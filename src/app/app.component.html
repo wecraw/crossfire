@@ -17,7 +17,7 @@
 
     </div>
   </div>
-  <div class="letters-row" [ngClass]="{'fade-out-bck': solved}">
+  <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
     <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
       
       <square (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
@@ -25,6 +25,15 @@
     </ng-container>
   </div>
   <button (click)="renderConfetti()">Check puzzle</button>
+  <i class="wrong-guess red fa-solid fa-lg fa-xmark"></i>
+  <i class="wrong-guess red fa-solid fa-lg fa-xmark"></i>
+  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
+  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
+  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
+  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
+  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
+
+
 
   <div class="levels-row">
     <ng-container *ngFor="let day of days; index as i">

@@ -218,6 +218,16 @@ export class AppComponent implements OnInit {
     })
   }
 
+  getNewPuzzle(){
+    let that = this
+
+    setTimeout(function(){
+      that.setClue()
+      that.entryIndex = 0;
+      that.solved = false;
+    }, 500);
+  }
+
   checkAnswer(){
     let correctLetters = 0;
     this.letters.forEach((letter, i) => {
@@ -234,8 +244,11 @@ export class AppComponent implements OnInit {
       console.log("you win!")
       this.renderConfetti()
       this.currentLevel++
-      this.solved = true;
-      this.setClue()
+      let that = this
+      setTimeout(function(){
+        that.solved = true;
+        that.getNewPuzzle()
+      }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
     }
 
   }
