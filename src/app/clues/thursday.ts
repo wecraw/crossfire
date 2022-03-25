@@ -12738,11 +12738,5 @@ export const thursdayClues = [
     [56,"Quirky sort","ODDONE"],
     [57,"Dormant volcano near the Turkish/Iranian border","ARARAT"],
     [58,"Ancient pyramid builders","MAYANS"],
-    [61,"Snacks served with cerveza","TAPAS"],
-    [63,"Many a Mormon","UTAHN"],
-    [64,"Time's partner, informally","TEMP"],
-    [65,"It's passed on","LORE"],
-    [67,"Footnote word","IDEM"],
-    [72,"Wise ___","GUY"]
-    
+    [61,"Snacks served with cerveza","TAPAS"]
 ]

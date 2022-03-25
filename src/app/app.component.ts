@@ -64,59 +64,11 @@ export class AppComponent implements OnInit {
     this.getRandomInt(sundayClues.length-1)
   ]
   solved: boolean = false;
+  guessNotAllowed: boolean = false;
   currentLevel: number = 0;
-
-  @HostListener('window:keyup', ['$event'])
-  keyEvent(event: KeyboardEvent) {
-    if(this.isKeyPrintable(event)){
-        if(this.enteredLetters[this.entryIndex].state !== "correct"){
-          this.enteredLetters[this.entryIndex].letter = event.key.toUpperCase()
-          this.enteredLetters[this.entryIndex].state = "default"
-        }
-        if (this.entryIndex < this.clue.answer.length - 1){
-          this.entryIndex++
-        }
-    }
-    if(event.key === "Backspace"){ //handle delete characters and move index on backspace
-      let deleteIndex
-      if (this.enteredLetters[this.entryIndex].letter !== ""){
-        deleteIndex = this.entryIndex
-        if (this.enteredLetters[this.entryIndex].state === "correct"){
-          this.entryIndex--
-          deleteIndex--
-        }
-      } else {
-        deleteIndex = this.entryIndex - 1
-        this.entryIndex--
-      } 
-      
-      if (deleteIndex < 0) deleteIndex = 0
-      if (this.entryIndex < 0) this.entryIndex = 0
-
-      if (this.enteredLetters[deleteIndex].state !== "correct"){
-        this.enteredLetters[deleteIndex].letter = ""
-        if(this.enteredLetters[deleteIndex].state === "incorrect"){
-          this.enteredLetters[deleteIndex].state = "default"
-        }
-      }
-
-
-    }
-    if(event.key === "Enter" && this.enteredLetters.length === this.letters.length){
-      console.log("checking")
-      this.checkAnswer()
-    }
-    if(event.key === "ArrowLeft"){
-      this.entryIndex--
-      if (this.entryIndex < 0 ) this.entryIndex = 0
-    }
-    if(event.key === "ArrowRight"){
-      this.entryIndex++
-      if (this.entryIndex === this.enteredLetters.length ) this.entryIndex = this.enteredLetters.length - 1
-    }
-    console.log(this.enteredLetters)
-
-  }
+  currentDisplayLevel: number = 0; //need this to make the transition for the progress bar, it updates after the true level does
+  incorrectGuesses: number = 0;
+  MAX_INCORRECT_GUESSES: number = 7;
 
   constructor(
     private renderer2: Renderer2,
@@ -127,43 +79,63 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     let clueSeed = this.getRandomInt(mondayClues.length-1)
     this.setClue()
+  }
+
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(event: KeyboardEvent) {
+    if(this.isKeyPrintable(event)){ //checks if entry is a letter or number and handles the entry
+      this.handleLetterEntry(event.key.toUpperCase())
+    }
+    if(event.key === "Backspace"){ //handle delete characters and move index on backspace
+      this.handleDeleteLetter()
+    }
+    if(event.key === "Enter"){
+      this.checkAnswer()
+    }
+    if(event.key === "ArrowLeft"){
+      this.entryIndex--
+      if (this.entryIndex < 0 ) this.entryIndex = 0
+    }
+    if(event.key === "ArrowRight"){
+      this.entryIndex++
+      if (this.entryIndex === this.enteredLetters.length ) this.entryIndex = this.enteredLetters.length - 1
+    }
 
   }
 
-  click(){
-    this.renderConfetti()
+  handleLetterEntry(letter: any){
+    if(this.enteredLetters[this.entryIndex].state !== "correct"){
+      this.enteredLetters[this.entryIndex].letter = letter
+      this.enteredLetters[this.entryIndex].state = "default"
+    }
+    if (this.entryIndex < this.clue.answer.length - 1){
+      this.entryIndex++
+    }
   }
 
-  renderConfetti(){
-    const canvas = this.renderer2.createElement('canvas');
- 
-    this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
- 
-    const myConfetti = confetti.create(canvas, {
-      resize: true // will fit all screen sizes
-    });
- 
-    myConfetti({
-      
-        particleCount: 150,
-        spread: 70,
-        angle: 60,
-        origin: { y: 0.5, x: 0 }
-      
-    });
-
-    myConfetti({
-      
-      particleCount: 150,
-      spread: 70,
-      angle: 120,
-      origin: { y: 0.5, x: 1 }
+  handleDeleteLetter(){
+    let deleteIndex
+    if (this.enteredLetters[this.entryIndex].letter !== ""){
+      deleteIndex = this.entryIndex
+      if (this.enteredLetters[this.entryIndex].state === "correct"){
+        this.entryIndex--
+        deleteIndex--
+      }
+    } else {
+      deleteIndex = this.entryIndex - 1
+      this.entryIndex--
+    } 
     
-  });
-   }
+    if (deleteIndex < 0) deleteIndex = 0
+    if (this.entryIndex < 0) this.entryIndex = 0
 
-  isKeyPrintable(e: KeyboardEvent) {
-    return allKeys.indexOf(e.key) === -1;
+    if (this.enteredLetters[deleteIndex].state !== "correct"){
+      this.enteredLetters[deleteIndex].letter = ""
+      if(this.enteredLetters[deleteIndex].state === "incorrect"){
+        this.enteredLetters[deleteIndex].state = "default"
+      }
+    }
+
   }
 
   setClue(){
@@ -182,13 +154,6 @@ export class AppComponent implements OnInit {
     } else {
       return ""
     }
-  }
-
-  getLevelState(i: number){
-    if (i === this.currentLevel) return "current"
-    if (i < this.currentLevel) return "complete"
-    if (i > this.currentLevel) return "upcoming"
-    return ""
   }
 
   getLetter(i: any){
@@ -225,11 +190,28 @@ export class AppComponent implements OnInit {
       that.setClue()
       that.entryIndex = 0;
       that.solved = false;
+      that.currentDisplayLevel = that.currentLevel
+      that.guessNotAllowed = false; //need to reset this from the check answer func
     }, 500);
+  }
+
+  isAnswerValid(){
+    let validGuess = true;
+    this.enteredLetters.forEach(letter => {
+      if (letter.letter === "") validGuess = false
+    })    
+    return validGuess
+
   }
 
   checkAnswer(){
     let correctLetters = 0;
+
+    //check if any squares are empty and if so, abort the check
+    if (!this.isAnswerValid()) return
+    if (this.guessNotAllowed) return
+
+
     this.letters.forEach((letter, i) => {
       if (this.enteredLetters[i].letter !== ""){
         if(letter.letter === this.enteredLetters[i].letter){
@@ -241,7 +223,7 @@ export class AppComponent implements OnInit {
       }
     })
     if (correctLetters === this.letters.length){
-      console.log("you win!")
+      this.guessNotAllowed = true
       this.renderConfetti()
       this.currentLevel++
       let that = this
@@ -249,12 +231,62 @@ export class AppComponent implements OnInit {
         that.solved = true;
         that.getNewPuzzle()
       }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
+    } else {
+      this.incorrectGuesses++
     }
 
+  }
+
+  handleVirtualKeypress(event: any){
+
+    if (event === "CHECK"){
+      this.checkAnswer()
+    } else if (event === "BKSP"){
+      this.handleDeleteLetter()
+    } else {
+      this.handleLetterEntry(event)
+    }
+  }
+
+
+
+  /*------------------------------Helpers-------------------------------------*/
+
+  isKeyPrintable(e: KeyboardEvent) {
+    return allKeys.indexOf(e.key) === -1;
   }
 
   getRandomInt(max: any) {
     return Math.floor(Math.random() * max);
   }
+
+  renderConfetti(){
+    const canvas = this.renderer2.createElement('canvas');
+ 
+    this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
+ 
+    const myConfetti = confetti.create(canvas, {
+      resize: true // will fit all screen sizes
+    });
+ 
+    myConfetti({
+      
+        particleCount: 150,
+        spread: 70,
+        angle: 60,
+        origin: { y: 0.5, x: 0 }
+      
+    });
+
+    myConfetti({
+      
+      particleCount: 150,
+      spread: 70,
+      angle: 120,
+      origin: { y: 0.5, x: 1 }
+    
+    });
+  }
+
 
 }

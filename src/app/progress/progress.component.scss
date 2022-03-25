@@ -1,0 +1,41 @@
+$level-current-color:#fbe377;
+$level-correct-color: #2a59e0;
+$level-upcoming-color: #ccc;
+
+.level{
+    border: 1px solid black;
+    border-radius: 50%;
+    background-color: white;
+    height: 26px;
+    width: 26px;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+    transition: all 0.2s ease-in;
+    &:last-of-type{
+        margin-right: 0;
+    }
+    &.upcoming{
+        color: $level-upcoming-color;
+        border: 1px solid $level-upcoming-color;
+    }
+    &.completed{
+        background-color: $level-correct-color;
+        color: white;
+    }
+    &.current{
+        background-color: $level-current-color;
+    }
+}
+
+.app-progress-bar{
+    display: flex;
+    width: fit-content;
+    background: linear-gradient(180deg, 
+    rgba(0,0,0,0) calc(50% - 1px), 
+    rgba(192,192,192,1) calc(50%), 
+    rgba(0,0,0,0) calc(50% + 1px)
+);
+}

@@ -1,0 +1,9 @@
+<div class="app-progress-bar">
+    <ng-container *ngFor="let level of levels; index as i">
+        <div class="level" [ngClass]="{'completed': currentLevel > i, 'upcoming': currentLevel < i, 'current': currentLevel === i}">
+            <div class="level-name">
+                {{level}}
+            </div>
+        </div>
+    </ng-container>
+</div>

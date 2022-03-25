@@ -1,15 +1,8 @@
-<div class="container">
-    <div class="letters-row header">
-      <square clueNumber="12" letter="C"></square>
-      <square letter="R"></square>
-      <square letter="O"></square>
-      <square letter="S"></square>
-      <square letter="S"></square>
-      <square letter="F"></square>
-      <square letter="I"></square>
-      <square letter="R"></square>
-      <square letter="E"></square>
+<app-header></app-header>
 
+<div class="container">
+    <div class="levels-row">
+      <progress-bar [currentLevel]="currentDisplayLevel"></progress-bar>
     </div>
   <div class="row">
     <div class="clue">
@@ -17,29 +10,29 @@
 
     </div>
   </div>
-  <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
-    <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
-      
-      <square (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
-      <square (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="!isFirst" [state]="getState(i)" [letter]=getLetter(i)></square>
-    </ng-container>
+  <div class="letters-wrapper">
+    <div style="transform: scale(0.5);" class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
+      <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
+        <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
+        <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="!isFirst" [state]="getState(i)" [letter]=getLetter(i)></square>
+      </ng-container>
+    </div>
   </div>
-  <button (click)="renderConfetti()">Check puzzle</button>
-  <i class="wrong-guess red fa-solid fa-lg fa-xmark"></i>
-  <i class="wrong-guess red fa-solid fa-lg fa-xmark"></i>
-  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
-  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
-  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
-  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
-  <i class="wrong-guess fa-solid fa-lg fa-xmark"></i>
 
+  <div class="check-row">
 
-
-  <div class="levels-row">
-    <ng-container *ngFor="let day of days; index as i">
-      <level [state]="getLevelState(i)" [day]="day"></level>
-      <!-- <level state="complete" [day]="day"></level> -->
-
-    </ng-container>
+    <div class="checks">
+      <ng-container *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i">
+        <i class="wrong-guess fa-solid fa-lg fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
+      </ng-container>
+    </div>
   </div>
+  <div class="keyboard-container">
+    <keyboard (keypressEvent)="handleVirtualKeypress($event)"></keyboard>
+  </div>
+
+
+
+
+
 </div>

@@ -1,0 +1,19 @@
+.keyboard-row{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;   
+}
+
+.button-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 58px;
+    background-color: #EFEFEF;
+    border-radius: 3px;
+    font-size: 1rem;
+    margin-right: 3px;
+    width: fit-content;
+    padding: 10px;
+    cursor: pointer;
+}

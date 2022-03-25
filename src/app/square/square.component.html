@@ -1,4 +1,4 @@
-<div class="square" [ngClass]="{'highlighted': highlighted}">
+<div class="square noselect" [ngClass]="getLetterSizeClass()" [class.header]="header" [class.highlighted]="highlighted">
     <div *ngIf="clueNumber" class="clue-number">{{clueNumber}}</div>
         <span [ngClass]="{'correct': state==='correct'}" class="letter">{{letter}}</span>
     <div *ngIf="state === 'incorrect'" class="overlay"></div>
