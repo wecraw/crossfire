@@ -218,7 +218,6 @@ export class AppComponent implements OnInit {
   }
 
   toast(text: string){
-    console.log(text)
     window.clearTimeout(this.toastTimeout)
     let that = this;
     this.toastText = text;
@@ -226,7 +225,6 @@ export class AppComponent implements OnInit {
     this.initialHideToast = false;
     this.toastTimeout = setTimeout(function(){
       that.showToast = false;
-      that.toastText = ""
     }, 1500);
   }
 
