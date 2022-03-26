@@ -72,6 +72,14 @@ export class AppComponent implements OnInit {
   currentLevel: number = 0;
   currentDisplayLevel: number = 0; //need this to make the transition for the progress bar, it updates after the true level does
   incorrectGuesses: number = 0;
+  invalidGuessAnimation: boolean = false; //used to show shake animation when an invalid guess is submitted
+  
+  showToast: boolean = false; //used to show and hide the 'need more letters' toast
+  initialHideToast: boolean = true; //used to hide boolean on initial load to prevent the fade out from happening on load
+  toastText: string = "";
+  toastTimeout: any;
+
+  shakeChecks: boolean = false; //used to shake x's when incorrect guess
 
   MAX_INCORRECT_GUESSES: number = 7;
 
@@ -209,11 +217,32 @@ export class AppComponent implements OnInit {
 
   }
 
+  toast(text: string){
+    console.log(text)
+    window.clearTimeout(this.toastTimeout)
+    let that = this;
+    this.toastText = text;
+    this.showToast = true;
+    this.initialHideToast = false;
+    this.toastTimeout = setTimeout(function(){
+      that.showToast = false;
+      that.toastText = ""
+    }, 1500);
+  }
+
   checkAnswer(){
     let correctLetters = 0;
+    let that = this;
 
     //check if any squares are empty and if so, abort the check
-    if (!this.isAnswerValid()) return
+    if (!this.isAnswerValid()){
+      this.invalidGuessAnimation = true;
+      this.toast("Not enough letters")
+      setTimeout(function(){
+        that.invalidGuessAnimation = false;
+      }, 700);
+      return
+    }
     if (this.guessNotAllowed) return
 
 
@@ -231,13 +260,16 @@ export class AppComponent implements OnInit {
       this.guessNotAllowed = true
       this.renderConfetti()
       this.currentLevel++
-      let that = this
       setTimeout(function(){
         that.solved = true;
         that.getNewPuzzle()
       }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
     } else {
       this.incorrectGuesses++
+      this.shakeChecks = true;
+      setTimeout(function(){
+        that.shakeChecks = false;
+      }, 300);
     }
 
   }
@@ -261,7 +293,17 @@ export class AppComponent implements OnInit {
     //todo launch settings menu
   }
 
+  share(){
+    if(navigator.share){
+      navigator.share({
+        text: "sharing today's crawsword! nice"
+      })
+    } else {
+      this.toast("Copied to clipboard")
+      navigator.clipboard.writeText("copying today's crawsword! nice")
+    }
 
+  }
 
   /*------------------------------Helpers-------------------------------------*/
 

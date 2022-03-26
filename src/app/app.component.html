@@ -10,8 +10,8 @@
 
     </div>
   </div>
-  <div class="letters-wrapper">
-    <div style="transform: scale(0.5);" class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
+  <div [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
+    <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
       <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
         <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
         <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="!isFirst" [state]="getState(i)" [letter]=getLetter(i)></square>
@@ -21,16 +21,20 @@
 
   <div class="check-row">
 
-    <div class="checks">
+    <div class="checks" [ngClass]="{'pulsate-fwd': shakeChecks}">
       <ng-container *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i">
         <i class="wrong-guess fa-solid fa-lg fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
       </ng-container>
     </div>
   </div>
+  <div class="toast-message" [ngClass]="{'fade-in-fwd': showToast, 'fade-out-bck': !showToast, 'hide-initial': initialHideToast}">
+    <span>{{toastText}}</span>
+  </div>
   <div class="keyboard-container">
     <keyboard (keypressEvent)="handleVirtualKeypress($event)"></keyboard>
   </div>
 </div>
+<button (click)="share()">Share</button>
 <div *ngIf="showHelpModal" class="help-overlay">
   <div class="container">
     <i (click)="toggleHelpModal()" class="close-icon fa-solid fa-xl fa-xmark"></i>
