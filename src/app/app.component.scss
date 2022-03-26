@@ -4,7 +4,7 @@ $button-text-color: #000;
 $button-border-color: #000;
 $button-text-color-disabled: #ccc;
 $button-border-color-disabled: #ccc;
-
+$page-background-color: #fefefe;
 
 
 .letters-row{
@@ -49,6 +49,13 @@ square:last-of-type{
 	        animation: fade-in-fwd 0.6s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
 }
 
+.letters-wrapper{
+  height: 62px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .wrong-guess {
   margin-left: 5px;
   color: $unused-guess-color;
@@ -90,8 +97,31 @@ square:last-of-type{
     opacity: 0.3;
     transition: opacity 0.1s ease-in;
     pointer-events: none;
+  }
 }
 
+.help-overlay{
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  padding: 24px;
+  padding-top: 0;
+  top: 0;
+  left: 0;
+  background-color: $page-background-color;
+
+  h5{
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 35px;
+  }
+  
+  .close-icon{
+    cursor: pointer;
+    float: right;
+    margin-top: 14px;
+    margin-right: 5px;
+  }
 }
 
 /* ----------------------------------------------

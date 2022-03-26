@@ -1,4 +1,4 @@
-<app-header></app-header>
+<app-header (helpClickEvent)="toggleHelpModal()" (settingsClickEvent)="onSettingsClick()"></app-header>
 
 <div class="container">
     <div class="levels-row">
@@ -30,9 +30,23 @@
   <div class="keyboard-container">
     <keyboard (keypressEvent)="handleVirtualKeypress($event)"></keyboard>
   </div>
-
-
-
-
-
+</div>
+<div *ngIf="showHelpModal" class="help-overlay">
+  <div class="container">
+    <i (click)="toggleHelpModal()" class="close-icon fa-solid fa-xl fa-xmark"></i>
+    <h5>How to play</h5>
+    <p>
+      Advance through all seven levels of the crawsword before you run out of guesses.
+    </p>
+    <p>
+      Each level contains a single crossword clue to solve. The clues become harder as you advance throught the levels.
+    </p>
+    <p>
+      If you check and your answer is wrong, a guess will be used and you'll get feedback on your guess:
+    </p>
+    <img style="margin-bottom: 15px;" src="../assets/images/example.png">
+    <p>
+      In this case, all the letters are correct except the middle "E". A red X is added to the total to indicate that a guess has been used up.
+    </p>
+  </div>
 </div>

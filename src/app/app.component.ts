@@ -33,6 +33,10 @@ export class AppComponent implements OnInit {
     clue: "",
     answer: ""
   };
+
+  showHelpModal = false;
+
+
   letters: ILetter[] = []
   enteredLetters: ILetter[] = []
   entryIndex: number = 0;
@@ -68,6 +72,7 @@ export class AppComponent implements OnInit {
   currentLevel: number = 0;
   currentDisplayLevel: number = 0; //need this to make the transition for the progress bar, it updates after the true level does
   incorrectGuesses: number = 0;
+
   MAX_INCORRECT_GUESSES: number = 7;
 
   constructor(
@@ -246,6 +251,14 @@ export class AppComponent implements OnInit {
     } else {
       this.handleLetterEntry(event)
     }
+  }
+
+  toggleHelpModal(){
+    this.showHelpModal = !this.showHelpModal
+  }
+
+  onSettingsClick(){
+    //todo launch settings menu
   }
 
 

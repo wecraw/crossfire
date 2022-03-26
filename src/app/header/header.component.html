@@ -1,8 +1,7 @@
 
 <div class="header-wrapper">
     <div class="letters-row">
-        <i class="fa-regular fa-lg fa-circle-question"></i>
-
+        <i (click)="onHelpClick()" class="icon fa-regular fa-lg fa-circle-question"></i>
         <square [header]="true" clueNumber="12" letter="C"></square>
         <square [header]="true" letter="R"></square>
         <square [header]="true" letter="A"></square>
@@ -12,6 +11,6 @@
         <square [header]="true" letter="O"></square>
         <square [header]="true" letter="R"></square>
         <square [header]="true" letter="D"></square>
-        <i class="fa-solid fa-lg fa-gear"></i>
+        <i (click)="onSettingsClick()" class="icon fa-solid fa-lg fa-gear"></i>
     </div>
 </div>
