@@ -8,6 +8,7 @@ import { ProgressComponent } from './progress/progress.component';
 import { KeyboardButtonComponent } from './keyboard-button/keyboard-button.component';
 import { KeyboardComponent } from './keyboard/keyboard.component';
 import { HeaderComponent } from './header/header.component';
+import { ModalComponent } from './modal/modal.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { HeaderComponent } from './header/header.component';
     ProgressComponent,
     KeyboardComponent,
     KeyboardButtonComponent,
-    HeaderComponent
+    HeaderComponent,
+    ModalComponent
   ],
   imports: [
     BrowserModule,

@@ -101,7 +101,7 @@ square:last-of-type{
 
   h5{
     text-align: center;
-    margin-top: 5px;
+    margin-top: 15px;
     margin-bottom: 35px;
   }
   
@@ -123,10 +123,11 @@ square:last-of-type{
   padding-top: 11px;
   font-weight: bold;
   left: 50%;
-  margin-left: -120px;
-  top: 50%;
+  margin-left: -100px;
+  top: 60%;
   background-color: #000;
   color: #fff;
+  z-index: 1000;
 
   &.hide-initial{
     display: none;

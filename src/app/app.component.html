@@ -34,7 +34,6 @@
     <keyboard (keypressEvent)="handleVirtualKeypress($event)"></keyboard>
   </div>
 </div>
-<button (click)="share()">Share</button>
 <div *ngIf="showHelpModal" class="help-overlay">
   <div class="container">
     <i (click)="toggleHelpModal()" class="close-icon fa-solid fa-xl fa-xmark"></i>
@@ -53,4 +52,13 @@
       In this case, all the letters are correct except the middle "E". A red X is added to the total to indicate that a guess has been used up.
     </p>
   </div>
+</div>
+<div *ngIf="showResetModal">
+  <app-modal headerText="Restart game" bodyText="Are you sure you want to start a new game?" [decisionModal]="true" (secondaryEvent)="toggleResetModal()" (primaryEvent)="reset()" primaryLabel="Reset" ></app-modal>
+</div>
+<div *ngIf="showLossModal">
+  <app-modal headerText="Game over" [bodyText]="'You made it to ' + days[currentLevel] + '.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+</div>
+<div *ngIf="showWinModal">
+  <app-modal headerText="You win!" [bodyText]="'You had ' + (MAX_INCORRECT_GUESSES - incorrectGuesses) + 'guesses remaining.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
 </div>

@@ -1,0 +1,21 @@
+<div class="modal-mask">
+
+</div>
+<div class="modal-frame">
+    <div class="modal-header">
+        <div>
+            {{headerText}}
+        </div>
+    </div>
+    <div class="modal-body">
+        <div>
+            {{bodyText}}
+        </div>
+    </div>
+    <div class="modal-footer">
+        <div *ngIf="decisionModal">
+            <button type="button" class="btn btn-secondary" (click)="onSecondaryClick()">{{secondaryLabel}}</button>
+            <button type="button" class="btn btn-primary" (click)="onPrimaryClick()">{{primaryLabel}}</button>
+        </div>
+    </div>
+</div>

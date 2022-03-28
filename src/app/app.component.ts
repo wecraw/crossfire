@@ -58,15 +58,7 @@ export class AppComponent implements OnInit {
     saturdayClues,
     sundayClues
   ]
-  clueSeeds = [
-    this.getRandomInt(mondayClues.length-1),
-    this.getRandomInt(tuesdayClues.length-1),
-    this.getRandomInt(wednesdayClues.length-1),
-    this.getRandomInt(thursdayClues.length-1),
-    this.getRandomInt(fridayClues.length-1),
-    this.getRandomInt(saturdayClues.length-1),
-    this.getRandomInt(sundayClues.length-1)
-  ]
+  clueSeeds: number[]
   solved: boolean = false;
   guessNotAllowed: boolean = false;
   currentLevel: number = 0;
@@ -79,9 +71,14 @@ export class AppComponent implements OnInit {
   toastText: string = "";
   toastTimeout: any;
 
+  showResetModal: boolean = false;
+  showLossModal: boolean = false;
+  showWinModal: boolean = false;
+
   shakeChecks: boolean = false; //used to shake x's when incorrect guess
 
-  MAX_INCORRECT_GUESSES: number = 7;
+  MAX_INCORRECT_GUESSES: number = 8;
+  DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
 
   constructor(
     private renderer2: Renderer2,
@@ -90,9 +87,27 @@ export class AppComponent implements OnInit {
 
 
   ngOnInit(): void {
-    let clueSeed = this.getRandomInt(mondayClues.length-1)
+    this.setClueSeeds()
     this.setClue()
   }
+
+  reset(){
+    this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = this.entryIndex = 0;
+    this.showResetModal = this.showLossModal = this.showWinModal = false;
+    this.guessNotAllowed = false;
+    this.setClueSeeds()
+    this.setClue()
+  }
+
+
+
+  setClueSeeds(){
+    this.clueSeeds = [];
+    this.cluesArray.forEach(clueSet => {
+      this.clueSeeds.push(this.getRandomInt(clueSet.length-1))
+    })
+  }
+
 
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
@@ -217,7 +232,8 @@ export class AppComponent implements OnInit {
 
   }
 
-  toast(text: string){
+  toast(text: string, duration?: number){
+    let toastDuration = duration || this.DEFAULT_TOAST_DURATION
     window.clearTimeout(this.toastTimeout)
     let that = this;
     this.toastText = text;
@@ -225,7 +241,7 @@ export class AppComponent implements OnInit {
     this.initialHideToast = false;
     this.toastTimeout = setTimeout(function(){
       that.showToast = false;
-    }, 1500);
+    }, toastDuration);
   }
 
   checkAnswer(){
@@ -256,20 +272,47 @@ export class AppComponent implements OnInit {
     })
     if (correctLetters === this.letters.length){
       this.guessNotAllowed = true
+      if (this.currentLevel === 6){
+        this.handleWin()
+      } else {
       this.renderConfetti()
       this.currentLevel++
       setTimeout(function(){
         that.solved = true;
         that.getNewPuzzle()
       }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
+      }
+
     } else {
       this.incorrectGuesses++
       this.shakeChecks = true;
       setTimeout(function(){
         that.shakeChecks = false;
       }, 300);
+      if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES){
+        this.guessNotAllowed = true;
+        this.handleLoss()
+      }
     }
 
+  }
+
+  handleLoss(){
+    let that = this;
+    let toastDuration = 2250
+    this.toast(this.clue.answer, toastDuration)
+
+    setTimeout(function(){ //wait until toast finishes to launch the modal
+      that.showLossModal = true
+    }, toastDuration + 500);
+  }
+
+  handleWin(){
+    let that = this;
+    this.renderWinConfetti()
+    setTimeout(function(){ //wait until toast finishes to launch the modal
+      that.showWinModal = true
+    }, 2000); //wait until victory confetti finishes
   }
 
   handleVirtualKeypress(event: any){
@@ -287,18 +330,35 @@ export class AppComponent implements OnInit {
     this.showHelpModal = !this.showHelpModal
   }
 
+  toggleResetModal(){
+    this.showResetModal = !this.showResetModal;
+  }
+
   onSettingsClick(){
+    this.toggleResetModal();
+
     //todo launch settings menu
   }
 
   share(){
+    let shareString = ""
+    for(let i = 0; i < 7; i++){
+      if(i < this.currentLevel) shareString += "🟦"
+      if(i === this.currentLevel) shareString += "🟨"
+      if(i > this.currentLevel) shareString += "⬛"
+    }
+    shareString += "\n"; //newline
+    for (let i = 0; i < this.MAX_INCORRECT_GUESSES; i++){
+      if(i <= this.incorrectGuesses) shareString += "❌"
+    }
+
     if(navigator.share){
       navigator.share({
-        text: "sharing today's crawsword! nice"
+        text: shareString
       })
     } else {
       this.toast("Copied to clipboard")
-      navigator.clipboard.writeText("copying today's crawsword! nice")
+      navigator.clipboard.writeText(shareString)
     }
 
   }
@@ -339,6 +399,95 @@ export class AppComponent implements OnInit {
       origin: { y: 0.5, x: 1 }
     
     });
+  }
+
+  renderWinConfetti(){
+    const canvas = this.renderer2.createElement('canvas');
+ 
+    this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
+ 
+    const myConfetti = confetti.create(canvas, {
+      resize: true // will fit all screen sizes
+    });
+
+    myConfetti({
+      
+      particleCount: 150,
+      spread: 70,
+      angle: 60,
+      origin: { y: 0.33, x: 0 }
+    
+    });
+
+    myConfetti({
+      
+      particleCount: 150,
+      spread: 70,
+      angle: 120,
+      origin: { y: 0.33, x: 1 }
+    
+    });
+
+    setTimeout(function(){
+      myConfetti({
+      
+        particleCount: 150,
+        spread: 70,
+        angle: 60,
+        origin: { y: 0.5, x: 0 }
+      
+    });
+
+    myConfetti({
+      
+      particleCount: 150,
+      spread: 70,
+      angle: 120,
+      origin: { y: 0.5, x: 1 }
+    
+    });
+    }, 500);
+
+    setTimeout(function(){
+      myConfetti({
+      
+        particleCount: 150,
+        spread: 70,
+        angle: 60,
+        origin: { y: 0.66, x: 0 }
+      
+    });
+
+    myConfetti({
+      
+      particleCount: 150,
+      spread: 70,
+      angle: 120,
+      origin: { y: 0.66, x: 1 }
+    
+    });
+    }, 1000);
+
+    setTimeout(function(){
+      myConfetti({
+      
+        particleCount: 150,
+        spread: 70,
+        angle: 60,
+        origin: { y: 0.8, x: 0 }
+      
+    });
+
+    myConfetti({
+      
+      particleCount: 150,
+      spread: 70,
+      angle: 120,
+      origin: { y: 0.8, x: 1 }
+    
+    });
+    }, 1500);
+
   }
 
 
