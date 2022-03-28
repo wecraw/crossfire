@@ -272,7 +272,8 @@ export class AppComponent implements OnInit {
     })
     if (correctLetters === this.letters.length){
       this.guessNotAllowed = true
-      if (this.currentLevel === 6){
+      this.currentLevel++
+      if (this.currentLevel === 7){
         this.handleWin()
       } else {
       this.renderConfetti()
@@ -341,7 +342,7 @@ export class AppComponent implements OnInit {
   }
 
   share(){
-    let shareString = ""
+    let shareString = "Crawsword (beta)\n\n"
     for(let i = 0; i < 7; i++){
       if(i < this.currentLevel) shareString += "🟦"
       if(i === this.currentLevel) shareString += "🟨"
