@@ -277,7 +277,6 @@ export class AppComponent implements OnInit {
         this.handleWin()
       } else {
       this.renderConfetti()
-      this.currentLevel++
       setTimeout(function(){
         that.solved = true;
         that.getNewPuzzle()
