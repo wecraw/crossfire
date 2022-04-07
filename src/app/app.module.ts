@@ -9,6 +9,15 @@ import { KeyboardButtonComponent } from './keyboard-button/keyboard-button.compo
 import { KeyboardComponent } from './keyboard/keyboard.component';
 import { HeaderComponent } from './header/header.component';
 import { ModalComponent } from './modal/modal.component';
+import { RouterModule, Routes } from '@angular/router';
+import { GameComponent } from './game/game.component';
+import { SearchComponent } from './search/search.component';
+import { NgAisModule } from 'angular-instantsearch';
+
+const routes: Routes = [
+  { path: '', component: GameComponent},
+  { path: 'search', component: SearchComponent}
+]
 
 @NgModule({
   declarations: [
@@ -18,11 +27,15 @@ import { ModalComponent } from './modal/modal.component';
     KeyboardComponent,
     KeyboardButtonComponent,
     HeaderComponent,
-    ModalComponent
+    ModalComponent,
+    GameComponent,
+    SearchComponent
   ],
   imports: [
     BrowserModule,
-    NgbModule
+    NgbModule,
+    RouterModule.forRoot(routes),
+    NgAisModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

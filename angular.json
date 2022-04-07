@@ -31,6 +31,7 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/instantsearch.css/themes/satellite.css",
               "src/styles.scss"
             ],
             "scripts": []

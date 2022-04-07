@@ -1,0 +1,64 @@
+<app-header (helpClickEvent)="toggleHelpModal()" (settingsClickEvent)="onSettingsClick()"></app-header>
+
+<div class="container">
+    <div class="levels-row">
+      <progress-bar [currentLevel]="currentDisplayLevel"></progress-bar>
+    </div>
+  <div class="row">
+    <div class="clue">
+      {{clue.clueNumber}}. {{clue.clue}}
+
+    </div>
+  </div>
+  <div [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
+    <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
+      <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
+        <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
+        <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="!isFirst" [state]="getState(i)" [letter]=getLetter(i)></square>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="check-row">
+
+    <div class="checks" [ngClass]="{'pulsate-fwd': shakeChecks}">
+      <ng-container *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i">
+        <i class="wrong-guess fa-solid fa-lg fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
+      </ng-container>
+    </div>
+  </div>
+  <div class="toast-message" [ngClass]="{'fade-in-fwd': showToast, 'fade-out-bck': !showToast, 'hide-initial': initialHideToast}">
+    <span>{{toastText}}</span>
+  </div>
+  <div class="keyboard-container">
+    <keyboard (keypressEvent)="handleVirtualKeypress($event)"></keyboard>
+  </div>
+</div>
+<div *ngIf="showHelpModal" class="help-overlay">
+  <div class="container">
+    <i (click)="toggleHelpModal()" class="close-icon fa-solid fa-xl fa-xmark"></i>
+    <h5>How to play</h5>
+    <p>
+      Advance through all seven levels of the crawsword before you run out of guesses.
+    </p>
+    <p>
+      Each level contains a single crossword clue to solve. The clues become harder as you advance throught the levels.
+    </p>
+    <p>
+      If you check and your answer is wrong, a guess will be used and you'll get feedback on your guess:
+    </p>
+    <img style="margin-bottom: 15px;" src="../assets/images/example.png">
+    <p>
+      In this case, all the letters are correct except the middle "E". A red X is added to the total to indicate that a guess has been used up.
+    </p>
+  </div>
+</div>
+<div *ngIf="showResetModal">
+  <app-modal headerText="Restart game" bodyText="Are you sure you want to start a new game?" [decisionModal]="true" (secondaryEvent)="toggleResetModal()" (primaryEvent)="reset()" primaryLabel="Reset" ></app-modal>
+</div>
+<div *ngIf="showLossModal">
+  <app-modal headerText="Game over" [bodyText]="'You made it to ' + days[currentLevel] + '.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+</div>
+<div *ngIf="showWinModal">
+  <app-modal headerText="You win!" [bodyText]="'You had ' + (MAX_INCORRECT_GUESSES - incorrectGuesses) + 'guesses remaining.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+</div>
