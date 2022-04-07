@@ -1,8 +1,8 @@
 <div class="container">
+    <h3>Clue search</h3>
     <ais-instantsearch [config]="config">
         <div class="left-panel">
             <ais-clear-refinements></ais-clear-refinements>
-            <h2>Filters</h2>
             <ais-refinement-list attribute="day" operator="or" [searchable]="false"></ais-refinement-list>
             <ais-configure [searchParameters]="{ hitsPerPage: 8 }"></ais-configure>
         </div>
@@ -10,15 +10,17 @@
             <ais-search-box></ais-search-box>
             <ais-hits>
             <ng-template let-hits="hits">
-                <ol class="ais-Hits-list flip-container">
-                <li (mouseenter)="showAnswer(i)" (mouseleave)="hideAnswer(i)" *ngFor="let hit of hits; index as i;" class="ais-Hits-item">
-                    <div *ngIf="showAnswerIndex !== i">
-                        {{hit.clue}}
-                    </div>
-                    <div *ngIf="showAnswerIndex === i">
-                        {{hit.answer}}
-                    </div>
-                </li>
+                <ol class="ais-Hits-list">
+                    <li class="flip-container" *ngFor="let hit of hits; index as i;">
+                        <div class="flipper">
+                            <div class="ais-Hits-item front">
+                                {{hit.clue}}
+                            </div>
+                            <div class="ais-Hits-item back">
+                                {{hit.answer}}
+                            </div>
+                        </div>
+                    </li>
                 </ol>
             </ng-template>
             </ais-hits>
