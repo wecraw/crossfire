@@ -1,5 +1,9 @@
-<div class="square noselect" [ngClass]="getLetterSizeClass()" [class.header]="header" [class.highlighted]="highlighted">
+<div class="square noselect" [ngClass]="getLetterSizeClass()" 
+    [class.header]="header" 
+    [class.present]="state === 'present'"
+    [class.absent]="state === 'absent'"
+    [class.correct]="state === 'correct'">
     <div *ngIf="clueNumber" class="clue-number">{{clueNumber}}</div>
-        <span [ngClass]="{'correct': state==='correct'}" class="letter">{{letter}}</span>
-    <div *ngIf="state === 'incorrect'" class="overlay"></div>
+        <span [ngClass]="{'checked': checked}" class="letter">{{letter}}</span>
+    <!-- <div *ngIf="state === 'incorrect'" class="overlay"></div> -->
 </div>

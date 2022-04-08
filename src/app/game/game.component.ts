@@ -17,7 +17,7 @@ export interface IClue {
 
 export interface ILetter {
   letter: any;
-  state: "default" | "correct" | "incorrect"
+  state: "default" | "correct" | "absent" | "present"
 }
 
 @Component({
@@ -36,9 +36,14 @@ export class GameComponent implements OnInit {
 
   showHelpModal = false;
 
+  _letters: string[] = []
+  _enteredLetters: string[] = []
+  _submissions: string[][] = []
 
+  submissions: ILetter[][] = []
   letters: ILetter[] = []
   enteredLetters: ILetter[] = []
+
   entryIndex: number = 0;
   days = [
     "Monday",
@@ -99,7 +104,7 @@ export class GameComponent implements OnInit {
     this.setClue()
   }
 
-
+  
 
   setClueSeeds(){
     this.clueSeeds = [];
@@ -145,10 +150,6 @@ export class GameComponent implements OnInit {
     let deleteIndex
     if (this.enteredLetters[this.entryIndex].letter !== ""){
       deleteIndex = this.entryIndex
-      if (this.enteredLetters[this.entryIndex].state === "correct"){
-        this.entryIndex--
-        deleteIndex--
-      }
     } else {
       deleteIndex = this.entryIndex - 1
       this.entryIndex--
@@ -159,9 +160,6 @@ export class GameComponent implements OnInit {
 
     if (this.enteredLetters[deleteIndex].state !== "correct"){
       this.enteredLetters[deleteIndex].letter = ""
-      if(this.enteredLetters[deleteIndex].state === "incorrect"){
-        this.enteredLetters[deleteIndex].state = "default"
-      }
     }
 
   }
@@ -184,7 +182,7 @@ export class GameComponent implements OnInit {
     }
   }
 
-  getLetter(i: any){
+  getLetter(i: any){ //fill empty letters
     if (i < this.enteredLetters.length){
       return this.enteredLetters[i].letter
     } else {
@@ -266,7 +264,14 @@ export class GameComponent implements OnInit {
           this.enteredLetters[i].state = "correct"
           correctLetters++
         } else {
-          this.enteredLetters[i].state = "incorrect"
+          let flag = false
+          this.letters.forEach(letter => { //check if letter is present
+            if (letter.letter === this.enteredLetters[i].letter) {
+              this.enteredLetters[i].state = "present"
+              flag = true
+            }
+          })
+          if (!flag) this.enteredLetters[i].state = "absent"
         }
       }
     })
@@ -289,6 +294,17 @@ export class GameComponent implements OnInit {
       setTimeout(function(){
         that.shakeChecks = false;
       }, 300);
+
+      this.submissions.push(this.enteredLetters)
+      this.enteredLetters = []
+      this.letters.forEach(letter => {
+        this.enteredLetters.push({
+          letter: "",
+          state: "default"
+        })
+      })
+      this.entryIndex = 0;
+
       if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES){
         this.guessNotAllowed = true;
         this.handleLoss()

@@ -10,6 +10,15 @@
 
     </div>
   </div>
+
+  <div *ngFor="let submission of submissions" class="letters-wrapper">
+    <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
+      <ng-container *ngFor="let letter of submission">
+        <square [letterSize]="letters.length" [state]="letter.state" [letter]="letter.letter"></square>
+      </ng-container>
+    </div>
+  </div>
+
   <div [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
     <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
       <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
@@ -23,7 +32,7 @@
 
     <div class="checks" [ngClass]="{'pulsate-fwd': shakeChecks}">
       <ng-container *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i">
-        <i class="wrong-guess fa-solid fa-lg fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
+        <i class="wrong-guess fa-solid fa-lg fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" >X</i>
       </ng-container>
     </div>
   </div>

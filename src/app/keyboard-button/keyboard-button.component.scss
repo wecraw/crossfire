@@ -1,3 +1,9 @@
+$default-letter-color: #000;
+$filled-letter-color: #fff;
+$present-bg-color: rgb(181, 159, 59);
+$correct-bg-color: rgb(83, 141, 78);
+$absent-bg-color: rgb(120, 124, 126);
+
 .button-wrapper{
     display: flex;
     align-items: center;
@@ -11,8 +17,22 @@
     min-width: 30px;
     padding: 3px;
     cursor: pointer;
+    color: $default-letter-color;
     
     .button-label{
         font-weight: 700;
+    }
+
+    &.present{
+        background-color: $present-bg-color;
+        color: $filled-letter-color;
+    }
+    &.correct{
+        background-color: $correct-bg-color;
+        color: $filled-letter-color;
+    }
+    &.absent{
+        background-color: $absent-bg-color;
+        color: $filled-letter-color;
     }
 }

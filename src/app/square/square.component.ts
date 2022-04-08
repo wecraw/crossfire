@@ -13,6 +13,7 @@ export class SquareComponent implements OnInit {
   @Input() highlighted: boolean = false;
   @Input() letterSize: number = 0
   @Input() header: boolean = false;
+  @Input() checked: boolean = false;
   
   constructor() { }
 

@@ -8,6 +8,7 @@ import { Component, Input, OnInit } from '@angular/core';
 export class KeyboardButtonComponent implements OnInit {
 
   @Input() label: string;
+  @Input() state: "default" | "present" | "correct" | "absent" = "default"
 
   constructor() { }
 
