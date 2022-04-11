@@ -7,14 +7,23 @@ $button-border-color-disabled: #ccc;
 $page-background-color: #fefefe;
 
 
+.flex{
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 230px); //offset for header and keyboard
+}
 .letters-row{
     display: flex;
     width: 100%;
     justify-content: center;
 }
 
+.letter-rows-wrapper{
+  overflow-y: scroll;
+}
+
 .levels-row{
-    margin-top: 35px;
+    margin-top: 20px;
     display: flex;
     width: 100%;
     justify-content: center;
@@ -31,7 +40,7 @@ canvas {
 .clue{
     font-family: Georgia, 'Times New Roman', Times, serif;
     text-align: center;
-    margin-top: 35px;
+    margin-top: 20px;
     margin-bottom: 10px;
 }
 
@@ -40,11 +49,11 @@ square:last-of-type{
 }
 
 .letters-wrapper{
-  height: 62px;
+  height: 49px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .wrong-guess {
@@ -67,18 +76,18 @@ square:last-of-type{
 
 .keyboard-container{
   position: absolute;
-  bottom: 20px;
+  bottom: 10px;
   display: flex;
   left: 50%;
   margin-left: -175px; //half the width of the container
   justify-content: center;
 }
 
-@media (min-width: 991.98px) {
-  .keyboard-container{
-    display: none;
-  }
-}
+// @media (min-width: 991.98px) {
+//   .keyboard-container{
+//     display: none;
+//   }
+// }
 
 .check-button{
   height: 40px;

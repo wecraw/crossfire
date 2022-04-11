@@ -13,6 +13,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { GameComponent } from './game/game.component';
 import { SearchComponent } from './search/search.component';
 import { NgAisModule } from 'angular-instantsearch';
+import { TutorialComponent } from './tutorial/tutorial.component';
 
 const routes: Routes = [
   { path: '', component: GameComponent},
@@ -29,7 +30,8 @@ const routes: Routes = [
     HeaderComponent,
     ModalComponent,
     GameComponent,
-    SearchComponent
+    SearchComponent,
+    TutorialComponent
   ],
   imports: [
     BrowserModule,

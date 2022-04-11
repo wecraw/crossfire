@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 
 @Component({
   selector: 'keyboard',
@@ -6,6 +6,10 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./keyboard.component.scss']
 })
 export class KeyboardComponent implements OnInit {
+
+  @Input() presentLetters: string[] = [];
+  @Input() correctLetters: string[] = [];
+  @Input() absentLetters: string[] = [];
 
   @Output() keypressEvent = new EventEmitter<string>();
 
@@ -16,6 +20,19 @@ export class KeyboardComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+  }
+
+  getState(letter: string){
+
+    if (this.correctLetters.includes(letter)){
+      return "correct"
+    } else if (this.presentLetters.includes(letter)){
+      return "present"
+    } else if (this.absentLetters.includes(letter)) {
+      return "absent"
+    } else {
+      return "default"
+    }
   }
 
   onKeypress(letter: any){

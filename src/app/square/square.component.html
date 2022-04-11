@@ -2,8 +2,8 @@
     [class.header]="header" 
     [class.present]="state === 'present'"
     [class.absent]="state === 'absent'"
+    [class.highlighted]="highlighted"
     [class.correct]="state === 'correct'">
     <div *ngIf="clueNumber" class="clue-number">{{clueNumber}}</div>
-        <span [ngClass]="{'checked': checked}" class="letter">{{letter}}</span>
-    <!-- <div *ngIf="state === 'incorrect'" class="overlay"></div> -->
+        <span class="letter">{{letter}}</span>
 </div>

@@ -1,14 +1,14 @@
 <div class="keyboard-wrapper">
     <div class="keyboard-row">
-        <keyboard-button *ngFor="let letter of lettersRow1" (click)="onKeypress(letter)" [label]="letter"></keyboard-button>
+        <keyboard-button *ngFor="let letter of lettersRow1" (click)="onKeypress(letter)" [state]="getState(letter)" [label]="letter"></keyboard-button>
     </div>
     <div class="keyboard-row">
-        <keyboard-button *ngFor="let letter of lettersRow2" (click)="onKeypress(letter)" [label]="letter"></keyboard-button>
+        <keyboard-button *ngFor="let letter of lettersRow2" (click)="onKeypress(letter)" [state]="getState(letter)" [label]="letter"></keyboard-button>
     </div>
     <div class="keyboard-row">
-        <keyboard-button *ngFor="let letter of lettersRow3" (click)="onKeypress(letter)" [label]="letter"></keyboard-button>
-        <div (click)="onKeypress('BKSP')" class="button-wrapper noselect">
+        <keyboard-button *ngFor="let letter of lettersRow3" (click)="onKeypress(letter)" [state]="getState(letter)" [label]="letter"></keyboard-button>
+        <button (click)="onKeypress('BKSP')" class="button-wrapper noselect">
             <i class="fa-solid fa-lg fa-delete-left"></i>
-        </div>
+        </button>
     </div>
 </div>

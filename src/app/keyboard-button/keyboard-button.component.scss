@@ -1,7 +1,7 @@
 $default-letter-color: #000;
 $filled-letter-color: #fff;
-$present-bg-color: rgb(181, 159, 59);
-$correct-bg-color: rgb(83, 141, 78);
+$present-bg-color: rgb(201, 180, 88);
+$correct-bg-color: rgb(106, 170, 100);
 $absent-bg-color: rgb(120, 124, 126);
 
 .button-wrapper{
@@ -18,7 +18,9 @@ $absent-bg-color: rgb(120, 124, 126);
     padding: 3px;
     cursor: pointer;
     color: $default-letter-color;
-    
+    box-shadow: none;
+
+
     .button-label{
         font-weight: 700;
     }

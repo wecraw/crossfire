@@ -36,13 +36,14 @@ export class GameComponent implements OnInit {
 
   showHelpModal = false;
 
-  _letters: string[] = []
-  _enteredLetters: string[] = []
-  _submissions: string[][] = []
-
   submissions: ILetter[][] = []
-  letters: ILetter[] = []
+  letters: string[] = []
   enteredLetters: ILetter[] = []
+
+  //used for keyboard highlighting
+  presentLetters: string[] = []
+  absentLetters: string[] = []
+  correctLetters: string[] = []
 
   entryIndex: number = 0;
   days = [
@@ -97,14 +98,13 @@ export class GameComponent implements OnInit {
   }
 
   reset(){
+    this.submissions = []
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = this.entryIndex = 0;
     this.showResetModal = this.showLossModal = this.showWinModal = false;
     this.guessNotAllowed = false;
     this.setClueSeeds()
     this.setClue()
   }
-
-  
 
   setClueSeeds(){
     this.clueSeeds = [];
@@ -137,10 +137,9 @@ export class GameComponent implements OnInit {
   }
 
   handleLetterEntry(letter: any){
-    if(this.enteredLetters[this.entryIndex].state !== "correct"){
-      this.enteredLetters[this.entryIndex].letter = letter
-      this.enteredLetters[this.entryIndex].state = "default"
-    }
+
+    this.enteredLetters[this.entryIndex].letter = letter
+  
     if (this.entryIndex < this.clue.answer.length - 1){
       this.entryIndex++
     }
@@ -158,9 +157,7 @@ export class GameComponent implements OnInit {
     if (deleteIndex < 0) deleteIndex = 0
     if (this.entryIndex < 0) this.entryIndex = 0
 
-    if (this.enteredLetters[deleteIndex].state !== "correct"){
-      this.enteredLetters[deleteIndex].letter = ""
-    }
+    this.enteredLetters[deleteIndex].letter = ""
 
   }
 
@@ -182,7 +179,7 @@ export class GameComponent implements OnInit {
     }
   }
 
-  getLetter(i: any){ //fill empty letters
+  getLetter(i: any){ //fill empty letters on board
     if (i < this.enteredLetters.length){
       return this.enteredLetters[i].letter
     } else {
@@ -194,25 +191,27 @@ export class GameComponent implements OnInit {
     this.entryIndex = i;
   }
 
-  setLetters(answer: any){
+  setLetters(answer: string){
     this.letters = [];
     this.enteredLetters = [];
+    this.absentLetters = []
+    this.presentLetters = []
+    this.correctLetters = []
+
     Array.from(answer).forEach(letter => {
-      this.letters.push({
-        letter: letter,
-        state: 'default' 
-      })
+      this.letters.push(letter)
       this.enteredLetters.push({ //fill entered letter array with empty letters
         letter: "",
         state: "default"
       })
-    })
+    })    
   }
 
   getNewPuzzle(){
     let that = this
 
     setTimeout(function(){
+      that.submissions = []
       that.setClue()
       that.entryIndex = 0;
       that.solved = false;
@@ -243,7 +242,7 @@ export class GameComponent implements OnInit {
   }
 
   checkAnswer(){
-    let correctLetters = 0;
+    let correctLetterCount = 0;
     let that = this;
 
     //check if any squares are empty and if so, abort the check
@@ -257,27 +256,48 @@ export class GameComponent implements OnInit {
     }
     if (this.guessNotAllowed) return
 
+    let tempLettersRemaining = this.letters.concat([]); //temp array to track remaining letters, allows greens and yellos of same letter in same guess
 
     this.letters.forEach((letter, i) => {
-      if (this.enteredLetters[i].letter !== ""){
-        if(letter.letter === this.enteredLetters[i].letter){
-          this.enteredLetters[i].state = "correct"
-          correctLetters++
+      if(letter === this.enteredLetters[i].letter){
+        this.enteredLetters[i].state = "correct"
+        correctLetterCount++
+
+
+        //remove letter from temp array
+        let index = tempLettersRemaining.indexOf(letter)
+        if (index !== -1) tempLettersRemaining.splice(index, 1)
+        console.log(tempLettersRemaining)
+
+        this.correctLetters.push(letter)
+      }  
+    })
+
+    this.letters.forEach((letter, i) => {
+
+      if (this.enteredLetters[i].state !== "correct"){
+        console.log("checking " + letter)
+        console.log(this.enteredLetters[i].letter)
+        if (this.letters.includes(this.enteredLetters[i].letter) && tempLettersRemaining.includes(this.enteredLetters[i].letter)){
+          this.enteredLetters[i].state = "present"
+
+          this.presentLetters.push(this.enteredLetters[i].letter)
+          let index = tempLettersRemaining.indexOf(this.enteredLetters[i].letter)
+          if (index !== -1) tempLettersRemaining.splice(index, 1)
+
         } else {
-          let flag = false
-          this.letters.forEach(letter => { //check if letter is present
-            if (letter.letter === this.enteredLetters[i].letter) {
-              this.enteredLetters[i].state = "present"
-              flag = true
-            }
-          })
-          if (!flag) this.enteredLetters[i].state = "absent"
+
+          this.enteredLetters[i].state = "absent"
+          this.absentLetters.push(this.enteredLetters[i].letter)
+
         }
       }
     })
-    if (correctLetters === this.letters.length){
+    
+    if (correctLetterCount === this.letters.length){
       this.guessNotAllowed = true
       this.currentLevel++
+      this.entryIndex = -1 //to hide highlighter during confetti
       if (this.currentLevel === 7){
         this.handleWin()
       } else {
@@ -294,8 +314,13 @@ export class GameComponent implements OnInit {
       setTimeout(function(){
         that.shakeChecks = false;
       }, 300);
-
-      this.submissions.push(this.enteredLetters)
+      if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES){
+        this.guessNotAllowed = true;
+        this.handleLoss()
+      } else {
+        this.submissions.push(this.enteredLetters)
+        document.getElementById("letter-rows-wrapper")?.scrollTo(100,0)
+      }
       this.enteredLetters = []
       this.letters.forEach(letter => {
         this.enteredLetters.push({
@@ -305,10 +330,7 @@ export class GameComponent implements OnInit {
       })
       this.entryIndex = 0;
 
-      if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES){
-        this.guessNotAllowed = true;
-        this.handleLoss()
-      }
+
     }
 
   }
