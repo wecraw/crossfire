@@ -267,7 +267,6 @@ export class GameComponent implements OnInit {
         //remove letter from temp array
         let index = tempLettersRemaining.indexOf(letter)
         if (index !== -1) tempLettersRemaining.splice(index, 1)
-        console.log(tempLettersRemaining)
 
         this.correctLetters.push(letter)
       }  
@@ -276,8 +275,7 @@ export class GameComponent implements OnInit {
     this.letters.forEach((letter, i) => {
 
       if (this.enteredLetters[i].state !== "correct"){
-        console.log("checking " + letter)
-        console.log(this.enteredLetters[i].letter)
+        // console.log("checking " + letter) uncomment to console log answers
         if (this.letters.includes(this.enteredLetters[i].letter) && tempLettersRemaining.includes(this.enteredLetters[i].letter)){
           this.enteredLetters[i].state = "present"
 

@@ -61,5 +61,5 @@
   <app-modal headerText="Game over" [bodyText]="'You made it to ' + days[currentLevel] + '.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
 </div>
 <div *ngIf="showWinModal">
-  <app-modal headerText="You win!" [bodyText]="'You had ' + (MAX_INCORRECT_GUESSES - incorrectGuesses) + 'guesses remaining.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+  <app-modal headerText="You win!" [bodyText]="'You had ' + (MAX_INCORRECT_GUESSES - incorrectGuesses) + ' guesses remaining.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
 </div>
