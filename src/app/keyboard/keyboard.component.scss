@@ -21,4 +21,10 @@
     &:active{
         filter: brightness(75%);
     }
+     
+    //have to have this bc otherwise the back button shows up as blue on iOS
+    //no idea why
+    i { 
+        color: black !important;
+    }
 }
