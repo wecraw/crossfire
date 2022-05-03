@@ -19,6 +19,11 @@ $absent-bg-color: rgb(120, 124, 126);
     cursor: pointer;
     color: $default-letter-color;
     box-shadow: none;
+    border: none;
+
+    &:active{
+        filter: brightness(75%);
+    }
 
 
     .button-label{

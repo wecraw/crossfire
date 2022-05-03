@@ -316,19 +316,22 @@ export class GameComponent implements OnInit {
       }, 300);
       if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES){
         this.guessNotAllowed = true;
+        this.entryIndex = -1
         this.handleLoss()
       } else {
         this.submissions.push(this.enteredLetters)
         document.getElementById("letter-rows-wrapper")?.scrollTo(100,0)
-      }
-      this.enteredLetters = []
-      this.letters.forEach(letter => {
-        this.enteredLetters.push({
-          letter: "",
-          state: "default"
+        this.enteredLetters = []
+        this.letters.forEach(letter => {
+          this.enteredLetters.push({
+            letter: "",
+            state: "default"
+          })
         })
-      })
-      this.entryIndex = 0;
+        this.entryIndex = 0;
+      }
+      
+
 
 
     }
@@ -423,6 +426,7 @@ export class GameComponent implements OnInit {
     myConfetti({
       
         particleCount: 150,
+        ticks: 75,
         spread: 70,
         angle: 60,
         origin: { y: 0.5, x: 0 }
@@ -432,6 +436,7 @@ export class GameComponent implements OnInit {
     myConfetti({
       
       particleCount: 150,
+      ticks: 75,
       spread: 70,
       angle: 120,
       origin: { y: 0.5, x: 1 }

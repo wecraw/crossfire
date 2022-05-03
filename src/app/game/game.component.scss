@@ -6,11 +6,16 @@ $button-text-color-disabled: #ccc;
 $button-border-color-disabled: #ccc;
 $page-background-color: #fefefe;
 
+@media (min-width: 767.98px) {
+  .fit-content-lg{
+    min-width: fit-content; //prevents horizontal scroll of the letter box on large screens
+  }
+}
 
 .flex{
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 230px); //offset for header and keyboard
+  height: calc(100vh - 270px); //offset for header and keyboard
 }
 .letters-row{
     display: flex;
@@ -19,7 +24,8 @@ $page-background-color: #fefefe;
 }
 
 .letter-rows-wrapper{
-  overflow-y: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .levels-row{

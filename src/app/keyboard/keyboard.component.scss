@@ -16,4 +16,9 @@
     width: fit-content;
     padding: 10px;
     cursor: pointer;
+    border: none;
+
+    &:active{
+        filter: brightness(75%);
+    }
 }
