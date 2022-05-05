@@ -6,6 +6,7 @@ import { thursdayClues } from '../clues/thursday';
 import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
+import { answers } from '../clues/answers';
 import { allKeys } from '../keys';
 import * as confetti from 'canvas-confetti';
 
@@ -64,7 +65,7 @@ export class GameComponent implements OnInit {
     saturdayClues,
     sundayClues
   ]
-  clueSeeds: number[]
+  clueSeeds: number[];
   solved: boolean = false;
   guessNotAllowed: boolean = false;
   currentLevel: number = 0;
@@ -75,6 +76,7 @@ export class GameComponent implements OnInit {
   showToast: boolean = false; //used to show and hide the 'need more letters' toast
   initialHideToast: boolean = true; //used to hide boolean on initial load to prevent the fade out from happening on load
   toastText: string = "";
+  invalidReason: string = ""; //reason for why a guess is invalid, shown in toast text
   toastTimeout: any;
 
   showResetModal: boolean = false;
@@ -83,7 +85,7 @@ export class GameComponent implements OnInit {
 
   shakeChecks: boolean = false; //used to shake x's when incorrect guess
 
-  MAX_INCORRECT_GUESSES: number = 8;
+  MAX_INCORRECT_GUESSES: number = 10;
   DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
 
   constructor(
@@ -222,9 +224,24 @@ export class GameComponent implements OnInit {
 
   isAnswerValid(){
     let validGuess = true;
+    
+    //check if any squares are empty
     this.enteredLetters.forEach(letter => {
-      if (letter.letter === "") validGuess = false
-    })    
+      if (letter.letter === "") {
+        validGuess = false
+        this.invalidReason = "Not enough letters"
+      }
+    })
+
+    //if no squares empty, check if answer exists in the set of valid answers
+    if (validGuess){
+      let enteredAnswer = ""
+      this.enteredLetters.forEach(letter => {
+        enteredAnswer += letter.letter
+      })
+      validGuess = answers.includes(enteredAnswer.toUpperCase())
+      if (!validGuess) this.invalidReason = "Not a valid answer"
+    }
     return validGuess
 
   }
@@ -248,12 +265,13 @@ export class GameComponent implements OnInit {
     //check if any squares are empty and if so, abort the check
     if (!this.isAnswerValid()){
       this.invalidGuessAnimation = true;
-      this.toast("Not enough letters")
+      this.toast(this.invalidReason)
       setTimeout(function(){
         that.invalidGuessAnimation = false;
       }, 700);
       return
-    }
+    }    
+
     if (this.guessNotAllowed) return
 
     let tempLettersRemaining = this.letters.concat([]); //temp array to track remaining letters, allows greens and yellos of same letter in same guess
