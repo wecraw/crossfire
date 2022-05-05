@@ -237,14 +237,16 @@ export class GameComponent implements OnInit {
     })
 
     //if no squares empty, check if answer exists in the set of valid answers
-    if (validGuess){
-      let enteredAnswer = ""
-      this.enteredLetters.forEach(letter => {
-        enteredAnswer += letter.letter
-      })
-      validGuess = answers.includes(enteredAnswer.toUpperCase())
-      if (!validGuess) this.invalidReason = "Not a valid answer"
-    }
+    //removing for now for balancing
+
+    // if (validGuess){
+    //   let enteredAnswer = ""
+    //   this.enteredLetters.forEach(letter => {
+    //     enteredAnswer += letter.letter
+    //   })
+    //   validGuess = answers.includes(enteredAnswer.toUpperCase())
+    //   if (!validGuess) this.invalidReason = "Not a valid answer"
+    // }
     return validGuess
 
   }
