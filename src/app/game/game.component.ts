@@ -99,7 +99,7 @@ export class GameComponent implements OnInit {
   ngOnInit(): void {
     this.setClueSeeds()
     this.setClue()
-    this.gameWindowHeight = window.innerHeight - 270
+    this.gameWindowHeight = window.innerHeight - 265
   }
 
   reset(){
@@ -339,7 +339,7 @@ export class GameComponent implements OnInit {
         this.handleLoss()
       } else {
         this.submissions.push(this.enteredLetters)
-        document.getElementById("letter-rows-wrapper")?.scrollTo(100,0)
+        let el = document.getElementById("letters-row-wrapper")
         this.enteredLetters = []
         this.letters.forEach(letter => {
           this.enteredLetters.push({
@@ -348,6 +348,14 @@ export class GameComponent implements OnInit {
           })
         })
         this.entryIndex = 0;
+        
+        //need to put this in a 1ms timeout so that the view has a chance to update before the scroll runs
+        setTimeout(function(){
+          el?.scrollTo({
+            top: el.scrollHeight,
+            behavior: 'smooth'
+          })
+        }, 1)
       }
       
 
