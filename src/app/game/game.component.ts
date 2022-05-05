@@ -35,6 +35,8 @@ export class GameComponent implements OnInit {
     answer: ""
   };
 
+  gameWindowHeight: number;
+
   showHelpModal = false;
 
   submissions: ILetter[][] = []
@@ -97,6 +99,7 @@ export class GameComponent implements OnInit {
   ngOnInit(): void {
     this.setClueSeeds()
     this.setClue()
+    this.gameWindowHeight = window.innerHeight - 270
   }
 
   reset(){

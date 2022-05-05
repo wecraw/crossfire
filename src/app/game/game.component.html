@@ -1,6 +1,6 @@
 <app-header (helpClickEvent)="toggleHelpModal()" (settingsClickEvent)="onSettingsClick()"></app-header>
 
-<div class="container flex fit-content-lg">
+<div [style.height.px]="gameWindowHeight" class="container flex fit-content-lg">
     <div class="levels-row">
       <progress-bar [currentLevel]="currentDisplayLevel"></progress-bar>
     </div>

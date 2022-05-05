@@ -15,7 +15,7 @@ $page-background-color: #fefefe;
 .flex{
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 270px); //offset for header and keyboard
+  // height: calc(100% - 270px); //offset for header and keyboard
 }
 .letters-row{
     display: flex;
