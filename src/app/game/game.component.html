@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
+    <div *ngIf="!hasLost" [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
       <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
         <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
           <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
