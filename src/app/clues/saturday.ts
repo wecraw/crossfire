@@ -12726,17 +12726,5 @@ export const saturdayClues = [
     [20,"Grind","GNASH"],
     [22,"Hunger (for)","LUST"],
     [23,"Summer Mass. hrs.","EDT"],
-    [24,"___ Yonath, 2009 Chemistry co-Nobelist","ADA"],
-    [25,"No-goodnik","RAT"],
-    [26,"Roman's foe in the Gallic Wars","CELT"],
-    [28,"Building supports","STUDS"],
-    [30,"\"Veep\" actress Chlumsky","ANNA"],
-    [31,"About to explode, maybe","IRATE"],
-    [33,"Do some supermarket work","RESTOCK"],
-    [35,"More repulsive","ICKIER"],
-    [37,"Chemistry student's expense","LABFEE"],
-    [40,"Inexperienced with","NEWAT"],
-    [41,"Puts away","EATS"],
-    [42,"Alternatives to Nikes","PUMAS"],
-    [44,"God with a chariot pulled by goats","THOR"]
+    [24,"___ Yonath, 2009 Chemistry co-Nobelist","ADA"]
 ]

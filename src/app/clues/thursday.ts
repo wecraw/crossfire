@@ -12726,13 +12726,5 @@ export const thursdayClues = [
     [39,"Audio equipment brand","AIWA"],
     [41,"Crunch time helper, maybe","OFF"],
     [42,"Comics character who was perpetually 19","LILABNER"],
-    [43,"Involve unwillingly","DRAGINTO"],
-    [45,"Waterfall","CATARACT"],
-    [50,"Generous, affable sort","MRN"],
-    [52,"Counts (on)","RELIES"],
-    [54,"Weasel word?","ERMINE"],
-    [56,"Quirky sort","ODDONE"],
-    [57,"Dormant volcano near the Turkish/Iranian border","ARARAT"],
-    [58,"Ancient pyramid builders","MAYANS"],
-    [61,"Snacks served with cerveza","TAPAS"]
+    [43,"Involve unwillingly","DRAGINTO"]
 ]

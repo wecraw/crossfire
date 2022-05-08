@@ -12726,17 +12726,5 @@ export const fridayClues = [
     [31,"Acting as","QUA"],
     [32,"Curdle","CLOT"],
     [34,"Something you shouldn't do around Christmas","POUT"],
-    [35,"Brilliantly colored gemstone","FIREOPAL"],
-    [38,"Film ___","NOIR"],
-    [39,"Stereotypical teller of a groan-worthy joke","DAD"],
-    [42,"Black-tie","DRESSY"],
-    [43,"Company that makes Coffee-mate","NESTLE"],
-    [45,"Cause of irritation","PEEVE"],
-    [49,"Cartoon pal of the monkey Boots","DORA"],
-    [50,"Bit of percussion","GONG"],
-    [51,"Prom coif","UPDO"],
-    [52,"Take off","SHED"],
-    [53,"\"I'm with ___\"","HER"],
-    [55,"Product from Fender","AMP"],
-    [56,"\"Sick, dude!\"","RAD"]
+    [35,"Brilliantly colored gemstone","FIREOPAL"]
 ]

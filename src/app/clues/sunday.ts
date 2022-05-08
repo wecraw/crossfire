@@ -12727,16 +12727,5 @@ export const sundayClues = [
     [60,"Perceive","GET"],
     [61,"Spacewalk, for short","EVA"],
     [63,"Arafat's successor as P.L.O. chairman","ABBAS"],
-    [64,"Nursery rhyme boy","GEORGIE"],
-    [66,"Forum farewells","VALES"],
-    [68,"Number of weeks per annum?","LII"],
-    [69,"Those with clout","INS"],
-    [71,"The Bible on bad business practices?","FALSEPROFITS"],
-    [74,"Item near a stereo","CDCASE"],
-    [77,"Buc or Bronco","NFLER"],
-    [78,"Newport event","REGATTA"],
-    [79,"Long, long time","DOGSAGE"],
-    [81,"Like all official football games","REFEREED"],
-    [88,"Weasel out of","RENEGEON"],
-    [89,"\"Take me ___\"","ASIAM"]
+    [64,"Nursery rhyme boy","GEORGIE"]
 ]

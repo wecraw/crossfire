@@ -12718,5 +12718,14 @@ export const wednesdayClues = [
     [15,"Word with small or fish","FRY"],
     [16,"Animated singer of \"Part of Your World\"","ARIEL"],
     [17,"Movie that really should have featured Anne Archer?","ROBINHOOD"],
-    [19,"Greek-born New Age musician","YANNI"]
+    [19,"Greek-born New Age musician","YANNI"],
+    [37,"Political suffix","CRAT"],
+    [40,"Fillable flatbread","PITA"],
+    [41,"Persist","LAST"],
+    [44,"Western treaty grp.","OAS"],
+    [45,"Section of a wine list","REDS"],
+    [46,"H.S. class whose students might cook","HOMEEC"],
+    [48,"G.O.P. org.","RNC"],
+    [49,"Binary digit","ONE"],
+    [50,"Binary question","YESORNO"]
 ]

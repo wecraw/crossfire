@@ -6,7 +6,8 @@ import { thursdayClues } from '../clues/thursday';
 import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
-import { answers } from '../clues/answers';
+// import { answers } from '../clues/answers';
+import seedrandom from 'seedrandom';
 import { allKeys } from '../keys';
 import * as confetti from 'canvas-confetti';
 
@@ -81,6 +82,8 @@ export class GameComponent implements OnInit {
   invalidReason: string = ""; //reason for why a guess is invalid, shown in toast text
   toastTimeout: any;
 
+  practiceMode: boolean = false;
+
   showResetModal: boolean = false;
   showLossModal: boolean = false;
   showWinModal: boolean = false;
@@ -98,6 +101,8 @@ export class GameComponent implements OnInit {
 
   ngOnInit(): void {
     this.setClueSeeds()
+    // this.setDailySeed();
+    console.log(this.clueSeeds)
     this.setClue()
     this.gameWindowHeight = window.innerHeight - 265
   }
@@ -113,11 +118,18 @@ export class GameComponent implements OnInit {
 
   setClueSeeds(){
     this.clueSeeds = [];
-    this.cluesArray.forEach(clueSet => {
-      this.clueSeeds.push(this.getRandomInt(clueSet.length-1))
-    })
+    if (this.practiceMode){
+      this.cluesArray.forEach(clueSet => {
+        this.clueSeeds.push(this.getRandomInt(clueSet.length - 1))
+      })
+    } else { //sets the daily seed if not in practice mode  
+      let i = 0;
+      this.cluesArray.forEach(clueSet => {
+        this.clueSeeds.push(this.getRandomIntSeeded(clueSet.length - 1, this.daysSinceEpoch() + i))
+        i++;
+      })
+    }
   }
-
 
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
@@ -244,7 +256,9 @@ export class GameComponent implements OnInit {
     //   this.enteredLetters.forEach(letter => {
     //     enteredAnswer += letter.letter
     //   })
-    //   validGuess = answers.includes(enteredAnswer.toUpperCase())
+    //   enteredAnswer = enteredAnswer.toUpperCase()
+    //   validGuess = answers.includes(enteredAnswer)
+
     //   if (!validGuess) this.invalidReason = "Not a valid answer"
     // }
     return validGuess
@@ -443,6 +457,18 @@ export class GameComponent implements OnInit {
     return Math.floor(Math.random() * max);
   }
 
+  getRandomIntSeeded(max: number, seed: number) {
+    let rand = seedrandom(seed)
+    console.log(rand())
+    return Math.floor(rand() * max)
+  }
+
+  //used for random seeding
+  daysSinceEpoch(){
+    let now: any = new Date()
+    return Math.floor(now/8.64e7)
+  }
+
   renderConfetti(){
     const canvas = this.renderer2.createElement('canvas');
  
@@ -561,6 +587,4 @@ export class GameComponent implements OnInit {
     }, 1500);
 
   }
-
-
 }

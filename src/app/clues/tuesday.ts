@@ -12727,16 +12727,4 @@ export const tuesdayClues = [
     [55,"Org. for top-notch H.S. students","NHS"],
     [57,"Blue-blooded","WELLBORN"],
     [58,"Hollywood's Diane, Buster or Michael","KEATON"],
-    [61,"Seed cover","ARIL"],
-    [62,"Briefly put pen to paper, say","WROTEANOTE"],
-    [64,"\"Don't touch that, honey!\"","NONO"],
-    [65,"Engine capacity unit","LITER"],
-    [66,"Increase","GROW"],
-    [67,"Poses a poser","ASKS"],
-    [68,"Relatively cool red giant","SSTAR"],
-    [69,"The second \"S\" of MS-DOS: Abbr.","SYST"],
-    [1,"Radio host John","TESH"],
-    [2,"Teenage skin malady","ACNE"],
-    [3,"Takeout food together with a Netflix movie, maybe","CHEAPDATE"],
-    [4,"Garden amphibians","TOADS"]
 ]
