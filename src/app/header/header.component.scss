@@ -22,3 +22,19 @@ square{
 square:last-of-type{
     border-right: 1px solid black
 }
+
+.fa-bars{
+    font-size: 20px;
+    margin-left: 18px;
+    margin-right: 18px;
+    margin-top: 13px;
+
+    &:hover{
+        cursor: pointer;
+    }
+
+    //hide bootstrap caret that gets added to dropdown
+    &::after{
+        display: none;
+    }
+}

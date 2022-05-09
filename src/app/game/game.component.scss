@@ -103,6 +103,10 @@ square:last-of-type{
   }
 }
 
+.no-click{
+  pointer-events: none;
+}
+
 .help-overlay{
   width: 100vw;
   height: 100vh;

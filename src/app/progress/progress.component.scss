@@ -1,5 +1,6 @@
-$level-current-color:#fbe377;
-$level-correct-color: #2a59e0;
+$level-current-color:#fada4a;
+// $level-correct-color: #6aaa64;
+$level-correct-color: #538d4e;
 $level-upcoming-color: #ccc;
 
 .level{
@@ -14,6 +15,7 @@ $level-upcoming-color: #ccc;
     align-items: center;
     margin-right: 10px;
     transition: all 0.2s ease-in;
+    color: black;
     &:last-of-type{
         margin-right: 0;
     }

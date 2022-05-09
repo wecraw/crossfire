@@ -9,6 +9,7 @@ export class HeaderComponent implements OnInit {
 
   @Output() helpClickEvent = new EventEmitter<any>();
   @Output() settingsClickEvent = new EventEmitter<any>();
+  @Output() menuClickEvent = new EventEmitter<string>();
 
   constructor() { }
 
@@ -21,6 +22,10 @@ export class HeaderComponent implements OnInit {
 
   onSettingsClick(){
     this.settingsClickEvent.emit()
+  }
+
+  onMenuPress(menuItem: string){
+    this.menuClickEvent.emit(menuItem)
   }
 
 }

@@ -28,28 +28,13 @@ export interface ILetter {
 })
 
 export class GameComponent implements OnInit {
-  title = 'crossfire-ng';
+
+  //Clue variables
   clue: IClue = {
     clueNumber: 0,
     clue: "",
     answer: ""
   };
-
-  gameWindowHeight: number;
-
-  showHelpModal = false;
-
-  submissions: ILetter[][] = []
-  letters: string[] = []
-  enteredLetters: ILetter[] = []
-
-  //used for keyboard highlighting
-  presentLetters: string[] = []
-  absentLetters: string[] = []
-  correctLetters: string[] = []
-
-  entryIndex: number = 0;
-
   cluesArray = [
     mondayClues,
     tuesdayClues,
@@ -60,53 +45,72 @@ export class GameComponent implements OnInit {
     sundayClues
   ]
   clueSeeds: number[];
-  solved: boolean = false;
-  guessNotAllowed: boolean = false;
+
+  //Game state variables
   currentLevel: number = 0;
   currentDisplayLevel: number = 0; //need this to make the transition for the progress bar, it updates after the true level does
   incorrectGuesses: number = 0;
-  invalidGuessAnimation: boolean = false; //used to show shake animation when an invalid guess is submitted
-  
+  incorrectGuessesByLevel: number[] = [0, 0, 0, 0, 0, 0, 0] //tracks how many incorrect guesses are used per level
+  hasWon: boolean = false; //true if user has won already in the daily
+  hasLost: boolean = false; //true if user has lost already in the daily
+  guessNotAllowed: boolean = false; //disables typing and guessing in certain cases (e.g. win, loss, waiting for confetti/fade)
+
+
+  //Keyboard and letter entry variables
+  submissions: ILetter[][] = [] //historical log of guesses for a particular clue
+  letters: string[] = [] //string of answer letters
+  enteredLetters: ILetter[] = [] //currently entered letters
+  presentLetters: string[] = [] //keyboard highlighting
+  absentLetters: string[] = [] //keyboard highlighting
+  correctLetters: string[] = [] //keyboard highlighting
+  entryIndex: number = 0; //'cursor' for entering letters
+
+  //Toast variables
   showToast: boolean = false; //used to show and hide the 'need more letters' toast
   initialHideToast: boolean = true; //used to hide boolean on initial load to prevent the fade out from happening on load
   toastText: string = "";
   invalidReason: string = ""; //reason for why a guess is invalid, shown in toast text
-  toastTimeout: any;
+  toastTimeout: any; //used to reset toast if multiple are called in rapid succession
 
   practiceMode: boolean = false; //set true for debugging
   currentDay: number = 0; //days since epoch
-  hasWon: boolean = false; //true if user has won already in the daily
-  hasLost: boolean = false; //true if user has lost already in the daily
 
+  //Modal variables
   showResetModal: boolean = false;
   showLossModal: boolean = false;
   showWinModal: boolean = false;
+  showHelpModal: boolean = false;
 
+  //Animation variables
   shakeChecks: boolean = false; //used to shake x's when incorrect guess
+  invalidGuessAnimation: boolean = false; //used to show shake animation when an invalid guess is submitted
+  solved: boolean = false; //controls fade in and fade out for solved clues
+  gameWindowHeight: number; //scrollable game area
 
+  //Constants
+  SCROLLABLE_AREA_OFFSET: number = 265; //pixel offset for header and keyboard to calc scrollable area
   MAX_INCORRECT_GUESSES: number = 10;
   DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
+  PUZZLE_FIRST_DAY: number = 19120; //first day (in days since epoch) that the daily puzzle was ran
 
   constructor(
     private renderer2: Renderer2,
     private elementRef: ElementRef
   ){}
 
-
   ngOnInit(): void {
     this.setClueSeeds()
+    
     this.currentDay = this.daysSinceEpoch()
     if (!this.isNewDay() && !this.practiceMode){
       this.loadFromLocalStorage()
-
       this.scrollGameToBottom()
-
     }
     
     //resetting win condition depends on clue not being set yet
     if (this.hasWon){
       this.currentLevel = 6
-      this.currentDisplayLevel = 6
+      this.currentDisplayLevel = 7
       this.entryIndex = -1;
       this.handleWin()
     }
@@ -120,17 +124,16 @@ export class GameComponent implements OnInit {
       this.handleLoss()
     }
 
-    // if (this.hasLost) this.handleLoss
-
-
-    this.gameWindowHeight = window.innerHeight - 265
+    //sets the scrollable game area
+    //TODO add this to window resize listener
+    this.gameWindowHeight = window.innerHeight - this.SCROLLABLE_AREA_OFFSET
   }
 
   reset(){
     this.resetLocalStorage()
-    console.log("hey")
     this.submissions = []
     this.enteredLetters = []
+    this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0] //tracks how many incorrect guesses are used per level
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = this.entryIndex = 0;
     this.showResetModal = this.showLossModal = this.showWinModal = false;
     this.guessNotAllowed = false;
@@ -155,63 +158,7 @@ export class GameComponent implements OnInit {
     }
   }
 
-  @HostListener('window:keyup', ['$event'])
-  keyEvent(event: KeyboardEvent) {
-    if(this.isKeyPrintable(event)){ //checks if entry is a letter or number and handles the entry
-      this.handleLetterEntry(event.key.toUpperCase())
-    }
-    if(event.key === "Backspace"){ //handle delete characters and move index on backspace
-      this.handleDeleteLetter()
-    }
-    if(event.key === "Enter"){
-      this.checkAnswer()
-    }
-    if(event.key === "ArrowLeft"){
-      this.entryIndex--
-      if (this.entryIndex < 0 ) this.entryIndex = 0
-    }
-    if(event.key === "ArrowRight"){
-      this.entryIndex++
-      if (this.entryIndex === this.enteredLetters.length ) this.entryIndex = this.enteredLetters.length - 1
-    }
-
-  }
-
-  handleLetterEntry(letter: any){
-
-    this.enteredLetters[this.entryIndex].letter = letter
-  
-    if (this.entryIndex < this.clue.answer.length - 1){
-      this.entryIndex++
-    }
-  }
-
-  handleDeleteLetter(){
-    let deleteIndex
-    if (this.enteredLetters[this.entryIndex].letter !== ""){
-      deleteIndex = this.entryIndex
-    } else {
-      deleteIndex = this.entryIndex - 1
-      this.entryIndex--
-    } 
-    
-    if (deleteIndex < 0) deleteIndex = 0
-    if (this.entryIndex < 0) this.entryIndex = 0
-
-    this.enteredLetters[deleteIndex].letter = ""
-
-  }
-
-  setClue(){
-    this.clue = {
-      clueNumber: +this.cluesArray[this.currentLevel][this.clueSeeds[this.currentLevel]][0],
-      clue: this.cluesArray[this.currentLevel][this.clueSeeds[this.currentLevel]][1],
-      answer: this.cluesArray[this.currentLevel][this.clueSeeds[this.currentLevel]][2]
-    }
-    this.setLetters(this.clue.answer)
-
-  }
-
+  //gets state of entered letter
   getState(i: any){
     if (i < this.enteredLetters.length){
       return this.enteredLetters[i].state
@@ -220,7 +167,8 @@ export class GameComponent implements OnInit {
     }
   }
 
-  getLetter(i: any){ //fill empty letters on board
+  //fill empty letters on board
+  getLetter(i: any){
     if (i < this.enteredLetters.length){
       return this.enteredLetters[i].letter
     } else {
@@ -252,9 +200,7 @@ export class GameComponent implements OnInit {
           state: "correct"
         })
       }
-
     })    
-
   }
 
   getNewPuzzle(){
@@ -271,19 +217,16 @@ export class GameComponent implements OnInit {
     }, 500);
   }
 
+  //checks if any squares are empty and returns false if so
   isAnswerValid(){
     let validGuess = true;
-    
-    //check if any squares are empty
     this.enteredLetters.forEach(letter => {
       if (letter.letter === "") {
         validGuess = false
         this.invalidReason = "Not enough letters"
       }
     })
-
     return validGuess
-
   }
 
   checkAnswer(){
@@ -344,17 +287,19 @@ export class GameComponent implements OnInit {
       this.updateLocalStorage()
       this.entryIndex = -1 //to hide highlighter during confetti
       if (this.currentLevel === 7){
+        this.currentDisplayLevel = 7
         this.handleWin()
       } else {
-      this.renderConfetti()
-      setTimeout(function(){
-        that.solved = true;
-        that.getNewPuzzle()
-      }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
+        this.renderConfetti()
+        setTimeout(function(){
+          that.solved = true;
+          that.getNewPuzzle()
+        }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
       }
 
     } else {
       this.incorrectGuesses++
+      this.incorrectGuessesByLevel[this.currentLevel]++
       this.updateLocalStorage()
       this.shakeChecks = true;
       setTimeout(function(){
@@ -404,6 +349,52 @@ export class GameComponent implements OnInit {
     }, 3500); //wait until victory confetti finishes
   }
 
+  toggleHelpModal(){
+    this.showHelpModal = !this.showHelpModal
+  }
+
+  toggleResetModal(){
+    this.showResetModal = !this.showResetModal;
+  }
+
+  onMenuClick(event: any){
+    console.log(event)
+  }
+
+  /*------------------------------Keyboard/letter entry-------------------------------------*/
+
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(event: KeyboardEvent) {
+    if (!this.guessNotAllowed && !this.hasWon && !this.hasLost) {
+      if(this.isKeyPrintable(event)){ //checks if entry is a letter or number and handles the entry
+        this.handleLetterEntry(event.key.toUpperCase())
+      }
+      if(event.key === "Backspace"){ //handle delete characters and move index on backspace
+        this.handleDeleteLetter()
+      }
+      if(event.key === "Enter"){
+        this.checkAnswer()
+      }
+      if(event.key === "ArrowLeft"){
+        this.entryIndex--
+        if (this.entryIndex < 0 ) this.entryIndex = 0
+      }
+      if(event.key === "ArrowRight"){
+        this.entryIndex++
+        if (this.entryIndex === this.enteredLetters.length ) this.entryIndex = this.enteredLetters.length - 1
+      }
+    }
+  }
+
+  handleLetterEntry(letter: any){
+
+    this.enteredLetters[this.entryIndex].letter = letter
+  
+    if (this.entryIndex < this.clue.answer.length - 1){
+      this.entryIndex++
+    }
+  }
+
   handleVirtualKeypress(event: any){
 
     if (event === "CHECK"){
@@ -415,30 +406,57 @@ export class GameComponent implements OnInit {
     }
   }
 
-  toggleHelpModal(){
-    this.showHelpModal = !this.showHelpModal
+  handleDeleteLetter(){
+    let deleteIndex
+    if (this.enteredLetters[this.entryIndex].letter !== ""){
+      deleteIndex = this.entryIndex
+    } else {
+      deleteIndex = this.entryIndex - 1
+      this.entryIndex--
+    } 
+    
+    if (deleteIndex < 0) deleteIndex = 0
+    if (this.entryIndex < 0) this.entryIndex = 0
+
+    this.enteredLetters[deleteIndex].letter = ""
+
   }
 
-  toggleResetModal(){
-    this.showResetModal = !this.showResetModal;
+  setClue(){
+    this.clue = {
+      clueNumber: +this.cluesArray[this.currentLevel][this.clueSeeds[this.currentLevel]][0],
+      clue: this.cluesArray[this.currentLevel][this.clueSeeds[this.currentLevel]][1],
+      answer: this.cluesArray[this.currentLevel][this.clueSeeds[this.currentLevel]][2]
+    }
+    this.setLetters(this.clue.answer)
+
   }
 
-  onSettingsClick(){
-    this.toggleResetModal();
-
-    //todo launch settings menu
-  }
+  /*------------------------------Sharing-------------------------------------*/
 
   share(){
-    let shareString = "Crawsword (beta)\n\n"
+    let shareString = "Crawsword (beta) #"
+    let puzzleNumber = this.daysSinceEpoch() - this.PUZZLE_FIRST_DAY + 1 //gets the 1 indexed puzzle number shoutout matlab
+    
+    if (this.hasWon) this.currentLevel = 7
+    shareString += puzzleNumber + " " + this.currentLevel + "/7"
+    if (this.hasWon) shareString += "🎉"
+    shareString += "\n\n"
+
     for(let i = 0; i < 7; i++){
-      if(i < this.currentLevel) shareString += "🟦"
-      if(i === this.currentLevel) shareString += "🟨"
+      if(i < this.currentLevel){
+        shareString += "🟦"
+        shareString += "❌".repeat(this.incorrectGuessesByLevel[i])
+      } 
+
+      if(i === this.currentLevel){
+        shareString += "🟨"
+        shareString += "❌".repeat(this.incorrectGuessesByLevel[i])
+      } 
+
       if(i > this.currentLevel) shareString += "⬛"
-    }
-    shareString += "\n"; //newline
-    for (let i = 0; i < this.MAX_INCORRECT_GUESSES; i++){
-      if(i <= this.incorrectGuesses) shareString += "❌"
+
+      if (i !== 6) shareString += "\n"; //newline
     }
 
     if(navigator.share){
@@ -452,10 +470,11 @@ export class GameComponent implements OnInit {
 
   }
 
-  /*------------------------------Helpers-------------------------------------*/
+  /*------------------------------Local Storage Helpers-------------------------------------*/
 
   updateLocalStorage(){
     localStorage.setItem('incorrectGuesses', "" + this.incorrectGuesses)
+    localStorage.setItem('incorrectGuessesByLevel', JSON.stringify(this.incorrectGuessesByLevel))
     localStorage.setItem('currentDay', "" + this.daysSinceEpoch())
     localStorage.setItem('currentLevel', "" + this.currentLevel)
     localStorage.setItem('currentEntries', JSON.stringify(this.submissions))
@@ -465,6 +484,7 @@ export class GameComponent implements OnInit {
 
   resetLocalStorage(){
     localStorage.removeItem('incorrectGuesses')
+    localStorage.removeItem('incorrectGuessesByLevel')
     localStorage.removeItem('currentDay')
     localStorage.removeItem('currentLevel')
     localStorage.removeItem('currentEntries')
@@ -475,6 +495,9 @@ export class GameComponent implements OnInit {
   loadFromLocalStorage(){
     let iG = localStorage.getItem('incorrectGuesses')
     if (iG) this.incorrectGuesses = +iG
+
+    let iGBL = localStorage.getItem('incorrectGuessesByLevel')
+    if (iGBL) this.incorrectGuessesByLevel = JSON.parse(iGBL)
 
     let cL = localStorage.getItem('currentLevel')
     if (cL) {
@@ -493,6 +516,8 @@ export class GameComponent implements OnInit {
       
   }
 
+  /*------------------------------Other Helpers-------------------------------------*/
+
   isNewDay(){
     let savedDay = localStorage.getItem('currentDay')
     if (savedDay && +savedDay < this.daysSinceEpoch()) {
@@ -510,7 +535,6 @@ export class GameComponent implements OnInit {
 
   getRandomIntSeeded(max: number, seed: number) {
     let rand = seedrandom(seed)
-    console.log(rand())
     return Math.floor(rand() * max)
   }
 
