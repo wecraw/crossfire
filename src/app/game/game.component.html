@@ -47,11 +47,11 @@
 
 </div>
 <div [ngClass]="{'no-click': guessNotAllowed || hasLost || hasWon}" class="keyboard-container">
-  <keyboard (keypressEvent)="handleVirtualKeypress($event)"
+  <app-keyboard (keypressEvent)="handleVirtualKeypress($event)"
             [correctLetters]="correctLetters"
             [absentLetters]="absentLetters"
             [presentLetters]="presentLetters"
-  ></keyboard>
+  ></app-keyboard>
 </div>
 <div *ngIf="showHelpModal" class="help-overlay">
   <app-tutorial (onClose)="toggleHelpModal()"></app-tutorial>

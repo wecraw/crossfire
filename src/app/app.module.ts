@@ -11,13 +11,10 @@ import { HeaderComponent } from './header/header.component';
 import { ModalComponent } from './modal/modal.component';
 import { RouterModule, Routes } from '@angular/router';
 import { GameComponent } from './game/game.component';
-import { SearchComponent } from './search/search.component';
-import { NgAisModule } from 'angular-instantsearch';
 import { TutorialComponent } from './tutorial/tutorial.component';
 
 const routes: Routes = [
   { path: '', component: GameComponent},
-  { path: 'search', component: SearchComponent}
 ]
 
 @NgModule({
@@ -30,14 +27,12 @@ const routes: Routes = [
     HeaderComponent,
     ModalComponent,
     GameComponent,
-    SearchComponent,
     TutorialComponent
   ],
   imports: [
     BrowserModule,
     NgbModule,
     RouterModule.forRoot(routes),
-    NgAisModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

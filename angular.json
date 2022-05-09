@@ -31,7 +31,6 @@
               "src/assets"
             ],
             "styles": [
-              "node_modules/instantsearch.css/themes/satellite.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -104,9 +103,21 @@
             ],
             "scripts": []
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
   },
-  "defaultProject": "crossfire-ng"
+  "defaultProject": "crossfire-ng",
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
+  }
 }
