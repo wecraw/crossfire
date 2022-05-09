@@ -8,6 +8,11 @@
         </div>
     </div>
     <div class="modal-body">
+        <div *ngIf="timeRemaining">
+            <div> Next Crawsword </div>
+            <div class="time"> {{ secondsUntilTomorrow }} </div>
+             
+        </div>
         <div>
             {{bodyText}}
         </div>

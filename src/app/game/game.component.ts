@@ -6,7 +6,6 @@ import { thursdayClues } from '../clues/thursday';
 import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
-// import { answers } from '../clues/answers';
 import seedrandom from 'seedrandom';
 import { allKeys } from '../keys';
 import * as confetti from 'canvas-confetti';
@@ -50,15 +49,7 @@ export class GameComponent implements OnInit {
   correctLetters: string[] = []
 
   entryIndex: number = 0;
-  days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday"
-  ]
+
   cluesArray = [
     mondayClues,
     tuesdayClues,
@@ -108,13 +99,7 @@ export class GameComponent implements OnInit {
     if (!this.isNewDay() && !this.practiceMode){
       this.loadFromLocalStorage()
 
-      let el = document.getElementById("letters-row-wrapper")
-      setTimeout(function(){
-        el?.scrollTo({
-          top: el.scrollHeight,
-          behavior: 'smooth'
-        })
-      }, 1)
+      this.scrollGameToBottom()
 
     }
     
@@ -128,22 +113,29 @@ export class GameComponent implements OnInit {
 
     this.setClue()
 
-    //resetting loss condition depends on clue already being set
+    //resetting loss condition depends on clue already being set so toast can show
     if (this.hasLost){
       this.entryIndex = -1
+      this.enteredLetters = this.submissions[this.submissions.length - 1]
       this.handleLoss()
     }
+
+    // if (this.hasLost) this.handleLoss
+
 
     this.gameWindowHeight = window.innerHeight - 265
   }
 
   reset(){
     this.resetLocalStorage()
+    console.log("hey")
     this.submissions = []
     this.enteredLetters = []
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = this.entryIndex = 0;
     this.showResetModal = this.showLossModal = this.showWinModal = false;
     this.guessNotAllowed = false;
+    this.hasWon = false
+    this.hasLost = false
     this.setClueSeeds()
     this.setClue()
   }
@@ -242,7 +234,7 @@ export class GameComponent implements OnInit {
 
   setLetters(answer: string){
     this.letters = [];
-    if (!this.hasWon) this.enteredLetters = []; //don't reset this if the user has won so we can show the last answer
+    if (!this.hasWon && !this.hasLost) this.enteredLetters = []; //don't reset this if the user has won so we can show the last answer
     this.absentLetters = []
     this.presentLetters = []
     this.correctLetters = []
@@ -290,33 +282,8 @@ export class GameComponent implements OnInit {
       }
     })
 
-    //if no squares empty, check if answer exists in the set of valid answers
-    //removing for now for balancing
-
-    // if (validGuess){
-    //   let enteredAnswer = ""
-    //   this.enteredLetters.forEach(letter => {
-    //     enteredAnswer += letter.letter
-    //   })
-    //   enteredAnswer = enteredAnswer.toUpperCase()
-    //   validGuess = answers.includes(enteredAnswer)
-
-    //   if (!validGuess) this.invalidReason = "Not a valid answer"
-    // }
     return validGuess
 
-  }
-
-  toast(text: string, duration?: number){
-    let toastDuration = duration || this.DEFAULT_TOAST_DURATION
-    window.clearTimeout(this.toastTimeout)
-    let that = this;
-    this.toastText = text;
-    this.showToast = true;
-    this.initialHideToast = false;
-    this.toastTimeout = setTimeout(function(){
-      that.showToast = false;
-    }, toastDuration);
   }
 
   checkAnswer(){
@@ -396,11 +363,11 @@ export class GameComponent implements OnInit {
       if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES){
         this.guessNotAllowed = true;
         this.entryIndex = -1
+        this.submissions.push(this.enteredLetters)
         this.handleLoss()
       } else {
         this.submissions.push(this.enteredLetters)
         this.updateLocalStorage()
-        let el = document.getElementById("letters-row-wrapper")
         this.enteredLetters = []
         this.letters.forEach(letter => {
           this.enteredLetters.push({
@@ -409,14 +376,8 @@ export class GameComponent implements OnInit {
           })
         })
         this.entryIndex = 0;
-        
-        //need to put this in a 1ms timeout so that the view has a chance to update before the scroll runs
-        setTimeout(function(){
-          el?.scrollTo({
-            top: el.scrollHeight,
-            behavior: 'smooth'
-          })
-        }, 1)
+
+        this.scrollGameToBottom()
       }
     }
   }
@@ -440,7 +401,7 @@ export class GameComponent implements OnInit {
     this.renderWinConfetti()
     setTimeout(function(){ //wait until toast finishes to launch the modal
       that.showWinModal = true
-    }, 2000); //wait until victory confetti finishes
+    }, 3500); //wait until victory confetti finishes
   }
 
   handleVirtualKeypress(event: any){
@@ -557,6 +518,28 @@ export class GameComponent implements OnInit {
   daysSinceEpoch(){
     let now: any = new Date()
     return Math.floor(now/8.64e7)
+  }
+
+  toast(text: string, duration?: number){
+    let toastDuration = duration || this.DEFAULT_TOAST_DURATION
+    window.clearTimeout(this.toastTimeout)
+    let that = this;
+    this.toastText = text;
+    this.showToast = true;
+    this.initialHideToast = false;
+    this.toastTimeout = setTimeout(function(){
+      that.showToast = false;
+    }, toastDuration);
+  }
+
+  scrollGameToBottom(){
+    let el = document.getElementById("letters-row-wrapper")
+    setTimeout(function(){
+      el?.scrollTo({
+        top: el.scrollHeight,
+        behavior: 'smooth'
+      })
+    }, 1)
   }
 
   renderConfetti(){

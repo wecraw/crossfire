@@ -11,15 +11,19 @@
     </div>
   </div>
   <div id="letters-row-wrapper" class="letter-rows-wrapper">
-    <div *ngFor="let submission of submissions" class="letters-wrapper">
-      <div class="letters-row" [ngClass]="{'fade-out-bck': solved}">
-        <ng-container *ngFor="let letter of submission">
-          <square [letterSize]="letters.length" [state]="letter.state" [letter]="letter.letter"></square>
-        </ng-container>
+    <ng-container *ngFor="let submission of submissions; index as i;">
+      <!-- ngIf below hides the last submission if you've lost as we need to store the last guess for cookies but dont want to show it -->
+      <!-- not needed for win condition since we know the last guess is just the correct answer -->
+      <div *ngIf="!hasLost || (hasLost && i < submissions.length - 1)" class="letters-wrapper"> 
+        <div class="letters-row" [ngClass]="{'fade-out-bck': solved}">
+          <ng-container *ngFor="let letter of submission">
+            <square [letterSize]="letters.length" [state]="letter.state" [letter]="letter.letter"></square>
+          </ng-container>
+        </div>
       </div>
-    </div>
+    </ng-container>
 
-    <div *ngIf="!hasLost" [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
+    <div [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
       <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
         <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
           <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
@@ -58,8 +62,8 @@
   <app-modal headerText="Restart game" bodyText="Are you sure you want to start a new game?" [decisionModal]="true" (secondaryEvent)="toggleResetModal()" (primaryEvent)="reset()" primaryLabel="Reset" ></app-modal>
 </div>
 <div *ngIf="showLossModal">
-  <app-modal headerText="Game over" [bodyText]="'You made it to ' + days[currentLevel] + '.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+  <app-modal [timeRemaining]="true" headerText="Game over" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
 </div>
 <div *ngIf="showWinModal">
-  <app-modal headerText="You win!" [bodyText]="'You had ' + (MAX_INCORRECT_GUESSES - incorrectGuesses) + ' guesses remaining.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+  <app-modal [timeRemaining]="true" headerText="You win!" [bodyText]="'You had ' + (MAX_INCORRECT_GUESSES - incorrectGuesses) + ' guesses remaining.'" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
 </div>
