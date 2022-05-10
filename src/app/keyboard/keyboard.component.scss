@@ -28,4 +28,27 @@
     i { 
         color:var(--keyboard-button-label-color) !important;
     }
+
+
+
+}
+
+@media (min-width: 519.98px) { //desktop
+    .button-wrapper{
+      min-width: 48px;
+    }
+  }
+
+@media (max-width: 413.98px) { //iphone se
+    .button-wrapper{
+      min-width: 30px;
+  }
+}
+
+@media (max-width: 360px) { //iphone 5
+    .button-wrapper{
+      min-width: 27px;
+      max-width: 27px;
+      padding: 3px;
+    }
 }

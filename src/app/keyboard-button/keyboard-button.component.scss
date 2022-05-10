@@ -49,20 +49,25 @@ $absent-bg-color: rgb(120, 124, 126);
     }
 }
 
-@media (max-width: 413.98px) { //iphone se
+@media (min-width: 519.98px) { //desktop
     .button-wrapper{
-      min-width: 30px; //prevents horizontal scroll of the letter box on large screens
+      min-width: 43px;
     }
   }
 
+@media (max-width: 413.98px) { //iphone se
+    .button-wrapper{
+      min-width: 30px;
+  }
+}
+
   @media (max-width: 360px) { //iphone 5
     .button-wrapper{
-      min-width: 27px; //prevents horizontal scroll of the letter box on large screens
-      max-width: 27px; //prevents horizontal scroll of the letter box on large screens
+      min-width: 27px;
+      max-width: 27px;
 
     }
     .check-button{
-        padding: 0 !important;
         font-size: 0.7rem;
         min-width: fit-content;
     }
