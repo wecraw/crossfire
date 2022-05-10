@@ -11,18 +11,28 @@ $absent-bg-color: rgb(120, 124, 126);
     height: 58px;
     background-color: var(--keyboard-button-default-color);
     border-radius: 3px;
-    font-size: 0.85rem;
-    margin-right: 5px;
+    font-size: 0.9rem;
+    margin-right: 2.5px;
+    margin-left: 2.5px;
     width: fit-content;
-    min-width: 30px;
-    padding: 3px;
+    min-width: 33px;
+    padding: 10px;
     cursor: pointer;
     color: var(--keyboard-button-label-color);
     box-shadow: none;
     border: none;
+    
 
     &:active{
         filter: brightness(75%);
+    }
+
+    // &:last-of-type{
+    //     // margin-right: 0;
+    // }
+
+    &.check-button{
+        padding: 3px;
     }
 
 
@@ -43,3 +53,22 @@ $absent-bg-color: rgb(120, 124, 126);
         color: var(--keyboard-button-label-filled-color);
     }
 }
+
+@media (max-width: 413.98px) { //iphone se
+    .button-wrapper{
+      min-width: 30px; //prevents horizontal scroll of the letter box on large screens
+    }
+  }
+
+  @media (max-width: 360px) { //iphone 5
+    .button-wrapper{
+      min-width: 27px; //prevents horizontal scroll of the letter box on large screens
+      max-width: 27px; //prevents horizontal scroll of the letter box on large screens
+
+    }
+    .check-button{
+        padding: 0 !important;
+        font-size: 0.7rem;
+        min-width: fit-content;
+    }
+  }

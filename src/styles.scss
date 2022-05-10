@@ -49,9 +49,9 @@ body{
   
   //keyboard
   --keyboard-button-default-color: #d3d6da;
-  --keyboard-button-present-color: #c9b559;
-  --keyboard-button-correct-color: #6aaa64;
-  --keyboard-button-absent-color: #787c7e;
+  --keyboard-button-present-color: var(--square-present-bg-color);
+  --keyboard-button-correct-color: var(--square-correct-bg-color);
+  --keyboard-button-absent-color: var(--square-absent-bg-color);
   --keyboard-button-label-color: #000;
   --keyboard-button-label-filled-color: #fff;
 
@@ -107,9 +107,9 @@ html[data-theme='dark'] {
   
   //keyboard
   --keyboard-button-default-color: #818384;
-  --keyboard-button-present-color: #b59f3b;
-  --keyboard-button-correct-color: #538d4e;
-  --keyboard-button-absent-color: #3a3a3c;
+  --keyboard-button-present-color: var(--square-present-bg-color);
+  --keyboard-button-correct-color: var(--square-correct-bg-color);
+  --keyboard-button-absent-color: var(--square-absent-bg-color);
   --keyboard-button-label-color: #fff;
   --keyboard-button-label-filled-color: #fff;
 

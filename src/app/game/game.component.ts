@@ -187,9 +187,6 @@ export class GameComponent implements OnInit {
   setLetters(answer: string){
     this.letters = [];
     if (!this.hasWon && !this.hasLost) this.enteredLetters = []; //don't reset this if the user has won so we can show the last answer
-    this.absentLetters = []
-    this.presentLetters = []
-    this.correctLetters = []
 
     Array.from(answer).forEach(letter => {
       this.letters.push(letter)
@@ -208,6 +205,9 @@ export class GameComponent implements OnInit {
   }
 
   getNewPuzzle(){
+    this.absentLetters = []
+    this.presentLetters = []
+    this.correctLetters = []
     let that = this
 
     setTimeout(function(){
@@ -504,7 +504,10 @@ export class GameComponent implements OnInit {
     }
     
     let cE = localStorage.getItem('currentEntries')
-    if (cE) this.submissions = JSON.parse(cE)
+    if (cE){
+      this.submissions = JSON.parse(cE)
+      this.setKeyboardFromSubmissions()
+    }
 
     let hW = localStorage.getItem('hasWon')
     if (hW) this.hasWon = hW === "true"
@@ -512,6 +515,19 @@ export class GameComponent implements OnInit {
     let hL = localStorage.getItem('hasLost')
     if (hL) this.hasLost = hL === "true"
       
+  }
+
+  //sets keyboard state when loading from cookies. prevents from needing additional cookies to track keyboard
+  setKeyboardFromSubmissions(){
+    this.submissions.forEach(submission => {
+      submission.forEach(letter => {
+        console.log("hey")
+        console.log(letter)
+        if (letter.state === 'correct' && !this.correctLetters.includes(letter.letter)) this.correctLetters.push(letter.letter)
+        if (letter.state === 'absent' && !this.absentLetters.includes(letter.letter) && !this.correctLetters.includes(letter.letter)) this.absentLetters.push(letter.letter)
+        if (letter.state === 'present' && !this.presentLetters.includes(letter.letter) && !this.correctLetters.includes(letter.letter)) this.presentLetters.push(letter.letter)
+      })
+    })
   }
 
   /*------------------------------Modal Helpers-------------------------------------*/

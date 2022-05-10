@@ -10,17 +10,13 @@
         <square [header]="true" letter="O"></square>
         <square [header]="true" letter="R"></square>
         <square [header]="true" letter="D"></square>
-        <div class="row">
-            <div class="col">
-                <div ngbDropdown class="d-inline-block">
+        <div ngbDropdown class="menu d-inline-block">
                 <i class="fa-solid fa-bars" id="dropdownBasic1" ngbDropdownToggle></i>
                 <div class="noselect" ngbDropdownMenu aria-labelledby="dropdownBasic1">
                     <button (click)="onMenuPress('practice')" ngbDropdownItem>Practice mode</button>
                     <button (click)="onMenuPress('settings')" ngbDropdownItem>Settings</button>
                     <button (click)="onMenuPress('stats')" ngbDropdownItem>Statistics</button>
                     <button (click)="onMenuPress('about')" ngbDropdownItem>About</button>
-                </div>
-                </div>
-        </div>
+         </div>
     </div>
 </div>

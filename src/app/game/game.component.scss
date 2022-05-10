@@ -83,9 +83,13 @@ square:last-of-type{
   position: absolute;
   bottom: 10px;
   display: flex;
-  left: 50%;
-  margin-left: -175px; //half the width of the container
+
+  width: 100%;
+  display: flex;
   justify-content: center;
+  // left: 50%;
+  // margin-left: -187.5px; //half the width of the container
+  // justify-content: center;
 }
 
 .check-button{

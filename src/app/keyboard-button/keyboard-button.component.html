@@ -1,4 +1,4 @@
-<button class="button-wrapper noselect" [ngClass]="state" >
+<button class="button-wrapper noselect" [class.check-button]="label === 'CHECK'" [ngClass]="state" >
     <div class="button-label">
         {{label}}
     </div>
