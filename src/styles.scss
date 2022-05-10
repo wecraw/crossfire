@@ -45,7 +45,9 @@ body{
   --square-present-bg-color: #c9b559;
   --square-correct-bg-color: #6aaa64;
   --square-absent-bg-color: #787c7e;
-  --tutorial-square-color: #fff;
+
+  --tutorial-square-color: var(--square-default-color);
+  --tutorial-square-border-color: var(--square-border-color);
   
   //keyboard
   --keyboard-button-default-color: #d3d6da;
@@ -101,6 +103,7 @@ html[data-theme='dark'] {
   --square-present-bg-color: #b59f3b;
   --square-correct-bg-color: #538d4e;
   --square-absent-bg-color: #3a3a3c;
+
   --tutorial-square-color: #121213;
   --tutorial-square-border-color: #888;
 

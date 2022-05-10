@@ -1,8 +1,4 @@
 $divider-color: #ccc;
-.letters-row{
-    display: flex;
-    margin-bottom: 10px;
-}
 
 .setting-row{
     display: flex;
@@ -24,10 +20,6 @@ $divider-color: #ccc;
     margin-left: auto;
     font-size: 18px;
     color: #2a59e0;
-}
-
-square:last-of-type{
-    border-right: 1px solid black
 }
 
 h5{

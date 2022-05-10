@@ -50,7 +50,7 @@ canvas {
 }
 
 square:last-of-type{
-    border-right: 1px solid black
+  border-right: 1px solid var(--tutorial-square-border-color);
 }
 
 .letters-wrapper{

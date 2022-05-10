@@ -22,14 +22,9 @@ $absent-bg-color: rgb(120, 124, 126);
     box-shadow: none;
     border: none;
     
-
     &:active{
         filter: brightness(75%);
     }
-
-    // &:last-of-type{
-    //     // margin-right: 0;
-    // }
 
     &.check-button{
         padding: 3px;
