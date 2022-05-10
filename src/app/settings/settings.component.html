@@ -1,0 +1,30 @@
+<div class="container">
+    <i (click)="closeEvent()" class="close-icon fa-solid fa-xl fa-xmark"></i>
+    <h5>Settings</h5>
+    <div class="setting-row">
+        <div class="setting-label">Dark mode</div>
+        <div class="custom-control switch-right custom-switch">
+            <input [checked]="isDarkMode()" (change)="darkModeSwitchChange($event)" type="checkbox" class="custom-control-input" id="customSwitch1">
+            <label class="custom-control-label" for="customSwitch1"></label>
+        </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">High contrast mode</div>
+      <div class="custom-control switch-right custom-switch">
+          <input [checked]="isContrastMode()" (change)="contrastSwitchChange($event)" type="checkbox" class="custom-control-input" id="customSwitch2">
+          <label class="custom-control-label" for="customSwitch2"></label>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Feedback</div>
+      <a href="mailto:wecraw.industries@gmail.com?subject=Crawsword%20Feedback" class="link-right">Email</a>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Community</div>
+      <a href="https://twitter.com/crawsword" class="link-right">Twitter</a>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Questions?</div>
+      <a href="https://twitter.com/crawsword" class="link-right">FAQ</a>
+    </div>
+</div>

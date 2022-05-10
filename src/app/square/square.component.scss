@@ -1,46 +1,38 @@
-$square-border-color: #000;
-$letter-default-color: #000;
-$letter-checked-color: #fff;
-$square-highlighted-color:#fada4a;
-$square-default-color: #fff;
-$present-bg-color: rgb(201, 180, 88);
-$correct-bg-color: #6aaa64;
-$absent-bg-color: rgb(120, 124, 126);
-
-
 .square{
     width: 49px;
     height: 49px;
-    border: 1px solid $square-border-color;
+    border: 1px solid var(--square-border-color);
     border-right: none;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: $square-default-color;
+    background-color: var(--square-default-color);
 
     &.present{
-        background-color: $present-bg-color;
+        background-color: var(--square-present-bg-color);
         .letter, .clue-number {
-            color: $letter-checked-color;
+            color: var(--letter-checked-color);
         }
     }
     &.correct{
-        background-color: $correct-bg-color;
+        background-color: var(--square-correct-bg-color);
         .letter, .clue-number {
-            color: $letter-checked-color;
+            color: var(--letter-checked-color);
         }
     }
     &.absent{
-        background-color: $absent-bg-color;
+        background-color: var(--square-absent-bg-color);
         .letter, .clue-number {
-            color: $letter-checked-color;
+            color: var(--letter-checked-color);
         }
     }
 
     &.header{
         width: 29px !important;
         height: 29px !important;
+        background-color: var(--header-square-color);
+        
         .letter {
             font-size: 1.17rem !important;
             margin-top: 5px !important;
@@ -55,9 +47,9 @@ $absent-bg-color: rgb(120, 124, 126);
         font-weight: 500;
         font-size: 1.98rem;
         margin-top: 8px;
-        color: $letter-default-color;
+        color: var(--letter-default-color);
         &.checked{
-            color: $letter-checked-color;
+            color: var(--letter-checked-color);
         }
     }
 
@@ -70,7 +62,7 @@ $absent-bg-color: rgb(120, 124, 126);
     }
 
     &.highlighted{
-        background-color: $square-highlighted-color;
+        background-color: var(--square-highlighted-color);
     }
 }
 

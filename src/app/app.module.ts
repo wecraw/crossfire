@@ -12,6 +12,7 @@ import { ModalComponent } from './modal/modal.component';
 import { RouterModule, Routes } from '@angular/router';
 import { GameComponent } from './game/game.component';
 import { TutorialComponent } from './tutorial/tutorial.component';
+import { SettingsComponent } from './settings/settings.component';
 
 const routes: Routes = [
   { path: '', component: GameComponent},
@@ -27,7 +28,8 @@ const routes: Routes = [
     HeaderComponent,
     ModalComponent,
     GameComponent,
-    TutorialComponent
+    TutorialComponent,
+    SettingsComponent
   ],
   imports: [
     BrowserModule,

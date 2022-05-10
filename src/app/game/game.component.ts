@@ -80,6 +80,7 @@ export class GameComponent implements OnInit {
   showLossModal: boolean = false;
   showWinModal: boolean = false;
   showHelpModal: boolean = false;
+  showSettingsModal: boolean = false;
 
   //Animation variables
   shakeChecks: boolean = false; //used to shake x's when incorrect guess
@@ -99,8 +100,11 @@ export class GameComponent implements OnInit {
   ){}
 
   ngOnInit(): void {
-    this.setClueSeeds()
+    this.setTheme() //set color theme e.g. dark, contrast
     
+
+    this.setClueSeeds()
+
     this.currentDay = this.daysSinceEpoch()
     if (!this.isNewDay() && !this.practiceMode){
       this.loadFromLocalStorage()
@@ -349,16 +353,10 @@ export class GameComponent implements OnInit {
     }, 3500); //wait until victory confetti finishes
   }
 
-  toggleHelpModal(){
-    this.showHelpModal = !this.showHelpModal
-  }
-
-  toggleResetModal(){
-    this.showResetModal = !this.showResetModal;
-  }
-
-  onMenuClick(event: any){
-    console.log(event)
+  onMenuClick(selection: any){
+    if (selection === "settings"){
+      this.toggleSettingsModal()
+    }
   }
 
   /*------------------------------Keyboard/letter entry-------------------------------------*/
@@ -445,7 +443,7 @@ export class GameComponent implements OnInit {
 
     for(let i = 0; i < 7; i++){
       if(i < this.currentLevel){
-        shareString += "🟦"
+        shareString += "🟩"
         shareString += "❌".repeat(this.incorrectGuessesByLevel[i])
       } 
 
@@ -516,7 +514,31 @@ export class GameComponent implements OnInit {
       
   }
 
+  /*------------------------------Modal Helpers-------------------------------------*/
+
+  toggleHelpModal(){
+    this.showHelpModal = !this.showHelpModal
+  }
+
+  toggleResetModal(){
+    this.showResetModal = !this.showResetModal
+  }
+
+  toggleSettingsModal(){
+    this.showSettingsModal = !this.showSettingsModal
+  }
+
   /*------------------------------Other Helpers-------------------------------------*/
+
+  setTheme(){
+    let storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    if (storedTheme)
+        document.documentElement.setAttribute('data-theme', storedTheme)
+
+    let storedContrastTheme = localStorage.getItem('contrast-theme') || "";
+    if (storedTheme)
+        document.documentElement.setAttribute('data-contrast-theme', storedContrastTheme)
+  }
 
   isNewDay(){
     let savedDay = localStorage.getItem('currentDay')

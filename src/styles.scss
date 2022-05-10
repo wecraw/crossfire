@@ -17,4 +17,123 @@
 body{
   touch-action: manipulation;
   overflow-x: visible;
+  background-color: var(--body-color);
+  color: var(--text-color);
 }
+
+//light mode (i.e. default) color variables
+:root {
+
+  //body
+  --body-color: #fff; // or any global you wish to share with components 
+  --text-color: #000;
+
+  //header
+  --header-square-color: #fff;
+  --menu-border-color: rgba(0, 0, 0, 0.15);
+  --menu-hover-color: #eee;
+
+  //checks
+  --unused-check-color: #ccc;
+
+  //squares
+  --square-border-color: #000;
+  --letter-default-color: #000;
+  --letter-checked-color: #fff;
+  --square-highlighted-color: #fada4a;
+  --square-default-color: #fff;
+  --square-present-bg-color: #c9b559;
+  --square-correct-bg-color: #6aaa64;
+  --square-absent-bg-color: #787c7e;
+  --tutorial-square-color: #fff;
+  
+  //keyboard
+  --keyboard-button-default-color: #d3d6da;
+  --keyboard-button-present-color: #c9b559;
+  --keyboard-button-correct-color: #6aaa64;
+  --keyboard-button-absent-color: #787c7e;
+  --keyboard-button-label-color: #000;
+  --keyboard-button-label-filled-color: #fff;
+
+  //progress
+  --level-current-bg-color: #fada4a;
+  --level-current-text-color: #000;
+  --level-current-border-color: #000;
+
+  --level-completed-bg-color: #538d4e;
+  --level-completed-text-color: #fff;
+  --level-completed-border-color: #000;
+
+  --level-upcoming-text-color: #ccc;
+  --level-upcoming-bg-color: #fff;
+  --level-upcoming-border-color: #ccc;
+
+  //modals
+  --modal-text-color: #000;
+  --modal-bg-color: #fff;
+  --modal-border-color: transparent;
+
+
+
+}
+
+//dark mode color variables--------------------------------------
+html[data-theme='dark'] {
+
+  //body
+  --body-color: #121213;
+  --text-color: #fff;
+
+  //header
+  --header-square-color: #3a3a3c;
+  --menu-border-color: rgba(255, 255, 255, 0.15);
+  --menu-hover-color: #473f7b;
+
+  //checks
+  --unused-check-color: #4a4a4c;
+
+  //squares
+  --square-border-color: #000;
+  --letter-default-color: #fff;
+  --letter-checked-color: #fff;
+  --square-highlighted-color: #5378a5;
+  --square-default-color: #473f7b;
+  --square-present-bg-color: #b59f3b;
+  --square-correct-bg-color: #538d4e;
+  --square-absent-bg-color: #3a3a3c;
+  --tutorial-square-color: #121213;
+  --tutorial-square-border-color: #888;
+
+  
+  //keyboard
+  --keyboard-button-default-color: #818384;
+  --keyboard-button-present-color: #b59f3b;
+  --keyboard-button-correct-color: #538d4e;
+  --keyboard-button-absent-color: #3a3a3c;
+  --keyboard-button-label-color: #fff;
+  --keyboard-button-label-filled-color: #fff;
+
+  //progress
+  --level-current-bg-color: #fada4a;
+  --level-current-text-color: #000;
+  --level-current-border-color: #000;
+
+  --level-completed-bg-color: #538d4e;
+  --level-completed-text-color: #538d4e;
+  --level-completed-border-color: #000;
+
+  --level-upcoming-text-color: #888;
+  --level-upcoming-bg-color: #121213;
+  --level-upcoming-border-color: #888;
+
+
+  //modals
+  --modal-text-color: #fff;
+  --modal-bg-color: #222;
+  --modal-border-color: #333;
+}
+
+html[data-contrast-theme='contrast'] {
+  --high-contrast: #fff; // or any global you wish to share with components 
+}
+

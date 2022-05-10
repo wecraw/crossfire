@@ -1,12 +1,9 @@
 $level-current-color:#fada4a;
-// $level-correct-color: #6aaa64;
 $level-correct-color: #538d4e;
 $level-upcoming-color: #ccc;
 
 .level{
-    border: 1px solid black;
-    border-radius: 50%;
-    background-color: white;
+    border: 1px solid ;
     height: 26px;
     width: 26px;
     font-size: 0.8rem;
@@ -15,20 +12,23 @@ $level-upcoming-color: #ccc;
     align-items: center;
     margin-right: 10px;
     transition: all 0.2s ease-in;
-    color: black;
     &:last-of-type{
         margin-right: 0;
     }
     &.upcoming{
-        color: $level-upcoming-color;
-        border: 1px solid $level-upcoming-color;
+        color: var(--level-upcoming-text-color);
+        border: 1px solid var(--level-upcoming-border-color);
+        background-color: var(--level-upcoming-bg-color);
     }
     &.completed{
-        background-color: $level-correct-color;
-        color: white;
+        color: var(--level-completed-text-color);
+        border: 1px solid var(--level-completed-border-color);
+        background-color: var(--level-completed-bg-color);
     }
     &.current{
-        background-color: $level-current-color;
+        color: var(--level-current-text-color);
+        border: 1px solid var(--level-current-border-color);
+        background-color: var(--level-current-bg-color);
     }
 }
 

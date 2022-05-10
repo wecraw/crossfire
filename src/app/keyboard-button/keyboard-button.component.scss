@@ -9,7 +9,7 @@ $absent-bg-color: rgb(120, 124, 126);
     align-items: center;
     justify-content: center;
     height: 58px;
-    background-color: #EFEFEF;
+    background-color: var(--keyboard-button-default-color);
     border-radius: 3px;
     font-size: 0.85rem;
     margin-right: 5px;
@@ -17,7 +17,7 @@ $absent-bg-color: rgb(120, 124, 126);
     min-width: 30px;
     padding: 3px;
     cursor: pointer;
-    color: $default-letter-color;
+    color: var(--keyboard-button-label-color);
     box-shadow: none;
     border: none;
 
@@ -31,15 +31,15 @@ $absent-bg-color: rgb(120, 124, 126);
     }
 
     &.present{
-        background-color: $present-bg-color;
-        color: $filled-letter-color;
+        background-color: var(--keyboard-button-present-color);
+        color: var(--keyboard-button-label-filled-color);
     }
     &.correct{
-        background-color: $correct-bg-color;
-        color: $filled-letter-color;
+        background-color: var(--keyboard-button-correct-color);
+        color: var(--keyboard-button-label-filled-color);
     }
     &.absent{
-        background-color: $absent-bg-color;
-        color: $filled-letter-color;
+        background-color: var(--keyboard-button-absent-color);
+        color: var(--keyboard-button-label-filled-color);
     }
 }

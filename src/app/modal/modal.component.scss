@@ -12,12 +12,15 @@
     position: absolute;
     height: fit-content;
     width: 350px;
-    background-color: #fff;
     border-radius: 8px;
     left: 50%;
     margin-left: -175px;
     z-index: 100;
     top: 25%;
+    color: var(--modal-text-color);
+    background-color: var(--modal-bg-color);
+    border: 1px solid var(--modal-border-color);
+
 
     .modal-header{
         font-size: 1.5rem;

@@ -63,7 +63,8 @@ square:last-of-type{
 
 .wrong-guess {
   margin-left: 5px;
-  color: $unused-guess-color;
+
+  color: var(--unused-check-color);
   &.red{
     color: $red;
   }
@@ -115,7 +116,7 @@ square:last-of-type{
   padding-top: 0;
   top: 0;
   left: 0;
-  background-color: $page-background-color;
+  background: var(--body-color);
 
   h5{
     text-align: center;

@@ -1,0 +1,56 @@
+$divider-color: #ccc;
+.letters-row{
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.setting-row{
+    display: flex;
+    margin: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid $divider-color;
+}
+
+.setting-label{
+    font-size: 18px;
+}
+
+.switch-right{
+    margin-left: auto;
+    transform: scale(1.25);
+}
+
+.link-right{
+    margin-left: auto;
+    font-size: 18px;
+    color: #2a59e0;
+}
+
+square:last-of-type{
+    border-right: 1px solid black
+}
+
+h5{
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.last{
+    border-bottom: 1px solid $divider-color;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.close-icon{
+    cursor: pointer;
+    float: right;
+    margin-top: 12px;
+    margin-right: -12px;
+}   
+
+.custom-control-input:checked~.custom-control-label::before {
+    color: #fff;
+    border-color: #2a59e0;
+    background-color: #2a59e0;
+}

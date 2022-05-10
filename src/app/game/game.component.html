@@ -37,7 +37,7 @@
 
     <div class="checks" [ngClass]="{'pulsate-fwd': shakeChecks}">
       <ng-container *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i">
-        <i class="wrong-guess fa-solid fa-lg fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
+        <i class="wrong-guess fa-solid fa-xl fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
       </ng-container>
     </div>
   </div>
@@ -55,6 +55,9 @@
 </div>
 <div *ngIf="showHelpModal" class="help-overlay">
   <app-tutorial (onClose)="toggleHelpModal()"></app-tutorial>
+</div>
+<div *ngIf="showSettingsModal" class="help-overlay">
+  <app-settings (onClose)="toggleSettingsModal()"></app-settings>
 </div>
 <div *ngIf="showResetModal">
   <app-modal headerText="Restart game" bodyText="Are you sure you want to start a new game?" [decisionModal]="true" (secondaryEvent)="toggleResetModal()" (primaryEvent)="reset()" primaryLabel="Reset" ></app-modal>

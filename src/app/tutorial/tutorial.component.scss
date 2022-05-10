@@ -26,3 +26,11 @@ h5{
     margin-top: 12px;
     margin-right: -12px;
 }   
+
+square::ng-deep {
+        .square {
+            background-color: var(--tutorial-square-color);
+            border: 1px solid var(--tutorial-square-border-color);
+        }
+        
+}

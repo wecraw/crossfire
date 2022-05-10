@@ -20,7 +20,7 @@ square{
     margin-top: 9px;
 }
 square:last-of-type{
-    border-right: 1px solid black
+    border-right: 1px solid var(--square-border-color);
 }
 
 .fa-bars{
@@ -37,4 +37,18 @@ square:last-of-type{
     &::after{
         display: none;
     }
+}
+
+.dropdown-menu{
+    background: var(--body-color);
+    border-color: var(--menu-border-color);
+    button{
+        color: var(--text-color);
+    }
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+
+}
+
+.dropdown-item:hover{
+    background-color: var(--menu-hover-color);
 }
