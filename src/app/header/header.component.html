@@ -1,4 +1,4 @@
-<div class="header-wrapper">
+<div [ngClass]="{'no-click': disabled}" class="header-wrapper">
     <div class="letters-row">
         <i (click)="onHelpClick()" class="icon fa-regular fa-lg fa-circle-question"></i>
         <square [header]="true" clueNumber="15" letter="C"></square>
@@ -13,7 +13,9 @@
         <div ngbDropdown class="menu d-inline-block">
                 <i class="fa-solid fa-bars" id="dropdownBasic1" ngbDropdownToggle></i>
                 <div class="noselect" ngbDropdownMenu aria-labelledby="dropdownBasic1">
-                    <button (click)="onMenuPress('practice')" ngbDropdownItem>Practice mode</button>
+                    <button *ngIf="!practiceMode" (click)="onMenuPress('practice')" ngbDropdownItem>Practice mode</button>
+                    <button *ngIf="practiceMode" (click)="onMenuPress('practice')" ngbDropdownItem>Daily puzzle</button>
+                    <button *ngIf="practiceMode" (click)="onMenuPress('restart')" ngbDropdownItem>Restart practice</button>
                     <button (click)="onMenuPress('settings')" ngbDropdownItem>Settings</button>
                     <button (click)="onMenuPress('stats')" ngbDropdownItem>Statistics</button>
                     <button (click)="onMenuPress('about')" ngbDropdownItem>About</button>

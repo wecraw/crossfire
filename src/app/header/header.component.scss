@@ -55,3 +55,7 @@ square:last-of-type{
 .dropdown-item:hover{
     background-color: var(--menu-hover-color);
 }
+
+.no-click{
+    pointer-events: none;
+}

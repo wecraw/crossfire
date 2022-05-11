@@ -28,7 +28,7 @@ $page-background-color: #fefefe;
 }
 
 .levels-row{
-    margin-top: 20px;
+    margin-top: 15px;
     display: flex;
     width: 100%;
     justify-content: center;
@@ -45,7 +45,7 @@ canvas {
 .clue{
     font-family: Georgia, 'Times New Roman', Times, serif;
     text-align: center;
-    margin-top: 20px;
+    margin-top: 15px;
     margin-bottom: 10px;
 }
 
@@ -75,7 +75,7 @@ square:last-of-type{
   display: flex;
 
   .checks{
-    margin-top: 8px;
+    margin-top: 5px;
   }
 }
 

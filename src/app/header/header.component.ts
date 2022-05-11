@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 @Component({
   selector: 'app-header',
@@ -6,6 +6,9 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
+
+  @Input() practiceMode: boolean = false;
+  @Input() disabled: boolean = false;
 
   @Output() helpClickEvent = new EventEmitter<any>();
   @Output() settingsClickEvent = new EventEmitter<any>();

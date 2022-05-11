@@ -20,7 +20,7 @@ export class SquareComponent implements OnInit {
   ngOnInit(): void {
   }
   getLetterSizeClass(){
-    if (this.letterSize < 8) return ""
+    if (this.letterSize < 7) return ""
     return "letters-" + this.letterSize
   }
 

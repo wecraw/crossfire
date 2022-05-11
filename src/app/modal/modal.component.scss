@@ -33,3 +33,10 @@
     }
 
 }
+
+@media (max-width: 374.98px) { //iphone 5
+    .modal-frame {
+        width: 300px;
+        margin-left: -150px;
+    }
+}

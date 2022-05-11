@@ -62,8 +62,7 @@ body{
   --level-current-text-color: #000;
   --level-current-border-color: #000;
 
-  --level-completed-bg-color: #538d4e;
-  --level-completed-text-color: #fff;
+  --level-completed-bg-color: var(--square-correct-bg-color);
   --level-completed-border-color: #000;
 
   --level-upcoming-text-color: #ccc;
@@ -121,8 +120,7 @@ html[data-theme='dark'] {
   --level-current-text-color: #000;
   --level-current-border-color: #000;
 
-  --level-completed-bg-color: #538d4e;
-  --level-completed-text-color: #538d4e;
+  --level-completed-bg-color: var(--square-correct-bg-color);
   --level-completed-border-color: #000;
 
   --level-upcoming-text-color: #888;
@@ -137,6 +135,12 @@ html[data-theme='dark'] {
 }
 
 html[data-contrast-theme='contrast'] {
-  --high-contrast: #fff; // or any global you wish to share with components 
+  --square-present-bg-color: #0455A4;
+  --square-correct-bg-color: #E84A27;
+
+  --level-completed-bg-color: #E84A27;
+  --level-current-bg-color: #0455A4;
+  --level-current-text-color: #fff;
+
 }
 

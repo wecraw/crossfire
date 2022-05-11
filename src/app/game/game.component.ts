@@ -81,6 +81,7 @@ export class GameComponent implements OnInit {
   showWinModal: boolean = false;
   showHelpModal: boolean = false;
   showSettingsModal: boolean = false;
+  showAboutModal: boolean = false;
 
   //Animation variables
   shakeChecks: boolean = false; //used to shake x's when incorrect guess
@@ -101,7 +102,6 @@ export class GameComponent implements OnInit {
 
   ngOnInit(): void {
     this.setTheme() //set color theme e.g. dark, contrast
-    
 
     this.setClueSeeds()
 
@@ -110,9 +110,11 @@ export class GameComponent implements OnInit {
       this.loadFromLocalStorage()
       this.scrollGameToBottom()
     }
+    if (this.isNewDay()) this.resetLocalStorage()
     
-    //resetting win condition depends on clue not being set yet
+    //need to handle win 
     if (this.hasWon){
+      this.enteredLetters = this.submissions[this.submissions.length - 1]
       this.currentLevel = 6
       this.currentDisplayLevel = 7
       this.entryIndex = -1;
@@ -128,15 +130,18 @@ export class GameComponent implements OnInit {
       this.handleLoss()
     }
 
-    //sets the scrollable game area
-    //TODO add this to window resize listener
-    this.gameWindowHeight = window.innerHeight - this.SCROLLABLE_AREA_OFFSET
+    this.setScrollableArea()
   }
 
   reset(){
-    this.resetLocalStorage()
+    //uncomment for debug mode V
+    // this.resetLocalStorage()
     this.submissions = []
     this.enteredLetters = []
+    this.presentLetters = []
+    this.absentLetters = []
+    this.correctLetters = []
+
     this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0] //tracks how many incorrect guesses are used per level
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = this.entryIndex = 0;
     this.showResetModal = this.showLossModal = this.showWinModal = false;
@@ -190,27 +195,20 @@ export class GameComponent implements OnInit {
 
     Array.from(answer).forEach(letter => {
       this.letters.push(letter)
-      if (!this.hasWon){
-        this.enteredLetters.push({ //fill entered letter array with empty letters
-          letter: "",
-          state: "default"
-        })
-      } else {
-        this.enteredLetters.push({
-          letter: letter,
-          state: "correct"
-        })
-      }
+      this.enteredLetters.push({ //fill entered letter array with empty letters
+        letter: "",
+        state: "default"
+      })
     })    
   }
 
   getNewPuzzle(){
-    this.absentLetters = []
-    this.presentLetters = []
-    this.correctLetters = []
     let that = this
 
     setTimeout(function(){
+      that.absentLetters = []
+      that.presentLetters = []
+      that.correctLetters = []
       that.submissions = []
       that.updateLocalStorage()
       that.setClue()
@@ -292,6 +290,7 @@ export class GameComponent implements OnInit {
       this.entryIndex = -1 //to hide highlighter during confetti
       if (this.currentLevel === 7){
         this.currentDisplayLevel = 7
+        this.submissions.push(this.enteredLetters)
         this.handleWin()
       } else {
         this.renderConfetti()
@@ -333,6 +332,7 @@ export class GameComponent implements OnInit {
 
   handleLoss(){
     this.hasLost = true;
+    this.guessNotAllowed = true;
     this.updateLocalStorage()
     let that = this;
     let toastDuration = 2250
@@ -340,22 +340,44 @@ export class GameComponent implements OnInit {
 
     setTimeout(function(){ //wait until toast finishes to launch the modal
       that.showLossModal = true
+      that.guessNotAllowed = false;
     }, toastDuration + 500);
   }
 
   handleWin(){
+    this.guessNotAllowed = true;
     this.hasWon = true;
     this.updateLocalStorage()
     let that = this;
     this.renderWinConfetti()
     setTimeout(function(){ //wait until toast finishes to launch the modal
       that.showWinModal = true
+      that.guessNotAllowed = false;
     }, 3500); //wait until victory confetti finishes
   }
 
+  togglePracticeMode(){
+    this.practiceMode = !this.practiceMode;
+    this.reset()
+    this.ngOnInit()
+  }
+
   onMenuClick(selection: any){
+
     if (selection === "settings"){
       this.toggleSettingsModal()
+    }
+
+    if (selection === "about"){
+      this.toggleAboutModal()
+    }
+
+    if (selection === "practice"){
+      this.togglePracticeMode()
+    }
+
+    if (selection === "restart"){
+      this.reset()
     }
   }
 
@@ -433,11 +455,16 @@ export class GameComponent implements OnInit {
   /*------------------------------Sharing-------------------------------------*/
 
   share(){
-    let shareString = "Crawsword (beta) #"
-    let puzzleNumber = this.daysSinceEpoch() - this.PUZZLE_FIRST_DAY + 1 //gets the 1 indexed puzzle number shoutout matlab
+    let shareString = "Crawsword (beta) "
+    if (!this.practiceMode){
+      let puzzleNumber = this.daysSinceEpoch() - this.PUZZLE_FIRST_DAY + 1 //gets the 1 indexed puzzle number shoutout matlab
+      shareString += "#" + puzzleNumber
+    } else {
+      shareString += "(practice)"
+    }
     
     if (this.hasWon) this.currentLevel = 7
-    shareString += puzzleNumber + " " + this.currentLevel + "/7"
+    shareString += " " + this.currentLevel + "/7"
     if (this.hasWon) shareString += "🎉"
     shareString += "\n\n"
 
@@ -471,19 +498,22 @@ export class GameComponent implements OnInit {
   /*------------------------------Local Storage Helpers-------------------------------------*/
 
   updateLocalStorage(){
-    localStorage.setItem('incorrectGuesses', "" + this.incorrectGuesses)
-    localStorage.setItem('incorrectGuessesByLevel', JSON.stringify(this.incorrectGuessesByLevel))
-    localStorage.setItem('currentDay', "" + this.daysSinceEpoch())
-    localStorage.setItem('currentLevel', "" + this.currentLevel)
-    localStorage.setItem('currentEntries', JSON.stringify(this.submissions))
-    localStorage.setItem('hasWon', "" + this.hasWon)
-    localStorage.setItem('hasLost', "" + this.hasLost)
+    if (!this.practiceMode){
+      localStorage.setItem('incorrectGuesses', "" + this.incorrectGuesses)
+      localStorage.setItem('incorrectGuessesByLevel', JSON.stringify(this.incorrectGuessesByLevel))
+      localStorage.setItem('currentDay', "" + this.daysSinceEpoch())
+      localStorage.setItem('currentLevel', "" + this.currentLevel)
+      localStorage.setItem('currentEntries', JSON.stringify(this.submissions))
+      localStorage.setItem('hasWon', "" + this.hasWon)
+      localStorage.setItem('hasLost', "" + this.hasLost)
+    }
+
   }
 
   resetLocalStorage(){
     localStorage.removeItem('incorrectGuesses')
     localStorage.removeItem('incorrectGuessesByLevel')
-    localStorage.removeItem('currentDay')
+    localStorage.setItem('currentDay', "" + this.daysSinceEpoch())
     localStorage.removeItem('currentLevel')
     localStorage.removeItem('currentEntries')
     localStorage.removeItem('hasWon')
@@ -521,8 +551,6 @@ export class GameComponent implements OnInit {
   setKeyboardFromSubmissions(){
     this.submissions.forEach(submission => {
       submission.forEach(letter => {
-        console.log("hey")
-        console.log(letter)
         if (letter.state === 'correct' && !this.correctLetters.includes(letter.letter)) this.correctLetters.push(letter.letter)
         if (letter.state === 'absent' && !this.absentLetters.includes(letter.letter) && !this.correctLetters.includes(letter.letter)) this.absentLetters.push(letter.letter)
         if (letter.state === 'present' && !this.presentLetters.includes(letter.letter) && !this.correctLetters.includes(letter.letter)) this.presentLetters.push(letter.letter)
@@ -544,7 +572,20 @@ export class GameComponent implements OnInit {
     this.showSettingsModal = !this.showSettingsModal
   }
 
+  toggleAboutModal(){
+    this.showAboutModal = !this.showAboutModal
+  }
+
   /*------------------------------Other Helpers-------------------------------------*/
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event) {
+    this.setScrollableArea()
+  }
+
+  setScrollableArea(){
+    this.gameWindowHeight = window.innerHeight - this.SCROLLABLE_AREA_OFFSET
+  }
 
   setTheme(){
     let storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -579,7 +620,17 @@ export class GameComponent implements OnInit {
   //used for random seeding
   daysSinceEpoch(){
     let now: any = new Date()
-    return Math.floor(now/8.64e7)
+    let temp = Math.floor(now/8.64e7 + 2.52e7/8.64e7) //adding offset so game resets at midnight Pacific
+    return temp
+  }
+
+
+  getSecondsUntilTomorrow() {
+    let now: any = new Date();
+    const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200;
+
+    return new Date(SECONDS * 1000).toISOString().substring(11, 19)
+
   }
 
   toast(text: string, duration?: number){
@@ -720,6 +771,5 @@ export class GameComponent implements OnInit {
     
     });
     }, 1500);
-
   }
 }

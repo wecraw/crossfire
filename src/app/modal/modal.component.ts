@@ -41,16 +41,9 @@ export class ModalComponent implements OnInit {
 
   getSecondsUntilTomorrow() {
     let now: any = new Date();
-  
-    // tomorrow date
-    let tomorrow: any = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1);
-  
-    let diff = tomorrow - now; // difference in ms
-    let SECONDS = Math.round(diff / 1000); // convert to seconds
+    const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200;
 
     return new Date(SECONDS * 1000).toISOString().substring(11, 19)
-
   }
-
 
 }
