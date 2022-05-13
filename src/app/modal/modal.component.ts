@@ -8,11 +8,11 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 export class ModalComponent implements OnInit {
 
   @Input() decisionModal: boolean = false;
-  @Input() headerText: string;
-  @Input() bodyText: string;
   @Input() primaryLabel: string = 'Confirm';
   @Input() secondaryLabel: string = 'Cancel';
-  @Input() timeRemaining: boolean = false;
+  @Input() incorrectGuessesByLevel: number[];
+  @Input() stats: any;
+  @Input() currentLevel: number;
   
   @Output() secondaryEvent = new EventEmitter<any>();
   @Output() primaryEvent = new EventEmitter<any>();
@@ -20,15 +20,23 @@ export class ModalComponent implements OnInit {
   secondsUntilTomorrow: string;
   interval: any;
 
+  levels = [
+    "Mo",
+    "Tu",
+    "We",
+    "Th",
+    "Fr",
+    "Sa",
+    "Su"
+  ]
+
   constructor() { }
 
   ngOnInit(): void {
-    if (this.timeRemaining){
-      this.secondsUntilTomorrow = this.getSecondsUntilTomorrow();
-      this.interval = setInterval(() => {
-        this.secondsUntilTomorrow = this.getSecondsUntilTomorrow(); 
-      }, 1000);
-    }
+    this.secondsUntilTomorrow = this.getSecondsUntilTomorrow();
+    this.interval = setInterval(() => {
+      this.secondsUntilTomorrow = this.getSecondsUntilTomorrow(); 
+    }, 1000);
   }
 
   onSecondaryClick(){
@@ -37,6 +45,10 @@ export class ModalComponent implements OnInit {
 
   onPrimaryClick(){
     this.primaryEvent.emit()
+  }
+
+  numSequence(n: number): Array<number> {
+    return Array(n);
   }
 
   getSecondsUntilTomorrow() {

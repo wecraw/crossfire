@@ -27,6 +27,7 @@ body{
   //body
   --body-color: #fff; // or any global you wish to share with components 
   --text-color: #000;
+  --link-color: #2a59e0;
 
   //header
   --header-square-color: #fff;
@@ -62,6 +63,7 @@ body{
   --level-current-text-color: #000;
   --level-current-border-color: #000;
 
+  --level-completed-text-color: #fff;
   --level-completed-bg-color: var(--square-correct-bg-color);
   --level-completed-border-color: #000;
 
@@ -74,7 +76,9 @@ body{
   --modal-bg-color: #fff;
   --modal-border-color: transparent;
 
-
+  //toast
+  --toast-bg-color: #000;
+  --toast-text-color: #fff;
 
 }
 
@@ -84,6 +88,7 @@ html[data-theme='dark'] {
   //body
   --body-color: #121213;
   --text-color: #fff;
+  --link-color: #577ce6;
 
   //header
   --header-square-color: #3a3a3c;
@@ -120,6 +125,7 @@ html[data-theme='dark'] {
   --level-current-text-color: #000;
   --level-current-border-color: #000;
 
+  --level-completed-text-color: #fff;
   --level-completed-bg-color: var(--square-correct-bg-color);
   --level-completed-border-color: #000;
 
@@ -132,6 +138,10 @@ html[data-theme='dark'] {
   --modal-text-color: #fff;
   --modal-bg-color: #222;
   --modal-border-color: #333;
+
+  //toast
+  --toast-bg-color: #fff;
+  --toast-text-color: #000;
 }
 
 html[data-contrast-theme='contrast'] {
@@ -144,3 +154,7 @@ html[data-contrast-theme='contrast'] {
 
 }
 
+
+a{
+  color: var(--link-color);
+}

@@ -148,8 +148,8 @@ square:last-of-type{
   left: 50%;
   margin-left: -100px;
   top: 30%;
-  background-color: #000;
-  color: #fff;
+  background-color: var(--toast-bg-color);
+  color: var(--toast-text-color);
   z-index: 1000;
 
   &.hide-initial{

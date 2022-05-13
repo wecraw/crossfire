@@ -2,13 +2,21 @@
     <i (click)="closeEvent()" class="close-icon fa-solid fa-xl fa-xmark"></i>
     <h5>How to play</h5>
     <p>
-      Crawsword is a daily word game where players have ten attempts to answer seven crossword clues. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.
+      Advance through all seven levels of the Crawsword before you run out of guesses.
     </p>
     <p>
       Each level contains a single crossword clue to solve. The clues become harder as you advance throught the levels.
     </p>
-    <p class="last">
+    <p>
       If you check and your answer is wrong, a guess will be used up and the color of the tiles will change to show how close your guess was to the answer.
+    </p>
+
+    <p class="last">
+      More questions? Check out the <a href="#" (click)="faqEvent()">FAQ</a> to learn more.
+    </p>
+    
+    <p class="bold">
+      Examples
     </p>
     <div class="letters-row">
       <square state="correct" clueNumber="15" letter="A"></square>
@@ -42,7 +50,11 @@
 
     </div>
 
-    <p>
+    <p class="last">
       The letter <b>T</b> is not in the answer in any spot.
+    </p>
+
+    <p class="bold">
+      A new Crawsword puzzle will be available each day!
     </p>
 </div>

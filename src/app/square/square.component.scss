@@ -67,9 +67,6 @@
 
     }
 
-    
-
-
     .letter{
         font-weight: 500;
         font-size: 1.98rem;
@@ -105,82 +102,7 @@
                 font-size: 0.59rem;
             }
         }
-        &.letters-9{
-            width: 38px;
-            height: 38px;
-            .letter {
-                font-size: 1.57rem;
-            }
-            .clue-number{
-                font-size: 0.53rem;
-            }
-        }
-        &.letters-10{
-            width: 35px;
-            height: 35px;
-            .letter {
-                font-size: 1.41rem;
-                margin-top: 7px;
-            }
-            .clue-number{
-                font-size: 0.48rem;
-            }
-        }
-        &.letters-11{
-            width: 31px;
-            height: 31px;
-            .letter {
-                font-size: 1.25rem;
-                margin-top: 6px;
-            }
-            .clue-number{
-                font-size: 0.43rem;
-            }
-        }
-        &.letters-12{
-            width: 29px;
-            height: 29px;
-            .letter {
-                font-size: 1.17rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.48rem;
-            }
-        }
-        &.letters-13{
-            width: 27px;
-            height: 27px;
-            .letter {
-                font-size: 1.09rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.37rem;
-            }
-        }
-        &.letters-14{
-            width: 25px;
-            height: 25px;
-            .letter {
-                font-size: 1.01rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.34rem;
-            }
-        }
-        &.letters-15{
-            width: 23px;
-            height: 23px;
-            .letter {
-                font-size: 0.93rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.32rem;
-            }
-        }
+
     }
 }
 
@@ -206,82 +128,6 @@
             }
             .clue-number{
                 font-size: 0.59rem;
-            }
-        }
-        &.letters-9{
-            width: 32px;
-            height: 32px;
-            .letter {
-                font-size: 1.4rem;
-            }
-            .clue-number{
-                font-size: 0.53rem;
-            }
-        }
-        &.letters-10{
-            width: 28px;
-            height: 28px;
-            .letter {
-                font-size: 1.3rem;
-                margin-top: 7px;
-            }
-            .clue-number{
-                font-size: 0.48rem;
-            }
-        }
-        &.letters-11{
-            width: 26px;
-            height: 26px;
-            .letter {
-                font-size: 1.2rem;
-                margin-top: 6px;
-            }
-            .clue-number{
-                font-size: 0.43rem;
-            }
-        }
-        &.letters-12{
-            width: 24px;
-            height: 24px;
-            .letter {
-                font-size: 1.1rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.4rem;
-            }
-        }
-        &.letters-13{
-            width: 22px;
-            height: 22px;
-            .letter {
-                font-size: 1.05rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.37rem;
-            }
-        }
-        &.letters-14{
-            width: 20px;
-            height: 20px;
-            .letter {
-                font-size: 0.9rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.34rem;
-            }
-        }
-        &.letters-15{
-            width: 19px;
-            height: 19px;
-            .letter {
-                font-size: 0.85rem;
-                margin-top: 5px;
-            }
-            .clue-number{
-                font-size: 0.34rem;
             }
         }
     }

@@ -8,11 +8,16 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 export class SettingsComponent implements OnInit {
 
   @Output() onClose = new EventEmitter<any>();
+  @Output() onFaq = new EventEmitter<any>();
 
   constructor() { }
 
   closeEvent(){
     this.onClose.emit()
+  }
+
+  faqEvent(){
+    this.onFaq.emit()
   }
 
   isDarkMode(){

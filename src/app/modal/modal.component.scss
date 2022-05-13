@@ -6,7 +6,6 @@
     position: absolute;
     top: 0;
     z-index: 10;
-
 }
 .modal-frame{
     position: absolute;
@@ -16,27 +15,139 @@
     left: 50%;
     margin-left: -175px;
     z-index: 100;
-    top: 25%;
+    top: 15%;
     color: var(--modal-text-color);
     background-color: var(--modal-bg-color);
     border: 1px solid var(--modal-border-color);
 
+    .modal-body{
+        padding: 0.9rem;
+    }
 
     .modal-header{
         font-size: 1.5rem;
     }
+    .header{
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 18px;
+        font-weight: bold;
+    }
 
     .modal-footer{
+        padding: 0;
+        padding-top: 10px;
+        .buttons {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .btn-primary{
+            background-color: #2a59e0;
+        }
         button{
             margin: 4px;
         }
+        justify-content: flex-start;
     }
 
+}
+
+.timer-label{
+    text-align: center;
+}
+
+.time{
+    font-size: 24px;
+    text-align: center;
 }
 
 @media (max-width: 374.98px) { //iphone 5
     .modal-frame {
         width: 300px;
         margin-left: -150px;
+        top: 5px !important;
+    }
+    .modal-body{
+        padding: 0.4rem !important;
+    }
+    .buttons{
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .timer{
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
 }
+
+.stats{
+    display: flex;
+    text-align: center;
+    margin-bottom: 20px;
+
+    .stat-label{
+        max-width: 50px;
+        line-height: 1.1;
+        font-size: 14px;
+    }
+    .stat-number{
+        font-size: 30px;
+    }
+    .stat{
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.breakdown{
+    margin-left: 20px;
+    margin-bottom: 20px;
+    .day{
+        display: flex;
+    }
+}
+
+
+.level{
+    border: 1px solid ;
+    height: 26px;
+    width: 26px;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 5px;
+    margin-bottom: 2.5px;
+    margin-top: 2.5px;
+    transition: all 0.2s ease-in;
+    &:last-of-type{
+        margin-right: 0;
+    }
+    &.upcoming{
+        color: var(--level-upcoming-text-color);
+        border: 1px solid var(--level-upcoming-border-color);
+        background-color: var(--level-upcoming-bg-color);
+    }
+    &.completed{
+        color: var(--level-completed-text-color);
+        border: 1px solid var(--level-completed-border-color);
+        background-color: var(--level-completed-bg-color);
+    }
+    &.current{
+        color: var(--level-current-text-color);
+        border: 1px solid var(--level-current-border-color);
+        background-color: var(--level-current-bg-color);
+    }
+}
+
+.wrong-guess {
+    margin-left: 5px; 
+    color: #B50000;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .guesses{
+      display: flex;
+  }

@@ -54,8 +54,9 @@ export class GameComponent implements OnInit {
   hasWon: boolean = false; //true if user has won already in the daily
   hasLost: boolean = false; //true if user has lost already in the daily
   guessNotAllowed: boolean = false; //disables typing and guessing in certain cases (e.g. win, loss, waiting for confetti/fade)
-
-
+  practiceMode: boolean = false; //set true for debugging
+  currentDay: number = 0; //days since epoch
+  
   //Keyboard and letter entry variables
   submissions: ILetter[][] = [] //historical log of guesses for a particular clue
   letters: string[] = [] //string of answer letters
@@ -72,13 +73,9 @@ export class GameComponent implements OnInit {
   invalidReason: string = ""; //reason for why a guess is invalid, shown in toast text
   toastTimeout: any; //used to reset toast if multiple are called in rapid succession
 
-  practiceMode: boolean = false; //set true for debugging
-  currentDay: number = 0; //days since epoch
-
   //Modal variables
   showResetModal: boolean = false;
-  showLossModal: boolean = false;
-  showWinModal: boolean = false;
+  showGameOverModal: boolean = false;
   showHelpModal: boolean = false;
   showSettingsModal: boolean = false;
   showAboutModal: boolean = false;
@@ -144,7 +141,7 @@ export class GameComponent implements OnInit {
 
     this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0] //tracks how many incorrect guesses are used per level
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = this.entryIndex = 0;
-    this.showResetModal = this.showLossModal = this.showWinModal = false;
+    this.showResetModal = this.showGameOverModal = false;
     this.guessNotAllowed = false;
     this.hasWon = false
     this.hasLost = false
@@ -334,12 +331,13 @@ export class GameComponent implements OnInit {
     this.hasLost = true;
     this.guessNotAllowed = true;
     this.updateLocalStorage()
+    this.updateStats()
     let that = this;
     let toastDuration = 2250
     this.toast(this.clue.answer, toastDuration)
 
     setTimeout(function(){ //wait until toast finishes to launch the modal
-      that.showLossModal = true
+      that.showGameOverModal = true
       that.guessNotAllowed = false;
     }, toastDuration + 500);
   }
@@ -348,10 +346,11 @@ export class GameComponent implements OnInit {
     this.guessNotAllowed = true;
     this.hasWon = true;
     this.updateLocalStorage()
+    this.updateStats()
     let that = this;
     this.renderWinConfetti()
     setTimeout(function(){ //wait until toast finishes to launch the modal
-      that.showWinModal = true
+      that.showGameOverModal = true
       that.guessNotAllowed = false;
     }, 3500); //wait until victory confetti finishes
   }
@@ -453,12 +452,16 @@ export class GameComponent implements OnInit {
   }
 
   /*------------------------------Sharing-------------------------------------*/
+  
+  //gets the 1 indexed puzzle number shoutout matlab
+  getPuzzleNumber(){
+    return this.daysSinceEpoch() - this.PUZZLE_FIRST_DAY + 1
+  }
 
   share(){
     let shareString = "Crawsword (beta) "
     if (!this.practiceMode){
-      let puzzleNumber = this.daysSinceEpoch() - this.PUZZLE_FIRST_DAY + 1 //gets the 1 indexed puzzle number shoutout matlab
-      shareString += "#" + puzzleNumber
+      shareString += "#" + this.getPuzzleNumber()
     } else {
       shareString += "(practice)"
     }
@@ -507,7 +510,106 @@ export class GameComponent implements OnInit {
       localStorage.setItem('hasWon', "" + this.hasWon)
       localStorage.setItem('hasLost', "" + this.hasLost)
     }
+  }
 
+  getStats(){
+    let streak = this.getStreak();
+
+    let tG = localStorage.getItem('totalGamesPlayed')
+    if (!tG) tG = "0"
+
+    let tW = localStorage.getItem('totalWins')
+    if (!tW) tW = "0"
+
+    let winPercent = 0;
+    if (tG !== "0") winPercent = Math.round(+tW/+tG*100)
+
+    let mS = localStorage.getItem('maxStreak')
+    if (!mS) mS = "0"
+
+    return {
+      'maxStreak': mS,
+      'totalGames': tG,
+      'winPercent': winPercent,
+      'currentStreak': streak
+    }
+  }
+
+  updateStats(){
+
+    //cant use isnewday() here because it updates frequently, basically checking here if the stats have been logged yet today
+    let streakLastPuzzle = localStorage.getItem('streakLastPuzzle')
+    if (!streakLastPuzzle) streakLastPuzzle = "-1"
+    
+    if (+streakLastPuzzle !== this.getPuzzleNumber()) { //if stats haven't been logged today
+      if (!this.practiceMode){
+
+        let tG = localStorage.getItem('totalGamesPlayed')
+        if (tG) {
+          let tG_num = +tG
+          localStorage.setItem('totalGamesPlayed', tG_num + 1 + "")
+        } else {
+          localStorage.setItem('totalGamesPlayed', "1")
+        }
+  
+        let tW = localStorage.getItem('totalWins')
+        if (tW && this.hasWon) {
+          let tW_num = +tW
+          localStorage.setItem('totalWins', tW_num + 1 + "")
+        } else {
+          localStorage.setItem('totalWins', "1")
+        }
+  
+        let tL = localStorage.getItem('totalLevels')
+        if (tL){
+          let tL_num = +tL
+          localStorage.setItem('totalLevels', tL_num + this.currentLevel + "")
+        } else {
+          localStorage.setItem('totalLevels', this.currentLevel + "")
+        }
+  
+        let tGuess = localStorage.getItem('totalGuesses')
+        if (tGuess){
+          let tGuess_num = +tGuess
+          localStorage.setItem('totalGuesses', tGuess_num + this.incorrectGuesses + "")
+        }
+  
+        let streak = localStorage.getItem('streak')
+        let streakLastPuzzle = localStorage.getItem('streakLastPuzzle')
+        let isStreakValid = true;
+        if (streakLastPuzzle){
+          if (this.getPuzzleNumber() - +streakLastPuzzle > 1) isStreakValid = false //if its been longer than a day since last puzzle solve
+        } 
+        if (streak && isStreakValid){
+          let streak_num = +streak
+          if (this.hasLost) streak_num = 0;
+          if (this.hasWon) streak_num++
+          let mS = localStorage.getItem('maxStreak')
+          let mS_num = 0;
+          if (mS) mS_num = +mS
+          if (streak_num > mS_num) localStorage.setItem('maxStreak', "" + streak_num)
+          localStorage.setItem('streak', streak_num + "")
+        } else {
+          let streak_num = 0
+          if (this.hasWon) streak_num = 1
+          let mS = localStorage.getItem('maxStreak')
+          let mS_num = 0;
+          if (mS) mS_num = +mS
+          if (streak_num > mS_num) localStorage.setItem('maxStreak', "" + streak_num)
+          localStorage.setItem('streak', streak_num + "")
+        }
+        localStorage.setItem('streakLastPuzzle', "" + this.getPuzzleNumber())
+        
+
+      }
+    }
+
+  }
+
+  getStreak(){
+    let streak = localStorage.getItem('streak')
+    if (streak) return streak
+    return "0"
   }
 
   resetLocalStorage(){

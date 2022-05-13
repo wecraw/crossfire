@@ -1,5 +1,4 @@
 <app-header [disabled]="guessNotAllowed" [practiceMode]="practiceMode" (helpClickEvent)="toggleHelpModal()" (menuClickEvent)="onMenuClick($event)"></app-header>
-
 <div [style.height.px]="gameWindowHeight" class="container flex fit-content-lg">
     <div class="levels-row">
       <progress-bar [currentLevel]="currentDisplayLevel"></progress-bar>
@@ -53,23 +52,19 @@
   ></app-keyboard>
 </div>
 <div *ngIf="showHelpModal" class="help-overlay">
-  <app-tutorial (onClose)="toggleHelpModal()"></app-tutorial>
+  <app-tutorial (onFaq)="toggleHelpModal(); toggleAboutModal();" (onClose)="toggleHelpModal()"></app-tutorial>
 </div>
 <div *ngIf="showAboutModal" class="help-overlay">
-  <app-about (onClose)="toggleAboutModal()"></app-about>
+  <app-about (onToggleHelp)="toggleAboutModal(); toggleHelpModal();" (onClose)="toggleAboutModal()"></app-about>
 </div>
 <div *ngIf="showSettingsModal" class="help-overlay">
-  <app-settings (onClose)="toggleSettingsModal()"></app-settings>
+  <app-settings (onFaq)="toggleSettingsModal(); toggleAboutModal()" (onClose)="toggleSettingsModal()"></app-settings>
 </div>
 <div *ngIf="showResetModal">
   <app-modal headerText="Restart game" bodyText="Are you sure you want to start a new game?" [decisionModal]="true" (secondaryEvent)="toggleResetModal()" (primaryEvent)="reset()" primaryLabel="Reset" ></app-modal>
 </div>
-<div *ngIf="showLossModal">
-  <app-modal *ngIf="practiceMode" [timeRemaining]="true" headerText="Game over" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
-  <app-modal *ngIf="!practiceMode" [timeRemaining]="true" headerText="Game over" [decisionModal]="true" primaryLabel="Share" secondaryLabel="Practice mode" (secondaryEvent)="togglePracticeMode()" (primaryEvent)="share()" ></app-modal>
-</div>
-<div *ngIf="showWinModal">
-  <app-modal *ngIf="practiceMode" [timeRemaining]="true" headerText="You win!" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
-  <app-modal *ngIf="!practiceMode" [timeRemaining]="true" headerText="You win!" [decisionModal]="true" primaryLabel="Share" secondaryLabel="Practice mode" (secondaryEvent)="togglePracticeMode()" (primaryEvent)="share()" ></app-modal>
-</div>
 
+<div *ngIf="showGameOverModal">
+  <app-modal *ngIf="practiceMode" [currentLevel]="currentDisplayLevel" [incorrectGuessesByLevel]="incorrectGuessesByLevel" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
+  <app-modal *ngIf="!practiceMode" [stats]="getStats()" [currentLevel]="currentDisplayLevel" [incorrectGuessesByLevel]="incorrectGuessesByLevel" [decisionModal]="true" primaryLabel="Share" secondaryLabel="Practice" (secondaryEvent)="togglePracticeMode()" (primaryEvent)="share()" ></app-modal>
+</div>
