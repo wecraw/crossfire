@@ -459,7 +459,7 @@ export class GameComponent implements OnInit {
   }
 
   share(){
-    let shareString = "Crawsword (beta) "
+    let shareString = "Crawsword "
     if (!this.practiceMode){
       shareString += "#" + this.getPuzzleNumber()
     } else {
