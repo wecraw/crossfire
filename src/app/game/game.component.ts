@@ -98,6 +98,8 @@ export class GameComponent implements OnInit {
   ){}
 
   ngOnInit(): void {
+    
+
     this.setTheme() //set color theme e.g. dark, contrast
 
     this.setClueSeeds()
@@ -225,6 +227,19 @@ export class GameComponent implements OnInit {
         this.invalidReason = "Not enough letters"
       }
     })
+
+    // TODO: implement word dictionary checking
+
+    // if (validGuess){
+    //   let word = ""
+    //   this.enteredLetters.forEach(letter => {
+    //     word += letter.letter
+    //   })
+    //   console.log(word)
+    // }
+
+    // console.log("valid guess?")
+    // console.log(validGuess)
     return validGuess
   }
 
@@ -722,7 +737,7 @@ export class GameComponent implements OnInit {
   //used for random seeding
   daysSinceEpoch(){
     let now: any = new Date()
-    let temp = Math.floor(now/8.64e7 + 2.52e7/8.64e7) //adding offset so game resets at midnight Pacific
+    let temp = Math.floor(now/8.64e7 + 6.12e+7/8.64e7) //adding offset so game resets at midnight Pacific
     return temp
   }
 

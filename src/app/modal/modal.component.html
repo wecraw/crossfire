@@ -62,9 +62,12 @@
             </div>
     </div>
     <div class="modal-footer">
-        <div class="timer">
+        <div *ngIf="!newDay" class="timer">
             <div class="timer-label"> Next Crawsword </div>
             <div class="time"> {{ secondsUntilTomorrow }} </div>
+        </div>
+        <div *ngIf="newDay" class="timer">
+            <button (click)="refresh()" type="button" class="new-label btn btn-link">New Crawsword available!</button>
         </div>
         <div class="buttons" *ngIf="decisionModal">
             <button type="button" class="btn btn-secondary" (click)="onSecondaryClick()">{{secondaryLabel}}</button>

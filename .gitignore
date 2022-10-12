@@ -43,3 +43,5 @@ Thumbs.db
 
 # Puzzles
 /src/python/puzzles
+
+.env

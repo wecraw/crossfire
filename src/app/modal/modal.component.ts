@@ -19,6 +19,7 @@ export class ModalComponent implements OnInit {
 
   secondsUntilTomorrow: string;
   interval: any;
+  newDay: boolean = false;
 
   levels = [
     "Mo",
@@ -39,6 +40,10 @@ export class ModalComponent implements OnInit {
     }, 1000);
   }
 
+  refresh(){
+    window.location.reload()
+  }
+
   onSecondaryClick(){
     this.secondaryEvent.emit()
   }
@@ -53,8 +58,8 @@ export class ModalComponent implements OnInit {
 
   getSecondsUntilTomorrow() {
     let now: any = new Date();
-    const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200;
-
+    const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200 + 720;
+    if (SECONDS === 86400) this.newDay = true;
     return new Date(SECONDS * 1000).toISOString().substring(11, 19)
   }
 
