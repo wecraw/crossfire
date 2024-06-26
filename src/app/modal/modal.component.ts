@@ -56,7 +56,7 @@ export class ModalComponent implements OnInit {
     return Array(n);
   }
 
-  getSecondsUntilTomorrow() {
+  getSecondsUntilTomorrow(): string {
     let now: any = new Date();
     const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200 + 720;
     if (SECONDS === 86400) this.newDay = true;
