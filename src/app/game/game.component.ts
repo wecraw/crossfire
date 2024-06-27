@@ -88,7 +88,7 @@ export class GameComponent implements OnInit {
 
   //Constants
   SCROLLABLE_AREA_OFFSET: number = 265; //pixel offset for header and keyboard to calc scrollable area
-  MAX_INCORRECT_GUESSES: number = 10;
+  MAX_INCORRECT_GUESSES: number = 3;
   DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
   PUZZLE_FIRST_DAY: number = 19120; //first day (in days since epoch) that the daily puzzle was ran
 
