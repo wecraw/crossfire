@@ -34,9 +34,9 @@ export class ModalComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    this.secondsUntilTomorrow = this.getSecondsUntilMidnightPST();
+    this.secondsUntilTomorrow = this.getTimeUntilMidnightPST();
     this.interval = setInterval(() => {
-      this.secondsUntilTomorrow = this.getSecondsUntilMidnightPST(); 
+      this.secondsUntilTomorrow = this.getTimeUntilMidnightPST(); 
     }, 1000);
   }
 
@@ -56,10 +56,12 @@ export class ModalComponent implements OnInit {
     return Array(n);
   }
 
-  getSecondsUntilMidnightPST(): string {
+  getTimeUntilMidnightPST(): string {
     let now: any = new Date();
     const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200 + 720;
     if (SECONDS === 86400) this.newDay = true;
+    
+    //convert to hh:mm:ss
     return new Date(SECONDS * 1000).toISOString().substring(11, 19)
   }
 
