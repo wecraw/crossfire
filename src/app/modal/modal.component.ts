@@ -30,7 +30,6 @@ export class ModalComponent implements OnInit {
     this.interval = setInterval(() => {
       this.secondsUntilTomorrow = this.getSecondsUntilTomorrow();
     }, 1000);
-    this.testCountdownToPST();
   }
 
   refresh() {
@@ -65,22 +64,5 @@ export class ModalComponent implements OnInit {
     return `${hours.toString().padStart(2, '0')}:${minutes
       .toString()
       .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }
-
-  testCountdownToPST(): void {
-    const now = moment();
-    const testCases = [
-      { name: 'PST', timezone: 'America/Los_Angeles' },
-      { name: 'EST', timezone: 'America/New_York' },
-      { name: 'UTC', timezone: 'UTC' },
-      { name: 'IST', timezone: 'Asia/Kolkata' },
-      { name: 'JST', timezone: 'Asia/Tokyo' },
-    ];
-
-    testCases.forEach((testCase) => {
-      const localTime = now.tz(testCase.timezone);
-      const result = this.getSecondsUntilTomorrow(localTime.toDate());
-      console.log(`${testCase.name}: ${localTime.format()} -> ${result}`);
-    });
   }
 }
