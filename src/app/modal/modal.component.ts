@@ -58,7 +58,7 @@ export class ModalComponent implements OnInit {
 
   getTimeUntilMidnightPST(): string {
     let now: any = new Date();
-    const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200 + 720;
+    const SECONDS = 86400 - Math.floor(now / 1000) % 86400 + 25200;
     if (SECONDS === 86400) this.newDay = true;
     
     //convert to hh:mm:ss
