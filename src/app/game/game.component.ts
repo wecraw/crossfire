@@ -9,6 +9,7 @@ import { sundayClues } from '../clues/sunday';
 import seedrandom from 'seedrandom';
 import { allKeys } from '../keys';
 import * as confetti from 'canvas-confetti';
+import * as moment from 'moment-timezone';
 
 export interface IClue {
   clueNumber: number;
@@ -735,10 +736,11 @@ export class GameComponent implements OnInit {
   }
 
   //used for random seeding
-  daysSinceEpoch(){
-    let now: any = new Date()
-    let temp = Math.floor(now/8.64e7 + 6.12e+7/8.64e7) //adding offset so game resets at midnight Pacific
-    return temp
+  daysSinceEpoch(): number {
+    const pacificTime = moment().tz('America/Los_Angeles');
+    const pacificEpoch = moment.tz('1970-01-01', 'America/Los_Angeles');
+    
+    return pacificTime.diff(pacificEpoch, 'days');
   }
 
 
