@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import * as moment from 'moment-timezone';
 
 @Component({
   selector: 'app-modal',
