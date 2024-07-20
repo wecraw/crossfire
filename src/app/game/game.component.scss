@@ -61,11 +61,6 @@ square:last-of-type {
   margin-bottom: 5px;
 }
 
-.remaining-guess {
-  margin-left: 5px;
-  color: var(--unused-check-color);
-}
-
 .check-row {
   margin-top: 5px;
   justify-content: center;
@@ -74,6 +69,10 @@ square:last-of-type {
   .checks {
     min-width: 190px; //prevent 'Guesses remaining:' from moving as guesses are used up
     margin-top: 1px;
+  }
+  .guess-icon {
+    margin-left: 5px;
+    color: var(--unused-check-color);
   }
 }
 

@@ -65,18 +65,23 @@
       </div>
     </div>
   </div>
-
   <div class="check-row">
-    Guesses remaining:
     <div class="checks" [ngClass]="{ 'pulsate-fwd': shakeChecks }">
+      Guesses remaining:
+
       <ng-container
-        *ngFor="
-          let e of [].constructor(MAX_INCORRECT_GUESSES - incorrectGuesses);
-          index as i
-        "
+        *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i"
       >
-        <i class="remaining-guess fa-solid fa-sm fa-circle"></i>
+        <i
+          class="guess-icon fa-circle"
+          [ngClass]="{
+            'fa-solid': i < MAX_INCORRECT_GUESSES - incorrectGuesses,
+            'fa-regular': i >= MAX_INCORRECT_GUESSES - incorrectGuesses
+          }"
+        ></i>
       </ng-container>
+
+      <span class="used-guesses-spacer"></span>
     </div>
   </div>
   <div
