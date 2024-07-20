@@ -1,60 +1,54 @@
 <div class="container">
-    <i (click)="closeEvent()" class="close-icon fa-solid fa-xl fa-xmark"></i>
-    <h5>How to play</h5>
-    <p>
-      Advance through all seven levels of the Crawsword before you run out of guesses.
-    </p>
-    <p>
-      Each level contains a single crossword clue to solve. The clues become harder as you advance throught the levels.
-    </p>
-    <p>
-      If you check and your answer is wrong, a guess will be used up and the color of the tiles will change to show how close your guess was to the answer.
-    </p>
+  <i (click)="closeEvent()" class="close-icon fa-solid fa-xl fa-xmark"></i>
+  <h5>How to play</h5>
+  <p>
+    Advance through all seven levels of the Crawsword before you run out of
+    guesses.
+  </p>
+  <p>
+    Each level contains a single crossword clue to solve. The clues become
+    harder as you advance throught the levels.
+  </p>
+  <p>
+    If you check and your answer is wrong, a guess will be used up and the color
+    of the tiles will change to show how close your guess was to the answer.
+  </p>
 
-    <p class="last">
-      More questions? Check out the <a href="#" (click)="faqEvent()">FAQ</a> to learn more.
-    </p>
-    
-    <p class="bold">
-      Examples
-    </p>
-    <div class="letters-row">
-      <square state="correct" clueNumber="15" letter="A"></square>
-      <square letter="C"></square>
-      <square letter="R"></square>
-      <square letter="O"></square>
-      <square letter="S"></square>
-      <square letter="S"></square>
+  <p class="last">
+    More questions? Check out the <a href="#" (click)="faqEvent()">FAQ</a> to
+    learn more.
+  </p>
 
-    </div>
-    <p>
-      The letter <b>A</b> is in the answer and in the correct spot.
-    </p>
-    <div class="letters-row">
-      <square clueNumber="2" letter="D"></square>
-      <square state="present" letter="O"></square>
-      <square letter="W"></square>
-      <square letter="N"></square>
-    </div>
+  <p class="bold">Examples</p>
+  <div class="letters-row">
+    <square state="correct" clueNumber="15" letter="A"></square>
+    <square letter="C"></square>
+    <square letter="R"></square>
+    <square letter="O"></square>
+    <square letter="S"></square>
+    <square letter="S"></square>
+  </div>
+  <p>The letter <b>A</b> is in the answer and in the correct spot.</p>
+  <div class="letters-row">
+    <square clueNumber="2" letter="D"></square>
+    <square state="present" letter="O"></square>
+    <square letter="W"></square>
+    <square letter="N"></square>
+  </div>
 
-    <p>
-      The letter <b>O</b> is in the answer but in the wrong spot.
-    </p>
-    <div class="letters-row">
-      <square clueNumber="6" letter="S"></square>
-      <square letter="H"></square>
-      <square letter="O"></square>
-      <square letter="R"></square>
-      <square state="absent" letter="T"></square>
-      <square letter="Z"></square>
+  <p>The letter <b>O</b> is in the answer but in the wrong spot.</p>
+  <div class="letters-row">
+    <square clueNumber="6" letter="S"></square>
+    <square letter="H"></square>
+    <square letter="O"></square>
+    <square letter="R"></square>
+    <square state="absent" letter="T"></square>
+    <square letter="Z"></square>
+  </div>
 
-    </div>
+  <p class="last">The letter <b>T</b> is not in the answer in any spot.</p>
 
-    <p class="last">
-      The letter <b>T</b> is not in the answer in any spot.
-    </p>
-
-    <p style="margin-bottom: 10px;" class="bold">
-      A new Crawsword puzzle will be available each day!
-    </p>
+  <p style="margin-bottom: 20px" class="bold">
+    A new Crawsword puzzle will be available each day!
+  </p>
 </div>

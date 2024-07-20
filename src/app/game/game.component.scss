@@ -1,4 +1,4 @@
-$red: #B50000;
+$red: #b50000;
 $unused-guess-color: #ccc;
 $button-text-color: #000;
 $button-border-color: #000;
@@ -7,53 +7,53 @@ $button-border-color-disabled: #ccc;
 $page-background-color: #fefefe;
 
 @media (min-width: 767.98px) {
-  .fit-content-lg{
+  .fit-content-lg {
     min-width: fit-content; //prevents horizontal scroll of the letter box on large screens
   }
 }
 
-.flex{
+.flex {
   display: flex;
   flex-direction: column;
 }
-.letters-row{
-    display: flex;
-    width: 100%;
-    justify-content: center;
+.letters-row {
+  display: flex;
+  width: 100%;
+  justify-content: center;
 }
 
-.letter-rows-wrapper{
+.letter-rows-wrapper {
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-.levels-row{
-    margin-top: 15px;
-    display: flex;
-    width: 100%;
-    justify-content: center;
+.levels-row {
+  margin-top: 15px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
 }
 canvas {
-    height: 100%; /* we need these for full-screen effect */
-    width: 100%;
-    top: 0;
-    left: 0;
-    position: absolute;
-    pointer-events: none;
-  }
-
-.clue{
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    text-align: center;
-    margin-top: 15px;
-    margin-bottom: 10px;
+  height: 100%; /* we need these for full-screen effect */
+  width: 100%;
+  top: 0;
+  left: 0;
+  position: absolute;
+  pointer-events: none;
 }
 
-square:last-of-type{
+.clue {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  text-align: center;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+square:last-of-type {
   border-right: 1px solid var(--square-border-color);
 }
 
-.letters-wrapper{
+.letters-wrapper {
   height: 49px;
   display: flex;
   justify-content: center;
@@ -61,25 +61,23 @@ square:last-of-type{
   margin-bottom: 5px;
 }
 
-.wrong-guess {
+.remaining-guess {
   margin-left: 5px;
-
   color: var(--unused-check-color);
-  &.red{
-    color: $red;
-  }
 }
 
-.check-row{
+.check-row {
+  margin-top: 5px;
   justify-content: center;
   display: flex;
 
-  .checks{
-    margin-top: 5px;
+  .checks {
+    min-width: 190px; //prevent 'Guesses remaining:' from moving as guesses are used up
+    margin-top: 1px;
   }
 }
 
-.keyboard-container{
+.keyboard-container {
   position: absolute;
   bottom: 10px;
   display: flex;
@@ -92,7 +90,7 @@ square:last-of-type{
   // justify-content: center;
 }
 
-.check-button{
+.check-button {
   height: 40px;
   width: 120px;
   background-color: transparent;
@@ -101,18 +99,18 @@ square:last-of-type{
   opacity: 1;
   transition: opacity 0.1s ease-in;
 
-  &.disabled{
+  &.disabled {
     opacity: 0.3;
     transition: opacity 0.1s ease-in;
     pointer-events: none;
   }
 }
 
-.no-click{
+.no-click {
   pointer-events: none;
 }
 
-.help-overlay{
+.help-overlay {
   width: 100vw;
   height: 100vh;
   position: absolute;
@@ -122,13 +120,13 @@ square:last-of-type{
   left: 0;
   background: var(--body-color);
 
-  h5{
+  h5 {
     text-align: center;
     margin-top: 15px;
     margin-bottom: 35px;
   }
-  
-  .close-icon{
+
+  .close-icon {
     cursor: pointer;
     float: right;
     margin-top: 14px;
@@ -136,7 +134,7 @@ square:last-of-type{
   }
 }
 
-.toast-message{
+.toast-message {
   height: 50px;
   width: 200px;
   border-radius: 10px;
@@ -152,29 +150,30 @@ square:last-of-type{
   color: var(--toast-text-color);
   z-index: 1000;
 
-  &.hide-initial{
+  &.hide-initial {
     display: none;
   }
 }
 
 .fade-out-bck {
-	-webkit-animation: fade-out-bck 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-	        animation: fade-out-bck 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  -webkit-animation: fade-out-bck 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: fade-out-bck 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .fade-in-fwd {
-	-webkit-animation: fade-in-fwd 0.6s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
-	        animation: fade-in-fwd 0.6s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+  -webkit-animation: fade-in-fwd 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+  animation: fade-in-fwd 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) both;
 }
 
 .shake-horizontal {
-	-webkit-animation: shake-horizontal 0.7s cubic-bezier(0.455, 0.030, 0.515, 0.955) both;
-	        animation: shake-horizontal 0.7s cubic-bezier(0.455, 0.030, 0.515, 0.955) both;
+  -webkit-animation: shake-horizontal 0.7s
+    cubic-bezier(0.455, 0.03, 0.515, 0.955) both;
+  animation: shake-horizontal 0.7s cubic-bezier(0.455, 0.03, 0.515, 0.955) both;
 }
 
 .pulsate-fwd {
-	-webkit-animation: pulsate-fwd 0.3s ease-in-out both;
-	        animation: pulsate-fwd 0.3s ease-in-out both;
+  -webkit-animation: pulsate-fwd 0.3s ease-in-out both;
+  animation: pulsate-fwd 0.3s ease-in-out both;
 }
 
 /* ----------------------------------------------
@@ -190,7 +189,7 @@ square:last-of-type{
  * ----------------------------------------
  */
 
- /* ----------------------------------------------
+/* ----------------------------------------------
  * Generated by Animista on 2022-3-25 19:8:0
  * Licensed under FreeBSD License.
  * See http://animista.net/license for more info. 
@@ -205,57 +204,56 @@ square:last-of-type{
 @-webkit-keyframes pulsate-fwd {
   0% {
     -webkit-transform: scale(1);
-            transform: scale(1);
+    transform: scale(1);
   }
   50% {
     -webkit-transform: scale(1.1);
-            transform: scale(1.1);
+    transform: scale(1.1);
   }
   100% {
     -webkit-transform: scale(1);
-            transform: scale(1);
+    transform: scale(1);
   }
 }
 @keyframes pulsate-fwd {
   0% {
     -webkit-transform: scale(1);
-            transform: scale(1);
+    transform: scale(1);
   }
   50% {
     -webkit-transform: scale(1.1);
-            transform: scale(1.1);
+    transform: scale(1.1);
   }
   100% {
     -webkit-transform: scale(1);
-            transform: scale(1);
+    transform: scale(1);
   }
 }
 
-
- @-webkit-keyframes fade-out-bck {
-    0% {
-      -webkit-transform: translateZ(0);
-              transform: translateZ(0);
-      opacity: 1;
-    }
-    100% {
-      -webkit-transform: translateZ(-80px);
-              transform: translateZ(-80px);
-      opacity: 0;
-    }
+@-webkit-keyframes fade-out-bck {
+  0% {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    opacity: 1;
   }
-  @keyframes fade-out-bck {
-    0% {
-      -webkit-transform: translateZ(0);
-              transform: translateZ(0);
-      opacity: 1;
-    }
-    100% {
-      -webkit-transform: translateZ(-80px);
-              transform: translateZ(-80px);
-      opacity: 0;
-    }
+  100% {
+    -webkit-transform: translateZ(-80px);
+    transform: translateZ(-80px);
+    opacity: 0;
   }
+}
+@keyframes fade-out-bck {
+  0% {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translateZ(-80px);
+    transform: translateZ(-80px);
+    opacity: 0;
+  }
+}
 
 /**
  * ----------------------------------------
@@ -265,24 +263,24 @@ square:last-of-type{
 @-webkit-keyframes fade-in-fwd {
   0% {
     -webkit-transform: translateZ(-80px);
-            transform: translateZ(-80px);
+    transform: translateZ(-80px);
     opacity: 0;
   }
   100% {
     -webkit-transform: translateZ(0);
-            transform: translateZ(0);
+    transform: translateZ(0);
     opacity: 1;
   }
 }
 @keyframes fade-in-fwd {
   0% {
     -webkit-transform: translateZ(-80px);
-            transform: translateZ(-80px);
+    transform: translateZ(-80px);
     opacity: 0;
   }
   100% {
     -webkit-transform: translateZ(0);
-            transform: translateZ(0);
+    transform: translateZ(0);
     opacity: 1;
   }
 }
@@ -292,59 +290,59 @@ square:last-of-type{
  * animation shake-horizontal
  * ----------------------------------------
  */
- @-webkit-keyframes shake-horizontal {
+@-webkit-keyframes shake-horizontal {
   0%,
   100% {
     -webkit-transform: translateX(0);
-            transform: translateX(0);
+    transform: translateX(0);
   }
   10%,
   30%,
   50%,
   70% {
     -webkit-transform: translateX(-10px);
-            transform: translateX(-10px);
+    transform: translateX(-10px);
   }
   20%,
   40%,
   60% {
     -webkit-transform: translateX(10px);
-            transform: translateX(10px);
+    transform: translateX(10px);
   }
   80% {
     -webkit-transform: translateX(8px);
-            transform: translateX(8px);
+    transform: translateX(8px);
   }
   90% {
     -webkit-transform: translateX(-8px);
-            transform: translateX(-8px);
+    transform: translateX(-8px);
   }
 }
 @keyframes shake-horizontal {
   0%,
   100% {
     -webkit-transform: translateX(0);
-            transform: translateX(0);
+    transform: translateX(0);
   }
   10%,
   30%,
   50%,
   70% {
     -webkit-transform: translateX(-10px);
-            transform: translateX(-10px);
+    transform: translateX(-10px);
   }
   20%,
   40%,
   60% {
     -webkit-transform: translateX(10px);
-            transform: translateX(10px);
+    transform: translateX(10px);
   }
   80% {
     -webkit-transform: translateX(8px);
-            transform: translateX(8px);
+    transform: translateX(8px);
   }
   90% {
     -webkit-transform: translateX(-8px);
-            transform: translateX(-8px);
+    transform: translateX(-8px);
   }
 }

@@ -1,70 +1,156 @@
-<app-header [disabled]="guessNotAllowed" [practiceMode]="practiceMode" (helpClickEvent)="toggleHelpModal()" (menuClickEvent)="onMenuClick($event)"></app-header>
+<app-header
+  [disabled]="guessNotAllowed"
+  [practiceMode]="practiceMode"
+  (helpClickEvent)="toggleHelpModal()"
+  (menuClickEvent)="onMenuClick($event)"
+></app-header>
 <div [style.height.px]="gameWindowHeight" class="container flex fit-content-lg">
-    <div class="levels-row">
-      <progress-bar [currentLevel]="currentDisplayLevel"></progress-bar>
-    </div>
+  <div class="levels-row">
+    <progress-bar [currentLevel]="currentDisplayLevel"></progress-bar>
+  </div>
   <div class="row">
-    <div class="clue">
-      {{clue.clueNumber}}. {{clue.clue}}
-
-    </div>
+    <div class="clue">{{ clue.clueNumber }}. {{ clue.clue }}</div>
   </div>
   <div id="letters-row-wrapper" class="letter-rows-wrapper">
-    <ng-container *ngFor="let submission of submissions; index as i;">
+    <ng-container *ngFor="let submission of submissions; index as i">
       <!-- ngIf below hides the last submission if you've lost or won as we need to store the last guess for cookies but dont want to show it -->
-      <div *ngIf="!(hasLost || hasWon) || ((hasLost || hasWon) && i < submissions.length - 1)" class="letters-wrapper"> 
-        <div class="letters-row" [ngClass]="{'fade-out-bck': solved}">
+      <div
+        *ngIf="
+          !(hasLost || hasWon) ||
+          ((hasLost || hasWon) && i < submissions.length - 1)
+        "
+        class="letters-wrapper"
+      >
+        <div class="letters-row" [ngClass]="{ 'fade-out-bck': solved }">
           <ng-container *ngFor="let letter of submission">
-            <square [letterSize]="letters.length" [state]="letter.state" [letter]="letter.letter"></square>
+            <square
+              [letterSize]="letters.length"
+              [state]="letter.state"
+              [letter]="letter.letter"
+            ></square>
           </ng-container>
         </div>
       </div>
     </ng-container>
 
-    <div [ngClass]="{'shake-horizontal': invalidGuessAnimation}" class="letters-wrapper">
-      <div class="letters-row" [ngClass]="{'fade-out-bck': solved, 'fade-in-fwd': !solved}">
-        <ng-container *ngFor="let letter of letters; index as i; first as isFirst">
-          <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="isFirst" [clueNumber]="'' + clue.clueNumber" [state]="getState(i)" [letter]=getLetter(i)></square>
-          <square [letterSize]="letters.length" (click)="setEntryIndex(i)" [highlighted]="entryIndex === i" *ngIf="!isFirst" [state]="getState(i)" [letter]=getLetter(i)></square>
+    <div
+      [ngClass]="{ 'shake-horizontal': invalidGuessAnimation }"
+      class="letters-wrapper"
+    >
+      <div
+        class="letters-row"
+        [ngClass]="{ 'fade-out-bck': solved, 'fade-in-fwd': !solved }"
+      >
+        <ng-container
+          *ngFor="let letter of letters; index as i; first as isFirst"
+        >
+          <square
+            [letterSize]="letters.length"
+            (click)="setEntryIndex(i)"
+            [highlighted]="entryIndex === i"
+            *ngIf="isFirst"
+            [clueNumber]="'' + clue.clueNumber"
+            [state]="getState(i)"
+            [letter]="getLetter(i)"
+          ></square>
+          <square
+            [letterSize]="letters.length"
+            (click)="setEntryIndex(i)"
+            [highlighted]="entryIndex === i"
+            *ngIf="!isFirst"
+            [state]="getState(i)"
+            [letter]="getLetter(i)"
+          ></square>
         </ng-container>
       </div>
     </div>
   </div>
 
   <div class="check-row">
-
-    <div class="checks" [ngClass]="{'pulsate-fwd': shakeChecks}">
-      <ng-container *ngFor="let e of [].constructor(MAX_INCORRECT_GUESSES); index as i">
-        <i class="wrong-guess fa-solid fa-xl fa-xmark" [ngClass]="{'red': i < incorrectGuesses}" ></i>
+    Guesses remaining:
+    <div class="checks" [ngClass]="{ 'pulsate-fwd': shakeChecks }">
+      <ng-container
+        *ngFor="
+          let e of [].constructor(MAX_INCORRECT_GUESSES - incorrectGuesses);
+          index as i
+        "
+      >
+        <i class="remaining-guess fa-solid fa-sm fa-circle"></i>
       </ng-container>
     </div>
   </div>
-  <div class="toast-message" [ngClass]="{'fade-in-fwd': showToast, 'fade-out-bck': !showToast, 'hide-initial': initialHideToast}">
-    <span>{{toastText}}</span>
+  <div
+    class="toast-message"
+    [ngClass]="{
+      'fade-in-fwd': showToast,
+      'fade-out-bck': !showToast,
+      'hide-initial': initialHideToast
+    }"
+  >
+    <span>{{ toastText }}</span>
   </div>
-
 </div>
-<div [ngClass]="{'no-click': guessNotAllowed || hasLost || hasWon}" class="keyboard-container">
-  <app-keyboard (keypressEvent)="handleVirtualKeypress($event)"
-            [correctLetters]="correctLetters"
-            [absentLetters]="absentLetters"
-            [presentLetters]="presentLetters"
+<div
+  [ngClass]="{ 'no-click': guessNotAllowed || hasLost || hasWon }"
+  class="keyboard-container"
+>
+  <app-keyboard
+    tabindex="-1"
+    (keypressEvent)="handleVirtualKeypress($event)"
+    [correctLetters]="correctLetters"
+    [absentLetters]="absentLetters"
+    [presentLetters]="presentLetters"
   ></app-keyboard>
 </div>
 <div *ngIf="showHelpModal" class="help-overlay">
-  <app-tutorial (onFaq)="toggleHelpModal(); toggleAboutModal();" (onClose)="toggleHelpModal()"></app-tutorial>
+  <app-tutorial
+    (onFaq)="toggleHelpModal(); toggleAboutModal()"
+    (onClose)="toggleHelpModal()"
+  ></app-tutorial>
 </div>
 <div *ngIf="showAboutModal" class="help-overlay">
-  <app-about (onToggleHelp)="toggleAboutModal(); toggleHelpModal();" (onClose)="toggleAboutModal()"></app-about>
+  <app-about
+    (onToggleHelp)="toggleAboutModal(); toggleHelpModal()"
+    (onClose)="toggleAboutModal()"
+  ></app-about>
 </div>
 <div *ngIf="showSettingsModal" class="help-overlay">
-  <app-settings (onFaq)="toggleSettingsModal(); toggleAboutModal()" (onClose)="toggleSettingsModal()"></app-settings>
+  <app-settings
+    (onFaq)="toggleSettingsModal(); toggleAboutModal()"
+    (onClose)="toggleSettingsModal()"
+  ></app-settings>
 </div>
 <div *ngIf="showResetModal">
-  <app-modal headerText="Restart game" bodyText="Are you sure you want to start a new game?" [decisionModal]="true" (secondaryEvent)="toggleResetModal()" (primaryEvent)="reset()" primaryLabel="Reset" ></app-modal>
+  <app-modal
+    headerText="Restart game"
+    bodyText="Are you sure you want to start a new game?"
+    [decisionModal]="true"
+    (secondaryEvent)="toggleResetModal()"
+    (primaryEvent)="reset()"
+    primaryLabel="Reset"
+  ></app-modal>
 </div>
 
 <div *ngIf="showGameOverModal">
-  <app-modal *ngIf="practiceMode" [currentLevel]="currentDisplayLevel" [incorrectGuessesByLevel]="incorrectGuessesByLevel" [decisionModal]="true" primaryLabel="New game" secondaryLabel="Share" (secondaryEvent)="share()" (primaryEvent)="reset()" ></app-modal>
-  <app-modal *ngIf="!practiceMode" [stats]="getStats()" [currentLevel]="currentDisplayLevel" [incorrectGuessesByLevel]="incorrectGuessesByLevel" [decisionModal]="true" primaryLabel="Share" secondaryLabel="Practice" (secondaryEvent)="togglePracticeMode()" (primaryEvent)="share()" ></app-modal>
+  <app-modal
+    *ngIf="practiceMode"
+    [currentLevel]="currentDisplayLevel"
+    [incorrectGuessesByLevel]="incorrectGuessesByLevel"
+    [decisionModal]="true"
+    primaryLabel="New game"
+    secondaryLabel="Share"
+    (secondaryEvent)="share()"
+    (primaryEvent)="reset()"
+  ></app-modal>
+  <app-modal
+    *ngIf="!practiceMode"
+    [stats]="getStats()"
+    [currentLevel]="currentDisplayLevel"
+    [incorrectGuessesByLevel]="incorrectGuessesByLevel"
+    [decisionModal]="true"
+    primaryLabel="Share"
+    secondaryLabel="Practice"
+    (secondaryEvent)="togglePracticeMode()"
+    (primaryEvent)="share()"
+  ></app-modal>
 </div>

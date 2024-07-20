@@ -1,23 +1,48 @@
-<div [ngClass]="{'no-click': disabled}" class="header-wrapper">
-    <div class="letters-row">
-        <i (click)="onHelpClick()" class="icon fa-regular fa-lg fa-circle-question"></i>
-        <square [header]="true" clueNumber="15" letter="C"></square>
-        <square [header]="true" letter="R"></square>
-        <square [header]="true" letter="A"></square>
-        <square [header]="true" letter="W"></square>
-        <square [header]="true" letter="S"></square>
-        <square [header]="true" letter="W"></square>
-        <square [header]="true" letter="O"></square>
-        <square [header]="true" letter="R"></square>
-        <square [header]="true" letter="D"></square>
-        <div ngbDropdown class="menu d-inline-block">
-                <i class="fa-solid fa-bars" id="dropdownBasic1" ngbDropdownToggle></i>
-                <div class="noselect" ngbDropdownMenu aria-labelledby="dropdownBasic1">
-                    <button *ngIf="!practiceMode" (click)="onMenuPress('practice')" ngbDropdownItem>Practice mode</button>
-                    <button *ngIf="practiceMode" (click)="onMenuPress('practice')" ngbDropdownItem>Daily puzzle</button>
-                    <button *ngIf="practiceMode" (click)="onMenuPress('restart')" ngbDropdownItem>Restart practice</button>
-                    <button (click)="onMenuPress('settings')" ngbDropdownItem>Settings</button>
-                    <button (click)="onMenuPress('about')" ngbDropdownItem>About</button>
-         </div>
+<div [ngClass]="{ 'no-click': disabled }" class="header-wrapper">
+  <div class="letters-row">
+    <i
+      (click)="onHelpClick()"
+      class="icon fa-regular fa-lg fa-circle-question"
+    ></i>
+    <square [header]="true" clueNumber="15" letter="C"></square>
+    <square [header]="true" letter="R"></square>
+    <square [header]="true" letter="A"></square>
+    <square [header]="true" letter="W"></square>
+    <square [header]="true" letter="S"></square>
+    <square [header]="true" letter="W"></square>
+    <square [header]="true" letter="O"></square>
+    <square [header]="true" letter="R"></square>
+    <square [header]="true" letter="D"></square>
+    <div ngbDropdown class="menu d-inline-block">
+      <i class="fa-solid fa-bars" id="dropdownBasic1" ngbDropdownToggle></i>
+      <div class="noselect" ngbDropdownMenu aria-labelledby="dropdownBasic1">
+        <button
+          *ngIf="!practiceMode"
+          (click)="onMenuPress('practice')"
+          ngbDropdownItem
+        >
+          Practice mode
+        </button>
+        <button
+          *ngIf="practiceMode"
+          (click)="onMenuPress('practice')"
+          ngbDropdownItem
+        >
+          Daily puzzle
+        </button>
+        <button
+          *ngIf="practiceMode"
+          (click)="onMenuPress('restart')"
+          ngbDropdownItem
+        >
+          Restart practice
+        </button>
+        <button (click)="onMenuPress('settings')" ngbDropdownItem>
+          Settings
+        </button>
+        <button (click)="onMenuPress('about')" ngbDropdownItem>About</button>
+        <button (click)="onDonatePress()" ngbDropdownItem>Donate</button>
+      </div>
     </div>
+  </div>
 </div>

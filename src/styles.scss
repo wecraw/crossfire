@@ -1,20 +1,20 @@
 /* You can add global styles to this file, and also import other style files */
 
 /* Importing Bootstrap SCSS file. */
-@import './project_variables';
-@import '~bootstrap/scss/bootstrap';
+@import "./project_variables";
+@import "~bootstrap/scss/bootstrap";
 
 .noselect {
-    -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none; /* Safari */
-       -khtml-user-select: none; /* Konqueror HTML */
-         -moz-user-select: none; /* Old versions of Firefox */
-          -ms-user-select: none; /* Internet Explorer/Edge */
-              user-select: none; /* Non-prefixed version, currently
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
                                     supported by Chrome, Edge, Opera and Firefox */
 }
 
-body{
+body {
   touch-action: manipulation;
   overflow-x: visible;
   background-color: var(--body-color);
@@ -23,9 +23,8 @@ body{
 
 //light mode (i.e. default) color variables
 :root {
-
   //body
-  --body-color: #fff; // or any global you wish to share with components 
+  --body-color: #fff; // or any global you wish to share with components
   --text-color: #000;
   --link-color: #2a59e0;
 
@@ -35,7 +34,7 @@ body{
   --menu-hover-color: #eee;
 
   //checks
-  --unused-check-color: #ccc;
+  --unused-check-color: #5a594e;
 
   //squares
   --square-border-color: #000;
@@ -49,7 +48,7 @@ body{
 
   --tutorial-square-color: var(--square-default-color);
   --tutorial-square-border-color: var(--square-border-color);
-  
+
   //keyboard
   --keyboard-button-default-color: #d3d6da;
   --keyboard-button-present-color: var(--square-present-bg-color);
@@ -79,12 +78,10 @@ body{
   //toast
   --toast-bg-color: #000;
   --toast-text-color: #fff;
-
 }
 
 //dark mode color variables--------------------------------------
-html[data-theme='dark'] {
-
+html[data-theme="dark"] {
   //body
   --body-color: #121213;
   --text-color: #fff;
@@ -96,7 +93,7 @@ html[data-theme='dark'] {
   --menu-hover-color: #473f7b;
 
   //checks
-  --unused-check-color: #4a4a4c;
+  --unused-check-color: #aaa;
 
   //squares
   --square-border-color: #000;
@@ -111,7 +108,6 @@ html[data-theme='dark'] {
   --tutorial-square-color: #121213;
   --tutorial-square-border-color: #888;
 
-  
   //keyboard
   --keyboard-button-default-color: #818384;
   --keyboard-button-present-color: var(--square-present-bg-color);
@@ -133,7 +129,6 @@ html[data-theme='dark'] {
   --level-upcoming-bg-color: #121213;
   --level-upcoming-border-color: #888;
 
-
   //modals
   --modal-text-color: #fff;
   --modal-bg-color: #222;
@@ -144,17 +139,15 @@ html[data-theme='dark'] {
   --toast-text-color: #000;
 }
 
-html[data-contrast-theme='contrast'] {
-  --square-present-bg-color: #0455A4;
-  --square-correct-bg-color: #E84A27;
+html[data-contrast-theme="contrast"] {
+  --square-present-bg-color: #0455a4;
+  --square-correct-bg-color: #e84a27;
 
-  --level-completed-bg-color: #E84A27;
-  --level-current-bg-color: #0455A4;
+  --level-completed-bg-color: #e84a27;
+  --level-current-bg-color: #0455a4;
   --level-current-text-color: #fff;
-
 }
 
-
-a{
+a {
   color: var(--link-color);
 }

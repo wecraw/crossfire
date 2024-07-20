@@ -3,10 +3,9 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+  styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent implements OnInit {
-
+export class HeaderComponent {
   @Input() practiceMode: boolean = false;
   @Input() disabled: boolean = false;
 
@@ -14,21 +13,24 @@ export class HeaderComponent implements OnInit {
   @Output() settingsClickEvent = new EventEmitter<any>();
   @Output() menuClickEvent = new EventEmitter<string>();
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit(): void {
+  onHelpClick() {
+    this.helpClickEvent.emit();
   }
 
-  onHelpClick(){
-    this.helpClickEvent.emit()
+  onSettingsClick() {
+    this.settingsClickEvent.emit();
   }
 
-  onSettingsClick(){
-    this.settingsClickEvent.emit()
+  onMenuPress(menuItem: string) {
+    this.menuClickEvent.emit(menuItem);
   }
 
-  onMenuPress(menuItem: string){
-    this.menuClickEvent.emit(menuItem)
+  onDonatePress() {
+    window.open(
+      'https://www.paypal.com/donate/?hosted_button_id=ULHKXEU29A2VC',
+      '_blank'
+    );
   }
-
 }

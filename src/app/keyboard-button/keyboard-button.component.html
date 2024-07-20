@@ -1,5 +1,10 @@
-<button class="button-wrapper noselect" [class.check-button]="label === 'CHECK'" [ngClass]="state" >
-    <div class="button-label">
-        {{label}}
-    </div>
+<button
+  tabindex="-1"
+  class="button-wrapper noselect"
+  [class.check-button]="label === 'CHECK'"
+  [ngClass]="state"
+>
+  <div class="button-label">
+    {{ label }}
+  </div>
 </button>
