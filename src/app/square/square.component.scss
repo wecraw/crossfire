@@ -90,6 +90,19 @@
     }
 }
 
+// Inter-level fade: only the colored fill + letter fade away, the empty-cell
+// skeleton (default background + borders) stays in place.
+:host(.fade-out-letter) .square {
+    background-color: var(--square-default-color);
+    transition: background-color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    .letter,
+    .clue-number {
+        opacity: 0;
+        transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+}
+
 @media (max-width: 767.98px) {
     .square{
         &.letters-8{
