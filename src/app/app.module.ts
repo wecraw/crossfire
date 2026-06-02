@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, provideZoneChangeDetection } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
@@ -38,7 +38,7 @@ const routes: Routes = [
     NgbModule,
     RouterModule.forRoot(routes),
   ],
-  providers: [],
+  providers: [provideZoneChangeDetection({ eventCoalescing: true })],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

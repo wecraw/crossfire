@@ -2,17 +2,21 @@
   <i (click)="closeEvent()" (keyup.enter)="closeEvent()" tabindex="0" role="button" aria-label="Close" class="close-icon fa-solid fa-xl fa-xmark"></i>
   <h5>How to play</h5>
   <p>
-    Advance through all seven levels of the Crawsword before you run out of
-    guesses.
+    Advance through all seven levels of the Crawsword. Each level is a single
+    five-letter crossword answer, and you get <b>6 guesses</b> to crack it.
   </p>
   <p>
-    Each level contains a single crossword clue to solve. The clues become
-    harder as you advance through the levels, just like the daily crossword gets
-    harder as the week goes on!
+    The clues get harder as you climb, just like the daily crossword gets harder
+    as the week goes on. Run out of guesses on any level and the game is over,
+    so spend them wisely!
   </p>
   <p>
-    If you check and your answer is wrong, a guess will be used up and the color
-    of the tiles will change to show how close your guess was to the answer.
+    After each guess, the color of the tiles changes to show how close you were
+    to the answer.
+  </p>
+  <p>
+    When you solve a level, one <b>green letter</b> carries over and is given to
+    you in the next answer &mdash; a free correct letter to build on.
   </p>
 
   <p class="last">
@@ -22,19 +26,19 @@
 
   <p class="bold">Examples</p>
   <div class="letters-row">
-    <app-square state="correct" clueNumber="15" letter="A"></app-square>
-    <app-square letter="C"></app-square>
+    <app-square state="correct" clueNumber="15" letter="C"></app-square>
     <app-square letter="R"></app-square>
-    <app-square letter="O"></app-square>
-    <app-square letter="S"></app-square>
-    <app-square letter="S"></app-square>
+    <app-square letter="A"></app-square>
+    <app-square letter="N"></app-square>
+    <app-square letter="E"></app-square>
   </div>
-  <p>The letter <b>A</b> is in the answer and in the correct spot.</p>
+  <p>The letter <b>C</b> is in the answer and in the correct spot.</p>
   <div class="letters-row">
     <app-square clueNumber="2" letter="D"></app-square>
     <app-square state="present" letter="O"></app-square>
-    <app-square letter="W"></app-square>
-    <app-square letter="N"></app-square>
+    <app-square letter="U"></app-square>
+    <app-square letter="B"></app-square>
+    <app-square letter="T"></app-square>
   </div>
 
   <p>The letter <b>O</b> is in the answer but in the wrong spot.</p>
@@ -44,7 +48,6 @@
     <app-square letter="O"></app-square>
     <app-square letter="R"></app-square>
     <app-square state="absent" letter="T"></app-square>
-    <app-square letter="Z"></app-square>
   </div>
 
   <p class="last">The letter <b>T</b> is not in the answer in any spot.</p>

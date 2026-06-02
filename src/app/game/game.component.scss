@@ -22,9 +22,24 @@ $page-background-color: #fefefe;
   justify-content: center;
 }
 
-.letter-rows-wrapper {
-  overflow-y: auto;
-  overflow-x: hidden;
+.board-viewport {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.board {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  &.no-transition {
+    transition: none;
+  }
+}
+
+app-square.fade-out-letter {
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .levels-row {
@@ -54,26 +69,11 @@ app-square:last-of-type {
 }
 
 .letters-wrapper {
-  height: 49px;
+  height: var(--square-size, 49px);
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 5px;
-}
-
-.check-row {
-  margin-top: 5px;
-  justify-content: center;
-  display: flex;
-
-  .checks {
-    min-width: 190px; //prevent 'Guesses remaining:' from moving as guesses are used up
-    margin-top: 1px;
-  }
-  .guess-icon {
-    margin-left: 5px;
-    color: var(--unused-check-color);
-  }
 }
 
 .keyboard-container {

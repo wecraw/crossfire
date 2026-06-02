@@ -12,6 +12,7 @@ export class SquareComponent {
   @Input() letter: string = "";
   @Input() clueNumber: string = "";
   @Input() highlighted: boolean = false;
+  @Input() locked: boolean = false;
   @Input() letterSize: number = 0
   @Input() header: boolean = false;
   @Input() checked: boolean = false;

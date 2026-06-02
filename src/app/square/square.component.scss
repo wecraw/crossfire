@@ -1,6 +1,6 @@
 .square{
-    width: 49px;
-    height: 49px;
+    width: var(--square-size, 49px);
+    height: var(--square-size, 49px);
     border: 1px solid var(--square-border-color);
     border-right: none;
     position: relative;
@@ -69,8 +69,8 @@
 
     .letter{
         font-weight: 500;
-        font-size: 1.98rem;
-        margin-top: 8px;
+        font-size: var(--square-letter-size, 1.98rem);
+        margin-top: var(--square-letter-margin, 8px);
         color: var(--letter-default-color);
         &.checked{
             color: var(--letter-checked-color);

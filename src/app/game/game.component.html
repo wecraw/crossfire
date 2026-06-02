@@ -4,83 +4,43 @@
   (helpClickEvent)="toggleHelpModal()"
   (menuClickEvent)="onMenuClick($event)"
 ></app-header>
-<div [style.height.px]="gameWindowHeight" class="container flex fit-content-lg">
+<div class="container flex fit-content-lg">
   <div class="levels-row">
     <app-progress-bar [currentLevel]="currentDisplayLevel"></app-progress-bar>
   </div>
   <div class="row">
     <div class="clue">{{ clue.clueNumber }}. {{ clue.clue }}</div>
   </div>
-  <div id="letters-row-wrapper" class="letter-rows-wrapper">
-    @for (submission of submissions; track submission; let i = $index) {
-      <!-- ngIf below hides the last submission if you've lost or won as we need to store the last guess for cookies but dont want to show it -->
-      @if (
-        !(hasLost || hasWon) ||
-        ((hasLost || hasWon) && i < submissions.length - 1)
-        ) {
+  <div class="board-viewport">
+    <div
+      class="board"
+      [class.no-transition]="!boardTransition"
+      [style.transform]="'translateY(-' + slideOffset * rowHeight + 'px)'"
+      [style.--square-size]="tileSize + 'px'"
+      [style.--square-letter-size]="tileSize * 0.62 + 'px'"
+      [style.--square-letter-margin]="tileSize * 0.16 + 'px'"
+      >
+      @for (boardRow of board; track $index; let r = $index) {
         <div
           class="letters-wrapper"
+          [ngClass]="{ 'shake-horizontal': invalidGuessAnimation && r === currentRow }"
           >
-          <div class="letters-row" [ngClass]="{ 'fade-out-bck': solved }">
-            @for (letter of submission; track letter) {
+          <div class="letters-row">
+            @for (cell of boardRow; track $index; let c = $index) {
               <app-square
-                [letterSize]="letters.length"
-                [state]="letter.state"
-                [letter]="letter.letter"
+                [letterSize]="answer.length"
+                (click)="setCell(r, c)"
+                [highlighted]="isHighlighted(r, c)"
+                [locked]="!!cell.locked"
+                [clueNumber]="r === 0 && c === 0 ? '' + clue.clueNumber : ''"
+                [state]="cell.state"
+                [letter]="cell.letter"
+                [ngClass]="{ 'fade-out-letter': isFading(r, c) }"
               ></app-square>
             }
           </div>
         </div>
       }
-    }
-
-    <div
-      [ngClass]="{ 'shake-horizontal': invalidGuessAnimation }"
-      class="letters-wrapper"
-      >
-      <div
-        class="letters-row"
-        [ngClass]="{ 'fade-out-bck': solved, 'fade-in-fwd': !solved }"
-        >
-        @for (letter of letters; track $index; let i = $index; let isFirst = $first) {
-          @if (isFirst) {
-            <app-square
-              [letterSize]="letters.length"
-              (click)="setEntryIndex(i)"
-              [highlighted]="entryIndex === i"
-              [clueNumber]="'' + clue.clueNumber"
-              [state]="getState(i)"
-              [letter]="getLetter(i)"
-            ></app-square>
-          }
-          @if (!isFirst) {
-            <app-square
-              [letterSize]="letters.length"
-              (click)="setEntryIndex(i)"
-              [highlighted]="entryIndex === i"
-              [state]="getState(i)"
-              [letter]="getLetter(i)"
-            ></app-square>
-          }
-        }
-      </div>
-    </div>
-  </div>
-  <div class="check-row">
-    <div class="checks" [ngClass]="{ 'pulsate-fwd': shakeChecks }">
-      Guesses remaining:
-
-      @for (e of [].constructor(MAX_INCORRECT_GUESSES); track $index; let i = $index) {
-        <i
-          class="guess-icon fa-circle"
-          [ngClass]="{
-            'fa-solid': i < MAX_INCORRECT_GUESSES - incorrectGuesses,
-            'fa-regular': i >= MAX_INCORRECT_GUESSES - incorrectGuesses
-          }"
-        ></i>
-      }
-
-      <span class="used-guesses-spacer"></span>
     </div>
   </div>
   <div

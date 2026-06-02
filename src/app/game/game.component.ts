@@ -1,4 +1,12 @@
-import { Component, ElementRef, HostListener, OnInit, Renderer2, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  Renderer2,
+  inject,
+} from '@angular/core';
 import { mondayClues } from '../clues/monday';
 import { tuesdayClues } from '../clues/tuesday';
 import { wednesdayClues } from '../clues/wednesday';
@@ -6,7 +14,7 @@ import { thursdayClues } from '../clues/thursday';
 import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
-import seedrandom from 'seedrandom';
+import { dailyChains, ChainLevel } from '../clues/chains';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
 
@@ -19,53 +27,8 @@ export interface IClue {
 export interface ILetter {
   letter: string;
   state: 'default' | 'correct' | 'absent' | 'present';
+  locked?: boolean; //true for the carried green "given" letter
 }
-
-const LEGACY_CLUE_INSERTIONS: Partial<Record<number, [number, string[]][]>> = {
-  3: [
-    [11528, ['72', 'Steak accompanier', 'A1SAUCE']],
-    [11530, ['74', 'Some I.R.S. forms', 'W2S']],
-    [11569, ['68', 'Palindromic number', '212']],
-  ],
-  6: [
-    [4764, ['18', 'Apple tablet option', 'aPADPRO']],
-    [4769, ['25', 'Voting "aye"', 'aNFAVOR']],
-    [4771, ['27', 'Give way', 'YaELD']],
-    [4775, ['33', "Much of Goya's output", 'FRaJOLES']],
-    [4776, ['35', 'Japanese beer brand', 'KaRIN']],
-    [4783, ['52', 'Less certain', 'IFFaER']],
-    [4786, ['56', 'Symbol of Mexico', 'DAHLaA']],
-    [4790, ['68', 'Guiding light', 'POLARaS']],
-    [
-      4795,
-      [
-        '77',
-        'Executive producer of HBO\'s "A Black Lady Sketch Show"',
-        'aSSARAE',
-      ],
-    ],
-    [4807, ['97', 'Online source for film facts, in brief', 'aMDB']],
-    [4823, ['1', 'They get the wheels turning', 'AaLES']],
-    [
-      4826,
-      [
-        '4',
-        'Company that makes recoverable and reusable rocket boosters',
-        'SPACEa',
-      ],
-    ],
-    [4831, ['12', 'Duty', 'TAa']],
-    [4832, ['13', 'About to enter the stage, say', 'ONNEaT']],
-    [4846, ['45', 'Rose of rock', 'AaL']],
-    [4847, ['46', 'Nickname on a ranch', 'TEa']],
-    [4850, ['50', 'Digital writing', 'ETEaT']],
-    [4862, ['70', "Singer Aguilera's alter ego", 'aTINA']],
-    [4864, ['73', 'This is a test', 'EaAM']],
-    [4869, ['83', '"That\'s just unacceptable"', 'NOEaCUSE']],
-    [4870, ['85', '1969-74, politically', 'NIaONERA']],
-    [4874, ['91', 'New wings', 'ANNEaES']],
-  ],
-};
 
 @Component({
   standalone: false,
@@ -73,11 +36,11 @@ const LEGACY_CLUE_INSERTIONS: Partial<Record<number, [number, string[]][]>> = {
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
 })
-export class GameComponent implements OnInit {
+export class GameComponent implements OnInit, AfterViewInit {
   private renderer2 = inject(Renderer2);
   private elementRef = inject(ElementRef);
 
-  //Clue variables
+  //Clue/chain variables
   clue: IClue = {
     clueNumber: 0,
     clue: '',
@@ -92,34 +55,44 @@ export class GameComponent implements OnInit {
     saturdayClues,
     sundayClues,
   ];
-  clueSeeds: number[];
+  chain: ChainLevel[] = []; //today's 7-level chain
+  answer: string = ''; //current level's answer
+  givenPos: number = -1; //column of the carried green letter (-1 on Monday)
+  givenLetter: string = ''; //the carried green letter itself
+  private clueByAnswer: Map<string, IClue>[] = []; //per-weekday answer -> clue
 
   //Game state variables
   currentLevel: number = 0;
-  currentDisplayLevel: number = 0; //need this to make the transition for the progress bar, it updates after the true level does
-  incorrectGuesses: number = 0;
-  incorrectGuessesByLevel: number[] = [0, 0, 0, 0, 0, 0, 0]; //tracks how many incorrect guesses are used per level
-  hasWon: boolean = false; //true if user has won already in the daily
-  hasLost: boolean = false; //true if user has lost already in the daily
-  guessNotAllowed: boolean = false; //disables typing and guessing in certain cases (e.g. win, loss, waiting for confetti/fade)
-  practiceMode: boolean = false; //set true for debugging
+  currentDisplayLevel: number = 0; //lags currentLevel so the progress bar can transition
+  incorrectGuesses: number = 0; //running total across all levels (for stats)
+  incorrectGuessesByLevel: number[] = [0, 0, 0, 0, 0, 0, 0];
+  hasWon: boolean = false;
+  hasLost: boolean = false;
+  guessNotAllowed: boolean = false; //disables input during transitions / end states
+  practiceMode: boolean = false; //set true for debugging / free play
   currentDay: number = 0; //days since epoch
 
-  //Keyboard and letter entry variables
-  submissions: ILetter[][] = []; //historical log of guesses for a particular clue
-  letters: string[] = []; //string of answer letters
-  enteredLetters: ILetter[] = []; //currently entered letters
+  //Board / entry variables
+  board: ILetter[][] = []; //MAX_GUESSES_PER_LEVEL rows x WORD_LENGTH cols
+  currentRow: number = 0; //active guess row
+  currentCol: number = 0; //active cell within the row
   presentLetters: string[] = []; //keyboard highlighting
-  absentLetters: string[] = []; //keyboard highlighting
-  correctLetters: string[] = []; //keyboard highlighting
-  entryIndex: number = 0; //'cursor' for entering letters
+  absentLetters: string[] = [];
+  correctLetters: string[] = [];
+
+  //Transition variables
+  slideOffset: number = 0; //rows to translate the board up during a level pass
+  solvedRow: number = -1; //the row that was just solved (kept visible at top)
+  fadeNonCarry: boolean = false; //fades every solved-row letter except the carry
+  fadeKeepPos: number = -1; //column of the letter carried out to the next level
+  boardTransition: boolean = true; //false = snap (no animation) when swapping levels
 
   //Toast variables
-  showToast: boolean = false; //used to show and hide the 'need more letters' toast
-  initialHideToast: boolean = true; //used to hide boolean on initial load to prevent the fade out from happening on load
+  showToast: boolean = false;
+  initialHideToast: boolean = true;
   toastText: string = '';
-  invalidReason: string = ''; //reason for why a guess is invalid, shown in toast text
-  toastTimeout: ReturnType<typeof setTimeout>; //used to reset toast if multiple are called in rapid succession
+  invalidReason: string = '';
+  toastTimeout: ReturnType<typeof setTimeout>;
 
   //Modal variables
   showResetModal: boolean = false;
@@ -129,182 +102,242 @@ export class GameComponent implements OnInit {
   showAboutModal: boolean = false;
 
   //Animation variables
-  shakeChecks: boolean = false; //used to shake x's when incorrect guess
-  invalidGuessAnimation: boolean = false; //used to show shake animation when an invalid guess is submitted
-  solved: boolean = false; //controls fade in and fade out for solved clues
-  gameWindowHeight: number; //scrollable game area
+  shakeChecks: boolean = false;
+  invalidGuessAnimation: boolean = false;
+
+  //Responsive board sizing (recomputed to fit between the clue and keyboard)
+  tileSize: number = 49; //px per square
+  rowHeight: number = 54; //tile + row margin; drives the slide-up distance
+  ROW_MARGIN_PX: number = 5;
 
   //Constants
-  SCROLLABLE_AREA_OFFSET: number = 265; //pixel offset for header and keyboard to calc scrollable area
-  MAX_INCORRECT_GUESSES: number = 10;
-  DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
+  WORD_LENGTH: number = 5;
+  MAX_GUESSES_PER_LEVEL: number = 6;
+  NUM_LEVELS: number = 7;
+  MAX_TILE_PX: number = 56;
+  MIN_TILE_PX: number = 28;
+  DEFAULT_TOAST_DURATION: number = 1500;
   PUZZLE_FIRST_DAY: number = 19120;
-  DAILY_CLUE_MAPPING_V2_FIRST_DAY: number = 20612; //2026-06-08 in Pacific time
-
-  private useLegacyDailyClueMapping: boolean = false;
 
   ngOnInit(): void {
-    this.setTheme(); //set color theme e.g. dark, contrast
+    this.setTheme();
 
-    this.setClueSeeds();
+    this.buildClueMaps();
+    this.setChain();
 
     this.currentDay = this.daysSinceEpoch();
+
+    let resumed = false;
     if (!this.isNewDay() && !this.practiceMode) {
-      this.loadFromLocalStorage();
-      this.scrollGameToBottom();
+      resumed = this.loadFromLocalStorage();
     }
     if (this.isNewDay()) this.resetLocalStorage();
 
-    //need to handle win
-    if (this.hasWon) {
-      this.enteredLetters = this.submissions[this.submissions.length - 1];
-      this.currentLevel = 6;
-      this.currentDisplayLevel = 7;
-      this.entryIndex = -1;
-      this.handleWin();
+    if (!resumed) {
+      this.loadLevel(this.currentLevel);
     }
 
-    this.setClue();
-
-    //resetting loss condition depends on clue already being set so toast can show
-    if (this.hasLost) {
-      this.entryIndex = -1;
-      this.enteredLetters = this.submissions[this.submissions.length - 1];
+    if (this.hasWon) {
+      this.handleWin();
+    } else if (this.hasLost) {
       this.handleLoss();
     }
+  }
 
-    this.setScrollableArea();
+  ngAfterViewInit(): void {
+    //defer a tick so the clue/keyboard are laid out and a fresh change-detection
+    //cycle flushes the computed tile size to the board
+    setTimeout(() => this.setBoardSize());
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.setBoardSize();
+  }
+
+  //sizes the tiles so all 6 rows fit between the clue and the keyboard
+  setBoardSize() {
+    const clue = document.querySelector('.clue');
+    const keyboard = document.querySelector('.keyboard-container');
+    const gap = 14;
+
+    let availHeight: number;
+    if (clue && keyboard) {
+      availHeight =
+        keyboard.getBoundingClientRect().top -
+        clue.getBoundingClientRect().bottom -
+        gap;
+    } else {
+      availHeight = window.innerHeight - 340;
+    }
+
+    const byHeight =
+      Math.floor(availHeight / this.MAX_GUESSES_PER_LEVEL) - this.ROW_MARGIN_PX;
+    const availWidth = Math.min(window.innerWidth, 480) - 16;
+    const byWidth = Math.floor(availWidth / this.WORD_LENGTH) - 2;
+
+    this.tileSize = Math.max(
+      this.MIN_TILE_PX,
+      Math.min(this.MAX_TILE_PX, byHeight, byWidth)
+    );
+    this.rowHeight = this.tileSize + this.ROW_MARGIN_PX;
   }
 
   reset() {
-    //uncomment for debug mode V
-    // this.resetLocalStorage()
-    this.submissions = [];
-    this.enteredLetters = [];
     this.presentLetters = [];
     this.absentLetters = [];
     this.correctLetters = [];
-
-    this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0]; //tracks how many incorrect guesses are used per level
-    this.currentLevel =
-      this.currentDisplayLevel =
-      this.incorrectGuesses =
-      this.entryIndex =
-        0;
+    this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0];
+    this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = 0;
+    this.slideOffset = 0;
+    this.solvedRow = -1;
+    this.fadeNonCarry = false;
+    this.boardTransition = true;
     this.showResetModal = this.showGameOverModal = false;
     this.guessNotAllowed = false;
     this.hasWon = false;
     this.hasLost = false;
-    this.setClueSeeds();
-    this.setClue();
+    this.setChain();
+    this.loadLevel(0);
   }
 
-  setClueSeeds() {
-    this.clueSeeds = [];
-    this.useLegacyDailyClueMapping = false;
-    if (this.practiceMode) {
-      this.cluesArray.forEach((clueSet) => {
-        this.clueSeeds.push(this.getRandomInt(clueSet.length));
-      });
-    } else {
-      //sets the daily seed if not in practice mode
-      const day = this.daysSinceEpoch();
-      this.useLegacyDailyClueMapping =
-        day < this.DAILY_CLUE_MAPPING_V2_FIRST_DAY;
-      let i = 0;
-      this.cluesArray.forEach((_, level) => {
-        const clueSet = this.getClueSet(level);
-        const max = this.useLegacyDailyClueMapping
-          ? clueSet.length - 1
-          : clueSet.length;
-        this.clueSeeds.push(
-          this.getRandomIntSeeded(max, day + i)
-        );
-        i++;
-      });
-    }
-  }
+  /*------------------------------Chain / clue setup-------------------------------------*/
 
-  //gets state of entered letter
-  getState(i: number) {
-    if (i < this.enteredLetters.length) {
-      return this.enteredLetters[i].state;
-    } else {
-      return '';
-    }
-  }
-
-  //fill empty letters on board
-  getLetter(i: number) {
-    if (i < this.enteredLetters.length) {
-      return this.enteredLetters[i].letter;
-    } else {
-      return '';
-    }
-  }
-
-  setEntryIndex(i: number) {
-    this.entryIndex = i;
-  }
-
-  setLetters(answer: string) {
-    this.letters = [];
-    if (!this.hasWon && !this.hasLost) this.enteredLetters = []; //don't reset this if the user has won so we can show the last answer
-
-    Array.from(answer).forEach((letter) => {
-      this.letters.push(letter);
-      this.enteredLetters.push({
-        //fill entered letter array with empty letters
-        letter: '',
-        state: 'default',
-      });
+  //builds the per-weekday answer -> clue lookup (first occurrence wins)
+  buildClueMaps() {
+    this.clueByAnswer = this.cluesArray.map((clueSet) => {
+      const map = new Map<string, IClue>();
+      for (const [num, clue, answer] of clueSet as string[][]) {
+        if (!map.has(answer)) {
+          map.set(answer, { clueNumber: +num, clue, answer });
+        }
+      }
+      return map;
     });
   }
 
-  getNewPuzzle() {
-    setTimeout(() => {
-      this.absentLetters = [];
-      this.presentLetters = [];
-      this.correctLetters = [];
-      this.submissions = [];
-      this.updateLocalStorage();
-      this.setClue();
-      this.entryIndex = 0;
-      this.solved = false;
-      this.currentDisplayLevel = this.currentLevel;
-      this.guessNotAllowed = false; //need to reset this from the check answer func
-    }, 500);
+  setChain() {
+    if (this.practiceMode) {
+      this.chain = dailyChains[this.getRandomInt(dailyChains.length)];
+    } else {
+      const index = (this.getPuzzleNumber() - 1) % dailyChains.length;
+      this.chain = dailyChains[index];
+    }
   }
 
-  //checks if any squares are empty and returns false if so
+  //resolves the clue for a level and prepares a fresh board for it
+  loadLevel(level: number) {
+    const [answer, carryPos] = this.chain[level];
+    this.answer = answer;
+    this.givenPos = carryPos;
+    this.givenLetter = carryPos >= 0 ? answer[carryPos] : '';
+    this.clue =
+      this.clueByAnswer[level].get(answer) ??
+      ({ clueNumber: 0, clue: '', answer } as IClue);
+
+    //each level is a new word, so reset keyboard highlights; the carried letter
+    //is a known-correct given, so seed it as such
+    this.correctLetters = [];
+    this.presentLetters = [];
+    this.absentLetters = [];
+    if (this.givenLetter) this.correctLetters.push(this.givenLetter);
+
+    this.slideOffset = 0;
+    this.solvedRow = -1;
+    this.fadeNonCarry = false;
+    this.buildBoard();
+    this.currentRow = 0;
+    this.prefillRow(0);
+    this.currentCol = this.firstEditableCol();
+    this.currentDisplayLevel = level;
+  }
+
+  private buildBoard() {
+    this.board = [];
+    for (let r = 0; r < this.MAX_GUESSES_PER_LEVEL; r++) {
+      const row: ILetter[] = [];
+      for (let c = 0; c < this.answer.length; c++) {
+        row.push({ letter: '', state: 'default' });
+      }
+      this.board.push(row);
+    }
+  }
+
+  //drops the carried green letter into a row as a locked given
+  private prefillRow(row: number) {
+    if (this.givenPos >= 0 && this.board[row]) {
+      this.board[row][this.givenPos] = {
+        letter: this.givenLetter,
+        state: 'correct',
+        locked: true,
+      };
+    }
+  }
+
+  private firstEditableCol(): number {
+    const row = this.board[this.currentRow];
+    if (!row) return 0;
+    for (let c = 0; c < row.length; c++) {
+      if (!row[c].locked) return c;
+    }
+    return 0;
+  }
+
+  private nextEditableCol(from: number): number {
+    for (let c = from + 1; c < this.answer.length; c++) {
+      if (!this.board[this.currentRow][c].locked) return c;
+    }
+    return -1;
+  }
+
+  private prevEditableCol(from: number): number {
+    for (let c = from - 1; c >= 0; c--) {
+      if (!this.board[this.currentRow][c].locked) return c;
+    }
+    return -1;
+  }
+
+  /*------------------------------Board helpers (template)-------------------------------------*/
+
+  //the active cell that shows the cursor highlight
+  isHighlighted(row: number, col: number): boolean {
+    return (
+      !this.guessNotAllowed &&
+      !this.hasWon &&
+      !this.hasLost &&
+      this.solvedRow === -1 &&
+      row === this.currentRow &&
+      col === this.currentCol
+    );
+  }
+
+  //fade everything in the solved row except the letter being carried forward
+  isFading(row: number, col: number): boolean {
+    return this.fadeNonCarry && row === this.solvedRow && col !== this.fadeKeepPos;
+  }
+
+  setCell(row: number, col: number) {
+    if (this.guessNotAllowed || this.hasWon || this.hasLost) return;
+    if (row !== this.currentRow) return;
+    if (this.board[row][col].locked) return;
+    this.currentCol = col;
+  }
+
+  /*------------------------------Answer checking-------------------------------------*/
+
+  //returns false if any square in the active row is empty
   isAnswerValid() {
-    let validGuess = true;
-    this.enteredLetters.forEach((letter) => {
-      if (letter.letter === '') {
-        validGuess = false;
+    let valid = true;
+    this.board[this.currentRow].forEach((cell) => {
+      if (cell.letter === '') {
+        valid = false;
         this.invalidReason = 'Not enough letters';
       }
     });
-
-    // TODO: implement word dictionary checking
-
-    // if (validGuess){
-    //   let word = ""
-    //   this.enteredLetters.forEach(letter => {
-    //     word += letter.letter
-    //   })
-    //   console.log(word)
-    // }
-
-    // console.log("valid guess?")
-    // console.log(validGuess)
-    return validGuess;
+    return valid;
   }
 
   checkAnswer() {
-    let correctLetterCount = 0;
-
-    //check if any squares are empty and if so, abort the check
     if (!this.isAnswerValid()) {
       this.invalidGuessAnimation = true;
       this.toast(this.invalidReason);
@@ -316,85 +349,100 @@ export class GameComponent implements OnInit {
 
     if (this.guessNotAllowed) return;
 
-    const tempLettersRemaining = this.letters.concat([]); //temp array to track remaining letters, allows greens and yellos of same letter in same guess
+    const row = this.board[this.currentRow];
+    const letters = Array.from(this.answer);
+    const remaining = letters.concat([]); //track remaining letters for present logic
+    let correctCount = 0;
 
-    this.letters.forEach((letter, i) => {
-      if (letter === this.enteredLetters[i].letter) {
-        this.enteredLetters[i].state = 'correct';
-        correctLetterCount++;
-
-        //remove letter from temp array
-        const index = tempLettersRemaining.indexOf(letter);
-        if (index !== -1) tempLettersRemaining.splice(index, 1);
-
-        this.correctLetters.push(letter);
+    letters.forEach((letter, i) => {
+      if (letter === row[i].letter) {
+        row[i].state = 'correct';
+        correctCount++;
+        const index = remaining.indexOf(letter);
+        if (index !== -1) remaining.splice(index, 1);
+        if (!this.correctLetters.includes(letter)) this.correctLetters.push(letter);
       }
     });
 
-    this.letters.forEach((letter, i) => {
-      if (this.enteredLetters[i].state !== 'correct') {
-        if (
-          this.letters.includes(this.enteredLetters[i].letter) &&
-          tempLettersRemaining.includes(this.enteredLetters[i].letter)
-        ) {
-          this.enteredLetters[i].state = 'present';
-
-          this.presentLetters.push(this.enteredLetters[i].letter);
-          const index = tempLettersRemaining.indexOf(
-            this.enteredLetters[i].letter
-          );
-          if (index !== -1) tempLettersRemaining.splice(index, 1);
+    letters.forEach((letter, i) => {
+      if (row[i].state !== 'correct') {
+        if (letters.includes(row[i].letter) && remaining.includes(row[i].letter)) {
+          row[i].state = 'present';
+          const index = remaining.indexOf(row[i].letter);
+          if (index !== -1) remaining.splice(index, 1);
+          if (!this.presentLetters.includes(row[i].letter))
+            this.presentLetters.push(row[i].letter);
         } else {
-          this.enteredLetters[i].state = 'absent';
-          this.absentLetters.push(this.enteredLetters[i].letter);
+          row[i].state = 'absent';
+          if (!this.absentLetters.includes(row[i].letter))
+            this.absentLetters.push(row[i].letter);
         }
       }
     });
 
-    if (correctLetterCount === this.letters.length) {
-      this.guessNotAllowed = true;
-      this.currentLevel++;
-      this.updateLocalStorage();
-      this.entryIndex = -1; //to hide highlighter during confetti
-      if (this.currentLevel === 7) {
-        this.currentDisplayLevel = 7;
-        this.submissions.push(this.enteredLetters);
-        this.handleWin();
-      } else {
-        this.renderConfetti();
-        setTimeout(() => {
-          this.solved = true;
-          this.getNewPuzzle();
-        }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
-      }
+    if (correctCount === this.answer.length) {
+      this.handleCorrect();
     } else {
-      this.incorrectGuesses++;
-      this.incorrectGuessesByLevel[this.currentLevel]++;
-      this.updateLocalStorage();
-      this.shakeChecks = true;
-      setTimeout(() => {
-        this.shakeChecks = false;
-      }, 300);
-      if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES) {
-        this.guessNotAllowed = true;
-        this.entryIndex = -1;
-        this.submissions.push(this.enteredLetters);
-        this.handleLoss();
-      } else {
-        this.submissions.push(this.enteredLetters);
-        this.updateLocalStorage();
-        this.enteredLetters = [];
-        this.letters.forEach(() => {
-          this.enteredLetters.push({
-            letter: '',
-            state: 'default',
-          });
-        });
-        this.entryIndex = 0;
-
-        this.scrollGameToBottom();
-      }
+      this.handleIncorrect();
     }
+  }
+
+  private handleCorrect() {
+    this.guessNotAllowed = true;
+    this.solvedRow = this.currentRow;
+    this.currentLevel++;
+    this.updateLocalStorage();
+
+    if (this.currentLevel === this.NUM_LEVELS) {
+      this.currentDisplayLevel = this.NUM_LEVELS;
+      this.handleWin();
+      return;
+    }
+
+    //the letter carried into the next level stays; everything else fades
+    this.fadeKeepPos = this.chain[this.currentLevel]?.[1] ?? -1;
+
+    this.renderConfetti();
+
+    //slide the board up so the solved row rises to the top, then fade away
+    //everything but the carried letter, then load the next level in its place
+    setTimeout(() => {
+      this.slideOffset = this.solvedRow;
+      this.fadeNonCarry = true;
+    }, 650);
+
+    setTimeout(() => {
+      //snap the board back to offset 0 with the new level in place (no reverse
+      //slide), then re-enable transitions for the next level pass
+      this.boardTransition = false;
+      this.loadLevel(this.currentLevel);
+      this.updateLocalStorage();
+      this.guessNotAllowed = false;
+      //re-enable transitions only after the snapped frame has painted, so the
+      //new level doesn't slide back down
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => (this.boardTransition = true))
+      );
+    }, 650 + 700);
+  }
+
+  private handleIncorrect() {
+    this.incorrectGuesses++;
+    this.incorrectGuessesByLevel[this.currentLevel]++;
+    this.shakeChecks = true;
+    setTimeout(() => {
+      this.shakeChecks = false;
+    }, 300);
+
+    this.currentRow++;
+    if (this.currentRow === this.MAX_GUESSES_PER_LEVEL) {
+      this.guessNotAllowed = true;
+      this.handleLoss();
+    } else {
+      this.prefillRow(this.currentRow);
+      this.currentCol = this.firstEditableCol();
+    }
+    this.updateLocalStorage();
   }
 
   handleLoss() {
@@ -403,10 +451,9 @@ export class GameComponent implements OnInit {
     this.updateLocalStorage();
     this.updateStats();
     const toastDuration = 2250;
-    this.toast(this.clue.answer, toastDuration);
+    this.toast(this.answer, toastDuration);
 
     setTimeout(() => {
-      //wait until toast finishes to launch the modal
       this.showGameOverModal = true;
       this.guessNotAllowed = false;
     }, toastDuration + 500);
@@ -419,10 +466,9 @@ export class GameComponent implements OnInit {
     this.updateStats();
     this.renderWinConfetti();
     setTimeout(() => {
-      //wait until toast finishes to launch the modal
       this.showGameOverModal = true;
       this.guessNotAllowed = false;
-    }, 3500); //wait until victory confetti finishes
+    }, 3500);
   }
 
   togglePracticeMode() {
@@ -432,21 +478,10 @@ export class GameComponent implements OnInit {
   }
 
   onMenuClick(selection: string) {
-    if (selection === 'settings') {
-      this.toggleSettingsModal();
-    }
-
-    if (selection === 'about') {
-      this.toggleAboutModal();
-    }
-
-    if (selection === 'practice') {
-      this.togglePracticeMode();
-    }
-
-    if (selection === 'restart') {
-      this.reset();
-    }
+    if (selection === 'settings') this.toggleSettingsModal();
+    if (selection === 'about') this.toggleAboutModal();
+    if (selection === 'practice') this.togglePracticeMode();
+    if (selection === 'restart') this.reset();
   }
 
   /*------------------------------Keyboard/letter entry-------------------------------------*/
@@ -457,31 +492,24 @@ export class GameComponent implements OnInit {
       if (this.isLetterKey(event)) {
         this.handleLetterEntry(event.key.toUpperCase());
       }
-      if (event.key === 'Backspace') {
-        //handle delete characters and move index on backspace
-        this.handleDeleteLetter();
-      }
-      if (event.key === 'Enter') {
-        this.checkAnswer();
-      }
+      if (event.key === 'Backspace') this.handleDeleteLetter();
+      if (event.key === 'Enter') this.checkAnswer();
       if (event.key === 'ArrowLeft') {
-        this.entryIndex--;
-        if (this.entryIndex < 0) this.entryIndex = 0;
+        const prev = this.prevEditableCol(this.currentCol);
+        if (prev !== -1) this.currentCol = prev;
       }
       if (event.key === 'ArrowRight') {
-        this.entryIndex++;
-        if (this.entryIndex === this.enteredLetters.length)
-          this.entryIndex = this.enteredLetters.length - 1;
+        const next = this.nextEditableCol(this.currentCol);
+        if (next !== -1) this.currentCol = next;
       }
     }
   }
 
   handleLetterEntry(letter: string) {
-    this.enteredLetters[this.entryIndex].letter = letter;
-
-    if (this.entryIndex < this.clue.answer.length - 1) {
-      this.entryIndex++;
-    }
+    if (this.board[this.currentRow][this.currentCol].locked) return;
+    this.board[this.currentRow][this.currentCol].letter = letter;
+    const next = this.nextEditableCol(this.currentCol);
+    if (next !== -1) this.currentCol = next; //advance, stop at last editable cell
   }
 
   handleVirtualKeypress(event: string) {
@@ -495,44 +523,20 @@ export class GameComponent implements OnInit {
   }
 
   handleDeleteLetter() {
-    let deleteIndex;
-    if (this.enteredLetters[this.entryIndex].letter !== '') {
-      deleteIndex = this.entryIndex;
+    const cell = this.board[this.currentRow][this.currentCol];
+    if (!cell.locked && cell.letter !== '') {
+      cell.letter = '';
     } else {
-      deleteIndex = this.entryIndex - 1;
-      this.entryIndex--;
+      const prev = this.prevEditableCol(this.currentCol);
+      if (prev !== -1) {
+        this.currentCol = prev;
+        this.board[this.currentRow][prev].letter = '';
+      }
     }
-
-    if (deleteIndex < 0) deleteIndex = 0;
-    if (this.entryIndex < 0) this.entryIndex = 0;
-
-    this.enteredLetters[deleteIndex].letter = '';
-  }
-
-  setClue() {
-    const clueSet = this.getClueSet(this.currentLevel);
-    this.clue = {
-      clueNumber: +clueSet[this.clueSeeds[this.currentLevel]][0],
-      clue: clueSet[this.clueSeeds[this.currentLevel]][1],
-      answer: clueSet[this.clueSeeds[this.currentLevel]][2],
-    };
-    this.setLetters(this.clue.answer);
-  }
-
-  private getClueSet(level: number) {
-    const clueSet = this.cluesArray[level];
-    if (!this.useLegacyDailyClueMapping) return clueSet;
-
-    const legacyClueSet = [...clueSet];
-    LEGACY_CLUE_INSERTIONS[level]?.forEach(([index, clue]) => {
-      legacyClueSet.splice(index, 0, clue);
-    });
-    return legacyClueSet;
   }
 
   /*------------------------------Sharing-------------------------------------*/
 
-  //gets the 1 indexed puzzle number shoutout matlab
   getPuzzleNumber() {
     return this.daysSinceEpoch() - this.PUZZLE_FIRST_DAY + 1;
   }
@@ -545,31 +549,26 @@ export class GameComponent implements OnInit {
       shareString += '(practice)';
     }
 
-    if (this.hasWon) this.currentLevel = 7;
-    shareString += ' ' + this.currentLevel + '/7';
+    const reached = this.hasWon ? this.NUM_LEVELS : this.currentLevel;
+    shareString += ' ' + reached + '/' + this.NUM_LEVELS;
     if (this.hasWon) shareString += '🎉';
     shareString += '\n\n';
 
-    for (let i = 0; i < 7; i++) {
-      if (i < this.currentLevel) {
+    for (let i = 0; i < this.NUM_LEVELS; i++) {
+      if (i < reached) {
         shareString += '🟩';
         shareString += '❌'.repeat(this.incorrectGuessesByLevel[i]);
-      }
-
-      if (i === this.currentLevel) {
+      } else if (i === reached) {
         shareString += '🟨';
         shareString += '❌'.repeat(this.incorrectGuessesByLevel[i]);
+      } else {
+        shareString += '⬛';
       }
-
-      if (i > this.currentLevel) shareString += '⬛';
-
-      if (i !== 6) shareString += '\n'; //newline
+      if (i !== this.NUM_LEVELS - 1) shareString += '\n';
     }
 
     if (navigator.share) {
-      navigator.share({
-        text: shareString,
-      });
+      navigator.share({ text: shareString });
     } else {
       this.toast('Copied to clipboard');
       navigator.clipboard.writeText(shareString);
@@ -580,16 +579,17 @@ export class GameComponent implements OnInit {
 
   updateLocalStorage() {
     if (!this.practiceMode) {
-      localStorage.setItem('incorrectGuesses', '' + this.incorrectGuesses);
+      localStorage.setItem('v3:incorrectGuesses', '' + this.incorrectGuesses);
       localStorage.setItem(
-        'incorrectGuessesByLevel',
+        'v3:incorrectGuessesByLevel',
         JSON.stringify(this.incorrectGuessesByLevel)
       );
-      localStorage.setItem('currentDay', '' + this.daysSinceEpoch());
-      localStorage.setItem('currentLevel', '' + this.currentLevel);
-      localStorage.setItem('currentEntries', JSON.stringify(this.submissions));
-      localStorage.setItem('hasWon', '' + this.hasWon);
-      localStorage.setItem('hasLost', '' + this.hasLost);
+      localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
+      localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
+      localStorage.setItem('v3:currentRow', '' + this.currentRow);
+      localStorage.setItem('v3:board', JSON.stringify(this.board));
+      localStorage.setItem('v3:hasWon', '' + this.hasWon);
+      localStorage.setItem('v3:hasLost', '' + this.hasLost);
     }
   }
 
@@ -617,12 +617,10 @@ export class GameComponent implements OnInit {
   }
 
   updateStats() {
-    //cant use isnewday() here because it updates frequently, basically checking here if the stats have been logged yet today
     let streakLastPuzzle = localStorage.getItem('streakLastPuzzle');
     if (!streakLastPuzzle) streakLastPuzzle = '-1';
 
     if (+streakLastPuzzle !== this.getPuzzleNumber()) {
-      //if stats haven't been logged today
       if (!this.practiceMode) {
         const tG = localStorage.getItem('totalGamesPlayed');
         if (tG) {
@@ -657,7 +655,7 @@ export class GameComponent implements OnInit {
         let isStreakValid = true;
         if (streakLastPuzzle) {
           if (this.getPuzzleNumber() - +streakLastPuzzle > 1)
-            isStreakValid = false; //if its been longer than a day since last puzzle solve
+            isStreakValid = false;
         }
         if (streak && isStreakValid) {
           let streak_num = +streak;
@@ -691,62 +689,72 @@ export class GameComponent implements OnInit {
   }
 
   resetLocalStorage() {
-    localStorage.removeItem('incorrectGuesses');
-    localStorage.removeItem('incorrectGuessesByLevel');
-    localStorage.setItem('currentDay', '' + this.daysSinceEpoch());
-    localStorage.removeItem('currentLevel');
-    localStorage.removeItem('currentEntries');
-    localStorage.removeItem('hasWon');
-    localStorage.removeItem('hasLost');
+    localStorage.removeItem('v3:incorrectGuesses');
+    localStorage.removeItem('v3:incorrectGuessesByLevel');
+    localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
+    localStorage.removeItem('v3:currentLevel');
+    localStorage.removeItem('v3:currentRow');
+    localStorage.removeItem('v3:board');
+    localStorage.removeItem('v3:hasWon');
+    localStorage.removeItem('v3:hasLost');
   }
 
-  loadFromLocalStorage() {
-    const iG = localStorage.getItem('incorrectGuesses');
-    if (iG) this.incorrectGuesses = +iG;
-
-    const iGBL = localStorage.getItem('incorrectGuessesByLevel');
-    if (iGBL) this.incorrectGuessesByLevel = JSON.parse(iGBL);
-
-    const cL = localStorage.getItem('currentLevel');
+  //returns true if a saved in-progress board was restored
+  loadFromLocalStorage(): boolean {
+    const cL = localStorage.getItem('v3:currentLevel');
     if (cL) {
       this.currentLevel = +cL;
       this.currentDisplayLevel = this.currentLevel;
     }
 
-    const cE = localStorage.getItem('currentEntries');
-    if (cE) {
-      this.submissions = JSON.parse(cE);
-      this.setKeyboardFromSubmissions();
-    }
+    const iG = localStorage.getItem('v3:incorrectGuesses');
+    if (iG) this.incorrectGuesses = +iG;
 
-    const hW = localStorage.getItem('hasWon');
+    const iGBL = localStorage.getItem('v3:incorrectGuessesByLevel');
+    if (iGBL) this.incorrectGuessesByLevel = JSON.parse(iGBL);
+
+    const hW = localStorage.getItem('v3:hasWon');
     if (hW) this.hasWon = hW === 'true';
 
-    const hL = localStorage.getItem('hasLost');
+    const hL = localStorage.getItem('v3:hasLost');
     if (hL) this.hasLost = hL === 'true';
+
+    //prime the level (clue, given letter, fresh board), then overlay saved board
+    this.loadLevel(this.currentLevel);
+
+    const savedBoard = localStorage.getItem('v3:board');
+    if (savedBoard) {
+      this.board = JSON.parse(savedBoard);
+      const cR = localStorage.getItem('v3:currentRow');
+      this.currentRow = cR ? +cR : 0;
+      if (!this.hasWon && !this.hasLost) {
+        this.currentCol = this.firstEditableCol();
+      }
+      this.setKeyboardFromBoard();
+      return true;
+    }
+    return false;
   }
 
-  //sets keyboard state when loading from cookies. prevents from needing additional cookies to track keyboard
-  setKeyboardFromSubmissions() {
-    this.submissions.forEach((submission) => {
-      submission.forEach((letter) => {
+  //rebuilds keyboard highlight state from the restored board
+  setKeyboardFromBoard() {
+    this.board.forEach((row) => {
+      row.forEach((cell) => {
+        if (!cell.letter) return;
+        if (cell.state === 'correct' && !this.correctLetters.includes(cell.letter))
+          this.correctLetters.push(cell.letter);
         if (
-          letter.state === 'correct' &&
-          !this.correctLetters.includes(letter.letter)
+          cell.state === 'absent' &&
+          !this.absentLetters.includes(cell.letter) &&
+          !this.correctLetters.includes(cell.letter)
         )
-          this.correctLetters.push(letter.letter);
+          this.absentLetters.push(cell.letter);
         if (
-          letter.state === 'absent' &&
-          !this.absentLetters.includes(letter.letter) &&
-          !this.correctLetters.includes(letter.letter)
+          cell.state === 'present' &&
+          !this.presentLetters.includes(cell.letter) &&
+          !this.correctLetters.includes(cell.letter)
         )
-          this.absentLetters.push(letter.letter);
-        if (
-          letter.state === 'present' &&
-          !this.presentLetters.includes(letter.letter) &&
-          !this.correctLetters.includes(letter.letter)
-        )
-          this.presentLetters.push(letter.letter);
+          this.presentLetters.push(cell.letter);
       });
     });
   }
@@ -771,15 +779,6 @@ export class GameComponent implements OnInit {
 
   /*------------------------------Other Helpers-------------------------------------*/
 
-  @HostListener('window:resize')
-  onResize() {
-    this.setScrollableArea();
-  }
-
-  setScrollableArea() {
-    this.gameWindowHeight = window.innerHeight - this.SCROLLABLE_AREA_OFFSET;
-  }
-
   setTheme() {
     const storedTheme =
       localStorage.getItem('theme') ||
@@ -798,7 +797,7 @@ export class GameComponent implements OnInit {
   }
 
   isNewDay() {
-    const savedDay = localStorage.getItem('currentDay');
+    const savedDay = localStorage.getItem('v3:currentDay');
     if (savedDay && +savedDay < this.daysSinceEpoch()) {
       return true;
     } else return false;
@@ -812,12 +811,6 @@ export class GameComponent implements OnInit {
     return Math.floor(Math.random() * max);
   }
 
-  getRandomIntSeeded(max: number, seed: number) {
-    const rand = seedrandom(String(seed));
-    return Math.floor(rand() * max);
-  }
-
-  //used for random seeding
   daysSinceEpoch(): number {
     const pacificTime = moment().tz('America/Los_Angeles');
     const pacificEpoch = moment.tz('1970-01-01', 'America/Los_Angeles');
@@ -843,23 +836,13 @@ export class GameComponent implements OnInit {
     }, toastDuration);
   }
 
-  scrollGameToBottom() {
-    const el = document.getElementById('letters-row-wrapper');
-    setTimeout(function () {
-      el?.scrollTo({
-        top: el.scrollHeight,
-        behavior: 'smooth',
-      });
-    }, 1);
-  }
-
   renderConfetti() {
     const canvas = this.renderer2.createElement('canvas');
 
     this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
 
     const myConfetti = confetti.create(canvas, {
-      resize: true, // will fit all screen sizes
+      resize: true,
     });
 
     myConfetti({
@@ -887,7 +870,7 @@ export class GameComponent implements OnInit {
     this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
 
     const myConfetti = confetti.create(canvas, {
-      resize: true, // will fit all screen sizes
+      resize: true,
     });
 
     myConfetti({

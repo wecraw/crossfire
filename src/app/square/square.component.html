@@ -3,6 +3,7 @@
   [class.present]="state === 'present'"
   [class.absent]="state === 'absent'"
   [class.highlighted]="highlighted"
+  [class.locked]="locked"
   [class.correct]="state === 'correct'">
   @if (clueNumber) {
     <div class="clue-number">{{clueNumber}}</div>
