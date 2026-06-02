@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { AppModule } from '../app.module';
 import { KeyboardButtonComponent } from './keyboard-button.component';
 
 describe('KeyboardButtonComponent', () => {
@@ -7,13 +8,13 @@ describe('KeyboardButtonComponent', () => {
   let fixture: ComponentFixture<KeyboardButtonComponent>;
 
   beforeEach(async () => {
+    // KeyboardButtonComponent is declared in AppModule alongside the child components its
+    // template depends on, so importing the module gives the compiler the
+    // full context it needs.
     await TestBed.configureTestingModule({
-      declarations: [ KeyboardButtonComponent ]
-    })
-    .compileComponents();
-  });
+      imports: [AppModule],
+    }).compileComponents();
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(KeyboardButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

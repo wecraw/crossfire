@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   standalone: false,
@@ -6,22 +6,17 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
   templateUrl: './about.component.html',
   styleUrls: ['./about.component.scss']
 })
-export class AboutComponent implements OnInit {
+export class AboutComponent {
 
-  @Output() onClose = new EventEmitter<any>();
-  @Output() onToggleHelp = new EventEmitter<any>();
-
-  constructor() { }
+  @Output() closed = new EventEmitter<void>();
+  @Output() toggleHelp = new EventEmitter<void>();
 
   closeEvent(){
-    this.onClose.emit()
+    this.closed.emit()
   }
 
   toggleHelpEvent(){
-    this.onToggleHelp.emit()
-  }
-
-  ngOnInit(): void {
+    this.toggleHelp.emit()
   }
 
 }

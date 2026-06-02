@@ -2,76 +2,87 @@
 
 </div>
 <div class="modal-frame">
-    <div class="modal-body">
-        <div *ngIf="stats">
-            <div class="header">
-                Statistics
-            </div>
-
-                <div class="stats">
-                    <div class="stat">
-                        <div class="stat-number">
-                            {{stats.totalGames}}
-                        </div>
-                        <div class="stat-label">
-                            Games played
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">
-                            {{stats.winPercent}}
-                        </div>
-                        <div class="stat-label">
-                            Win %
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">
-                            {{stats.currentStreak}}
-                        </div>
-                        <div class="stat-label">
-                            Current streak
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">
-                            {{stats.maxStreak}}
-                        </div>
-                        <div class="stat-label">
-                            Max streak
-                        </div>
-                    </div>
-                </div>
+  <div class="modal-body">
+    @if (stats) {
+      <div>
+        <div class="header">
+          Statistics
         </div>
-        <div>
-            <div class="header">
-                Game breakdown
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-number">
+              {{stats.totalGames}}
             </div>
+            <div class="stat-label">
+              Games played
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">
+              {{stats.winPercent}}
+            </div>
+            <div class="stat-label">
+              Win %
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">
+              {{stats.currentStreak}}
+            </div>
+            <div class="stat-label">
+              Current streak
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">
+              {{stats.maxStreak}}
+            </div>
+            <div class="stat-label">
+              Max streak
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+    <div>
+      <div class="header">
+        Game breakdown
+      </div>
 
-            <div class="breakdown">
-                <div *ngFor="let level of levels; index as i" class="day">
-                    <div class="level" [ngClass]="{'completed': currentLevel > i, 'upcoming': currentLevel < i, 'current': currentLevel === i}">
-                        <div class="level-name">
-                            {{level}}
-                        </div>
-                    </div>
-                    <div class="guesses">
-                        <i *ngFor="let j of numSequence(incorrectGuessesByLevel[i])" class="wrong-guess fa-solid fa-xl fa-xmark"></i>
-                    </div>    
-                </div>
+      <div class="breakdown">
+        @for (level of levels; track level; let i = $index) {
+          <div class="day">
+            <div class="level" [ngClass]="{'completed': currentLevel > i, 'upcoming': currentLevel < i, 'current': currentLevel === i}">
+              <div class="level-name">
+                {{level}}
+              </div>
             </div>
+            <div class="guesses">
+              @for (j of numSequence(incorrectGuessesByLevel[i]); track j) {
+                <i class="wrong-guess fa-solid fa-xl fa-xmark"></i>
+              }
+            </div>
+          </div>
+        }
+      </div>
     </div>
     <div class="modal-footer">
-        <div *ngIf="!newDay" class="timer">
-            <div class="timer-label"> Next Crawsword </div>
-            <div class="time"> {{ secondsUntilTomorrow }} </div>
+      @if (!newDay) {
+        <div class="timer">
+          <div class="timer-label"> Next Crawsword </div>
+          <div class="time"> {{ secondsUntilTomorrow }} </div>
         </div>
-        <div *ngIf="newDay" class="timer">
-            <button (click)="refresh()" type="button" class="new-label btn btn-link">New Crawsword available!</button>
+      }
+      @if (newDay) {
+        <div class="timer">
+          <button (click)="refresh()" type="button" class="new-label btn btn-link">New Crawsword available!</button>
         </div>
-        <div class="buttons" *ngIf="decisionModal">
-            <button type="button" class="btn btn-secondary" (click)="onSecondaryClick()">{{secondaryLabel}}</button>
-            <button type="button" class="btn btn-primary" (click)="onPrimaryClick()">{{primaryLabel}}</button>
+      }
+      @if (decisionModal) {
+        <div class="buttons">
+          <button type="button" class="btn btn-secondary" (click)="onSecondaryClick()">{{secondaryLabel}}</button>
+          <button type="button" class="btn btn-primary" (click)="onPrimaryClick()">{{primaryLabel}}</button>
         </div>
+      }
     </div>
-</div>
+  </div>

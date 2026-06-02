@@ -1,9 +1,11 @@
-<div class="square noselect" [ngClass]="getLetterSizeClass()" 
-    [class.header]="header" 
-    [class.present]="state === 'present'"
-    [class.absent]="state === 'absent'"
-    [class.highlighted]="highlighted"
-    [class.correct]="state === 'correct'">
-    <div *ngIf="clueNumber" class="clue-number">{{clueNumber}}</div>
-        <span class="letter">{{letter}}</span>
+<div class="square noselect" [ngClass]="getLetterSizeClass()"
+  [class.header]="header"
+  [class.present]="state === 'present'"
+  [class.absent]="state === 'absent'"
+  [class.highlighted]="highlighted"
+  [class.correct]="state === 'correct'">
+  @if (clueNumber) {
+    <div class="clue-number">{{clueNumber}}</div>
+  }
+  <span class="letter">{{letter}}</span>
 </div>

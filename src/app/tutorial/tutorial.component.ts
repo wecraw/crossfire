@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 
 @Component({
   standalone: false,
@@ -6,22 +6,17 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
   templateUrl: './tutorial.component.html',
   styleUrls: ['./tutorial.component.scss']
 })
-export class TutorialComponent implements OnInit {
+export class TutorialComponent {
 
-  @Output() onClose = new EventEmitter<any>();
-  @Output() onFaq = new EventEmitter<any>();
-
-  constructor() { }
+  @Output() closed = new EventEmitter<void>();
+  @Output() faq = new EventEmitter<void>();
 
   closeEvent(){
-    this.onClose.emit()
+    this.closed.emit()
   }
 
   faqEvent(){
-    this.onFaq.emit()
-  }
-
-  ngOnInit(): void {
+    this.faq.emit()
   }
 
 }

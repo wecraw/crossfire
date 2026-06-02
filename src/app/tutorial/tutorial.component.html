@@ -1,5 +1,5 @@
 <div class="container">
-  <i (click)="closeEvent()" class="close-icon fa-solid fa-xl fa-xmark"></i>
+  <i (click)="closeEvent()" (keyup.enter)="closeEvent()" tabindex="0" role="button" aria-label="Close" class="close-icon fa-solid fa-xl fa-xmark"></i>
   <h5>How to play</h5>
   <p>
     Advance through all seven levels of the Crawsword before you run out of
@@ -22,29 +22,29 @@
 
   <p class="bold">Examples</p>
   <div class="letters-row">
-    <square state="correct" clueNumber="15" letter="A"></square>
-    <square letter="C"></square>
-    <square letter="R"></square>
-    <square letter="O"></square>
-    <square letter="S"></square>
-    <square letter="S"></square>
+    <app-square state="correct" clueNumber="15" letter="A"></app-square>
+    <app-square letter="C"></app-square>
+    <app-square letter="R"></app-square>
+    <app-square letter="O"></app-square>
+    <app-square letter="S"></app-square>
+    <app-square letter="S"></app-square>
   </div>
   <p>The letter <b>A</b> is in the answer and in the correct spot.</p>
   <div class="letters-row">
-    <square clueNumber="2" letter="D"></square>
-    <square state="present" letter="O"></square>
-    <square letter="W"></square>
-    <square letter="N"></square>
+    <app-square clueNumber="2" letter="D"></app-square>
+    <app-square state="present" letter="O"></app-square>
+    <app-square letter="W"></app-square>
+    <app-square letter="N"></app-square>
   </div>
 
   <p>The letter <b>O</b> is in the answer but in the wrong spot.</p>
   <div class="letters-row">
-    <square clueNumber="6" letter="S"></square>
-    <square letter="H"></square>
-    <square letter="O"></square>
-    <square letter="R"></square>
-    <square state="absent" letter="T"></square>
-    <square letter="Z"></square>
+    <app-square clueNumber="6" letter="S"></app-square>
+    <app-square letter="H"></app-square>
+    <app-square letter="O"></app-square>
+    <app-square letter="R"></app-square>
+    <app-square state="absent" letter="T"></app-square>
+    <app-square letter="Z"></app-square>
   </div>
 
   <p class="last">The letter <b>T</b> is not in the answer in any spot.</p>

@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 
 @Component({
   standalone: false,
@@ -31,7 +31,7 @@ export class KeyboardComponent {
     }
   }
 
-  onKeypress(letter: any) {
+  onKeypress(letter: string) {
     this.keypressEvent.emit(letter);
   }
 }

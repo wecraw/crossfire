@@ -1,12 +1,12 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   standalone: false,
-  selector: 'square',
+  selector: 'app-square',
   templateUrl: './square.component.html',
   styleUrls: ['./square.component.scss']
 })
-export class SquareComponent implements OnInit {
+export class SquareComponent {
 
   @Input() state: string = "default";
   @Input() letter: string = "";
@@ -15,11 +15,7 @@ export class SquareComponent implements OnInit {
   @Input() letterSize: number = 0
   @Input() header: boolean = false;
   @Input() checked: boolean = false;
-  
-  constructor() { }
 
-  ngOnInit(): void {
-  }
   getLetterSizeClass(){
     if (this.letterSize < 7) return ""
     return "letters-" + this.letterSize

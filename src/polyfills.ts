@@ -6,6 +6,6 @@
 import '@angular/localize/init';
 
 // Some browser libraries expect a Node-style `process` global to exist.
-(window as any).process = {
+(window as unknown as { process: { env: Record<string, string | undefined> } }).process = {
   env: { DEBUG: undefined },
 };

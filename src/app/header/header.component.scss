@@ -16,10 +16,10 @@
     cursor: pointer;
 }
 
-square{
+app-square{
     margin-top: 9px;
 }
-square:last-of-type{
+app-square:last-of-type{
     border-right: 1px solid var(--square-border-color);
 }
 

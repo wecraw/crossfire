@@ -1,5 +1,5 @@
 <div class="container">
-  <i (click)="closeEvent()" class="close-icon fa-solid fa-xl fa-xmark"></i>
+  <i (click)="closeEvent()" (keyup.enter)="closeEvent()" tabindex="0" role="button" aria-label="Close" class="close-icon fa-solid fa-xl fa-xmark"></i>
   <h5>About</h5>
   <p>
     Crawsword is a daily word game where players have ten attempts to answer

@@ -1,6 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import moment from 'moment-timezone';
 
+export interface GameStats {
+  maxStreak: string;
+  totalGames: string;
+  winPercent: number;
+  currentStreak: string;
+}
+
 @Component({
   standalone: false,
   selector: 'app-modal',
@@ -12,14 +19,14 @@ export class ModalComponent implements OnInit {
   @Input() primaryLabel: string = 'Confirm';
   @Input() secondaryLabel: string = 'Cancel';
   @Input() incorrectGuessesByLevel: number[];
-  @Input() stats: any;
+  @Input() stats: GameStats;
   @Input() currentLevel: number;
 
-  @Output() secondaryEvent = new EventEmitter<any>();
-  @Output() primaryEvent = new EventEmitter<any>();
+  @Output() secondaryEvent = new EventEmitter<void>();
+  @Output() primaryEvent = new EventEmitter<void>();
 
   secondsUntilTomorrow: string;
-  interval: any;
+  interval: ReturnType<typeof setInterval>;
   newDay: boolean = false;
 
   levels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];

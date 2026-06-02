@@ -3,12 +3,12 @@ import { Component } from '@angular/core';
 
 export interface IClue {
   clueNumber: number;
-  clue: any;
-  answer: any;
+  clue: string;
+  answer: string;
 }
 
 export interface ILetter {
-  letter: any;
+  letter: string;
   state: "default" | "correct" | "incorrect"
 }
 

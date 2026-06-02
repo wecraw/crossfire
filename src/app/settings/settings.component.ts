@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   standalone: false,
@@ -6,37 +6,33 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent {
 
-  @Output() onClose = new EventEmitter<any>();
-  @Output() onFaq = new EventEmitter<any>();
-
-  constructor() { }
+  @Output() closed = new EventEmitter<void>();
+  @Output() faq = new EventEmitter<void>();
 
   closeEvent(){
-    this.onClose.emit()
+    this.closed.emit()
   }
 
   faqEvent(){
-    this.onFaq.emit()
+    this.faq.emit()
   }
 
   isDarkMode(){
-    let currentTheme = document.documentElement.getAttribute("data-theme");
-    var storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     if (storedTheme === 'dark') return true
     return false
   }
-  
+
   isContrastMode(){
-    let currentTheme = document.documentElement.getAttribute("data-contrast-theme");
-    var storedTheme = localStorage.getItem('contrast-theme');
+    const storedTheme = localStorage.getItem('contrast-theme');
     if (storedTheme === 'contrast') return true
     return false
   }
 
-  darkModeSwitchChange(event: any){
-    let currentTheme = document.documentElement.getAttribute("data-theme");
+  darkModeSwitchChange(){
+    const currentTheme = document.documentElement.getAttribute("data-theme");
     let targetTheme = "light";
 
     if (currentTheme === "light") {
@@ -47,8 +43,8 @@ export class SettingsComponent implements OnInit {
     localStorage.setItem('theme', targetTheme);
   }
 
-  contrastSwitchChange(event: any){
-    let currentTheme = document.documentElement.getAttribute("data-contrast-theme");
+  contrastSwitchChange(){
+    const currentTheme = document.documentElement.getAttribute("data-contrast-theme");
     let targetTheme = "default";
 
     if (currentTheme === "default") {
@@ -56,11 +52,7 @@ export class SettingsComponent implements OnInit {
     }
 
     document.documentElement.setAttribute('data-contrast-theme', targetTheme)
-    localStorage.setItem('contrast-theme', targetTheme);    
-  }
-
-  ngOnInit(): void {
-    
+    localStorage.setItem('contrast-theme', targetTheme);
   }
 
 }

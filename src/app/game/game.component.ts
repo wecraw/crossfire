@@ -1,10 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  OnInit,
-  Renderer2,
-} from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, Renderer2, inject } from '@angular/core';
 import { mondayClues } from '../clues/monday';
 import { tuesdayClues } from '../clues/tuesday';
 import { wednesdayClues } from '../clues/wednesday';
@@ -19,12 +13,12 @@ import moment from 'moment-timezone';
 
 export interface IClue {
   clueNumber: number;
-  clue: any;
-  answer: any;
+  clue: string;
+  answer: string;
 }
 
 export interface ILetter {
-  letter: any;
+  letter: string;
   state: 'default' | 'correct' | 'absent' | 'present';
 }
 
@@ -35,6 +29,9 @@ export interface ILetter {
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit {
+  private renderer2 = inject(Renderer2);
+  private elementRef = inject(ElementRef);
+
   //Clue variables
   clue: IClue = {
     clueNumber: 0,
@@ -77,7 +74,7 @@ export class GameComponent implements OnInit {
   initialHideToast: boolean = true; //used to hide boolean on initial load to prevent the fade out from happening on load
   toastText: string = '';
   invalidReason: string = ''; //reason for why a guess is invalid, shown in toast text
-  toastTimeout: any; //used to reset toast if multiple are called in rapid succession
+  toastTimeout: ReturnType<typeof setTimeout>; //used to reset toast if multiple are called in rapid succession
 
   //Modal variables
   showResetModal: boolean = false;
@@ -96,9 +93,7 @@ export class GameComponent implements OnInit {
   SCROLLABLE_AREA_OFFSET: number = 265; //pixel offset for header and keyboard to calc scrollable area
   MAX_INCORRECT_GUESSES: number = 10;
   DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
-  PUZZLE_FIRST_DAY: number = 19120; //first day (in days since epoch) that the daily puzzle was ran
-
-  constructor(private renderer2: Renderer2, private elementRef: ElementRef) {}
+  PUZZLE_FIRST_DAY: number = 19120;
 
   ngOnInit(): void {
     this.setTheme(); //set color theme e.g. dark, contrast
@@ -175,7 +170,7 @@ export class GameComponent implements OnInit {
   }
 
   //gets state of entered letter
-  getState(i: any) {
+  getState(i: number) {
     if (i < this.enteredLetters.length) {
       return this.enteredLetters[i].state;
     } else {
@@ -184,7 +179,7 @@ export class GameComponent implements OnInit {
   }
 
   //fill empty letters on board
-  getLetter(i: any) {
+  getLetter(i: number) {
     if (i < this.enteredLetters.length) {
       return this.enteredLetters[i].letter;
     } else {
@@ -211,19 +206,17 @@ export class GameComponent implements OnInit {
   }
 
   getNewPuzzle() {
-    let that = this;
-
-    setTimeout(function () {
-      that.absentLetters = [];
-      that.presentLetters = [];
-      that.correctLetters = [];
-      that.submissions = [];
-      that.updateLocalStorage();
-      that.setClue();
-      that.entryIndex = 0;
-      that.solved = false;
-      that.currentDisplayLevel = that.currentLevel;
-      that.guessNotAllowed = false; //need to reset this from the check answer func
+    setTimeout(() => {
+      this.absentLetters = [];
+      this.presentLetters = [];
+      this.correctLetters = [];
+      this.submissions = [];
+      this.updateLocalStorage();
+      this.setClue();
+      this.entryIndex = 0;
+      this.solved = false;
+      this.currentDisplayLevel = this.currentLevel;
+      this.guessNotAllowed = false; //need to reset this from the check answer func
     }, 500);
   }
 
@@ -254,21 +247,20 @@ export class GameComponent implements OnInit {
 
   checkAnswer() {
     let correctLetterCount = 0;
-    let that = this;
 
     //check if any squares are empty and if so, abort the check
     if (!this.isAnswerValid()) {
       this.invalidGuessAnimation = true;
       this.toast(this.invalidReason);
-      setTimeout(function () {
-        that.invalidGuessAnimation = false;
+      setTimeout(() => {
+        this.invalidGuessAnimation = false;
       }, 700);
       return;
     }
 
     if (this.guessNotAllowed) return;
 
-    let tempLettersRemaining = this.letters.concat([]); //temp array to track remaining letters, allows greens and yellos of same letter in same guess
+    const tempLettersRemaining = this.letters.concat([]); //temp array to track remaining letters, allows greens and yellos of same letter in same guess
 
     this.letters.forEach((letter, i) => {
       if (letter === this.enteredLetters[i].letter) {
@@ -276,7 +268,7 @@ export class GameComponent implements OnInit {
         correctLetterCount++;
 
         //remove letter from temp array
-        let index = tempLettersRemaining.indexOf(letter);
+        const index = tempLettersRemaining.indexOf(letter);
         if (index !== -1) tempLettersRemaining.splice(index, 1);
 
         this.correctLetters.push(letter);
@@ -292,7 +284,7 @@ export class GameComponent implements OnInit {
           this.enteredLetters[i].state = 'present';
 
           this.presentLetters.push(this.enteredLetters[i].letter);
-          let index = tempLettersRemaining.indexOf(
+          const index = tempLettersRemaining.indexOf(
             this.enteredLetters[i].letter
           );
           if (index !== -1) tempLettersRemaining.splice(index, 1);
@@ -314,9 +306,9 @@ export class GameComponent implements OnInit {
         this.handleWin();
       } else {
         this.renderConfetti();
-        setTimeout(function () {
-          that.solved = true;
-          that.getNewPuzzle();
+        setTimeout(() => {
+          this.solved = true;
+          this.getNewPuzzle();
         }, 750); //start the get new puzzle animation after this much time has passed. i.e. how long do they look at the confetti
       }
     } else {
@@ -324,8 +316,8 @@ export class GameComponent implements OnInit {
       this.incorrectGuessesByLevel[this.currentLevel]++;
       this.updateLocalStorage();
       this.shakeChecks = true;
-      setTimeout(function () {
-        that.shakeChecks = false;
+      setTimeout(() => {
+        this.shakeChecks = false;
       }, 300);
       if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES) {
         this.guessNotAllowed = true;
@@ -336,7 +328,7 @@ export class GameComponent implements OnInit {
         this.submissions.push(this.enteredLetters);
         this.updateLocalStorage();
         this.enteredLetters = [];
-        this.letters.forEach((letter) => {
+        this.letters.forEach(() => {
           this.enteredLetters.push({
             letter: '',
             state: 'default',
@@ -354,14 +346,13 @@ export class GameComponent implements OnInit {
     this.guessNotAllowed = true;
     this.updateLocalStorage();
     this.updateStats();
-    let that = this;
-    let toastDuration = 2250;
+    const toastDuration = 2250;
     this.toast(this.clue.answer, toastDuration);
 
-    setTimeout(function () {
+    setTimeout(() => {
       //wait until toast finishes to launch the modal
-      that.showGameOverModal = true;
-      that.guessNotAllowed = false;
+      this.showGameOverModal = true;
+      this.guessNotAllowed = false;
     }, toastDuration + 500);
   }
 
@@ -370,12 +361,11 @@ export class GameComponent implements OnInit {
     this.hasWon = true;
     this.updateLocalStorage();
     this.updateStats();
-    let that = this;
     this.renderWinConfetti();
-    setTimeout(function () {
+    setTimeout(() => {
       //wait until toast finishes to launch the modal
-      that.showGameOverModal = true;
-      that.guessNotAllowed = false;
+      this.showGameOverModal = true;
+      this.guessNotAllowed = false;
     }, 3500); //wait until victory confetti finishes
   }
 
@@ -385,7 +375,7 @@ export class GameComponent implements OnInit {
     this.ngOnInit();
   }
 
-  onMenuClick(selection: any) {
+  onMenuClick(selection: string) {
     if (selection === 'settings') {
       this.toggleSettingsModal();
     }
@@ -431,7 +421,7 @@ export class GameComponent implements OnInit {
     }
   }
 
-  handleLetterEntry(letter: any) {
+  handleLetterEntry(letter: string) {
     this.enteredLetters[this.entryIndex].letter = letter;
 
     if (this.entryIndex < this.clue.answer.length - 1) {
@@ -439,7 +429,7 @@ export class GameComponent implements OnInit {
     }
   }
 
-  handleVirtualKeypress(event: any) {
+  handleVirtualKeypress(event: string) {
     if (event === 'CHECK') {
       this.checkAnswer();
     } else if (event === 'BKSP') {
@@ -545,7 +535,7 @@ export class GameComponent implements OnInit {
   }
 
   getStats() {
-    let streak = this.getStreak();
+    const streak = this.getStreak();
 
     let tG = localStorage.getItem('totalGamesPlayed');
     if (!tG) tG = '0';
@@ -575,41 +565,41 @@ export class GameComponent implements OnInit {
     if (+streakLastPuzzle !== this.getPuzzleNumber()) {
       //if stats haven't been logged today
       if (!this.practiceMode) {
-        let tG = localStorage.getItem('totalGamesPlayed');
+        const tG = localStorage.getItem('totalGamesPlayed');
         if (tG) {
-          let tG_num = +tG;
+          const tG_num = +tG;
           localStorage.setItem('totalGamesPlayed', tG_num + 1 + '');
         } else {
           localStorage.setItem('totalGamesPlayed', '1');
         }
 
-        let tW = localStorage.getItem('totalWins');
+        const tW = localStorage.getItem('totalWins');
         if (tW && this.hasWon) {
-          let tW_num = +tW;
+          const tW_num = +tW;
           localStorage.setItem('totalWins', tW_num + 1 + '');
         } else {
           localStorage.setItem('totalWins', '1');
         }
 
-        let tL = localStorage.getItem('totalLevels');
+        const tL = localStorage.getItem('totalLevels');
         if (tL) {
-          let tL_num = +tL;
+          const tL_num = +tL;
           localStorage.setItem('totalLevels', tL_num + this.currentLevel + '');
         } else {
           localStorage.setItem('totalLevels', this.currentLevel + '');
         }
 
-        let tGuess = localStorage.getItem('totalGuesses');
+        const tGuess = localStorage.getItem('totalGuesses');
         if (tGuess) {
-          let tGuess_num = +tGuess;
+          const tGuess_num = +tGuess;
           localStorage.setItem(
             'totalGuesses',
             tGuess_num + this.incorrectGuesses + ''
           );
         }
 
-        let streak = localStorage.getItem('streak');
-        let streakLastPuzzle = localStorage.getItem('streakLastPuzzle');
+        const streak = localStorage.getItem('streak');
+        const streakLastPuzzle = localStorage.getItem('streakLastPuzzle');
         let isStreakValid = true;
         if (streakLastPuzzle) {
           if (this.getPuzzleNumber() - +streakLastPuzzle > 1)
@@ -619,7 +609,7 @@ export class GameComponent implements OnInit {
           let streak_num = +streak;
           if (this.hasLost) streak_num = 0;
           if (this.hasWon) streak_num++;
-          let mS = localStorage.getItem('maxStreak');
+          const mS = localStorage.getItem('maxStreak');
           let mS_num = 0;
           if (mS) mS_num = +mS;
           if (streak_num > mS_num)
@@ -628,7 +618,7 @@ export class GameComponent implements OnInit {
         } else {
           let streak_num = 0;
           if (this.hasWon) streak_num = 1;
-          let mS = localStorage.getItem('maxStreak');
+          const mS = localStorage.getItem('maxStreak');
           let mS_num = 0;
           if (mS) mS_num = +mS;
           if (streak_num > mS_num)
@@ -641,7 +631,7 @@ export class GameComponent implements OnInit {
   }
 
   getStreak() {
-    let streak = localStorage.getItem('streak');
+    const streak = localStorage.getItem('streak');
     if (streak) return streak;
     return '0';
   }
@@ -655,28 +645,28 @@ export class GameComponent implements OnInit {
   }
 
   loadFromLocalStorage() {
-    let iG = localStorage.getItem('incorrectGuesses');
+    const iG = localStorage.getItem('incorrectGuesses');
     if (iG) this.incorrectGuesses = +iG;
 
-    let iGBL = localStorage.getItem('incorrectGuessesByLevel');
+    const iGBL = localStorage.getItem('incorrectGuessesByLevel');
     if (iGBL) this.incorrectGuessesByLevel = JSON.parse(iGBL);
 
-    let cL = localStorage.getItem('currentLevel');
+    const cL = localStorage.getItem('currentLevel');
     if (cL) {
       this.currentLevel = +cL;
       this.currentDisplayLevel = this.currentLevel;
     }
 
-    let cE = localStorage.getItem('currentEntries');
+    const cE = localStorage.getItem('currentEntries');
     if (cE) {
       this.submissions = JSON.parse(cE);
       this.setKeyboardFromSubmissions();
     }
 
-    let hW = localStorage.getItem('hasWon');
+    const hW = localStorage.getItem('hasWon');
     if (hW) this.hasWon = hW === 'true';
 
-    let hL = localStorage.getItem('hasLost');
+    const hL = localStorage.getItem('hasLost');
     if (hL) this.hasLost = hL === 'true';
   }
 
@@ -725,8 +715,8 @@ export class GameComponent implements OnInit {
 
   /*------------------------------Other Helpers-------------------------------------*/
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event) {
+  @HostListener('window:resize')
+  onResize() {
     this.setScrollableArea();
   }
 
@@ -735,7 +725,7 @@ export class GameComponent implements OnInit {
   }
 
   setTheme() {
-    let storedTheme =
+    const storedTheme =
       localStorage.getItem('theme') ||
       (window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
@@ -743,7 +733,7 @@ export class GameComponent implements OnInit {
     if (storedTheme)
       document.documentElement.setAttribute('data-theme', storedTheme);
 
-    let storedContrastTheme = localStorage.getItem('contrast-theme') || '';
+    const storedContrastTheme = localStorage.getItem('contrast-theme') || '';
     if (storedTheme)
       document.documentElement.setAttribute(
         'data-contrast-theme',
@@ -752,7 +742,7 @@ export class GameComponent implements OnInit {
   }
 
   isNewDay() {
-    let savedDay = localStorage.getItem('currentDay');
+    const savedDay = localStorage.getItem('currentDay');
     if (savedDay && +savedDay < this.daysSinceEpoch()) {
       return true;
     } else return false;
@@ -762,12 +752,12 @@ export class GameComponent implements OnInit {
     return allKeys.indexOf(e.key) === -1;
   }
 
-  getRandomInt(max: any) {
+  getRandomInt(max: number) {
     return Math.floor(Math.random() * max);
   }
 
   getRandomIntSeeded(max: number, seed: number) {
-    let rand = seedrandom(String(seed));
+    const rand = seedrandom(String(seed));
     return Math.floor(rand() * max);
   }
 
@@ -780,26 +770,25 @@ export class GameComponent implements OnInit {
   }
 
   getSecondsUntilTomorrow() {
-    let now: any = new Date();
-    const SECONDS = 86400 - (Math.floor(now / 1000) % 86400) + 25200;
+    const now = new Date();
+    const SECONDS = 86400 - (Math.floor(now.getTime() / 1000) % 86400) + 25200;
 
     return new Date(SECONDS * 1000).toISOString().substring(11, 19);
   }
 
   toast(text: string, duration?: number) {
-    let toastDuration = duration || this.DEFAULT_TOAST_DURATION;
+    const toastDuration = duration || this.DEFAULT_TOAST_DURATION;
     window.clearTimeout(this.toastTimeout);
-    let that = this;
     this.toastText = text;
     this.showToast = true;
     this.initialHideToast = false;
-    this.toastTimeout = setTimeout(function () {
-      that.showToast = false;
+    this.toastTimeout = setTimeout(() => {
+      this.showToast = false;
     }, toastDuration);
   }
 
   scrollGameToBottom() {
-    let el = document.getElementById('letters-row-wrapper');
+    const el = document.getElementById('letters-row-wrapper');
     setTimeout(function () {
       el?.scrollTo({
         top: el.scrollHeight,

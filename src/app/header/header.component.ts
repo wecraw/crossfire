@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   standalone: false,
@@ -10,8 +10,8 @@ export class HeaderComponent {
   @Input() practiceMode: boolean = false;
   @Input() disabled: boolean = false;
 
-  @Output() helpClickEvent = new EventEmitter<any>();
-  @Output() settingsClickEvent = new EventEmitter<any>();
+  @Output() helpClickEvent = new EventEmitter<void>();
+  @Output() settingsClickEvent = new EventEmitter<void>();
   @Output() menuClickEvent = new EventEmitter<string>();
 
   constructor() {}
