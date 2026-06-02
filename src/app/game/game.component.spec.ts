@@ -126,8 +126,9 @@ describe('GameComponent', () => {
       component.currentLevel = 0;
       component.currentRow = 0;
       component.clue = { clueNumber: 1, clue: 'test', answer };
+      component.incorrectGuesses = 0;
       component.board = [];
-      for (let r = 0; r < component.MAX_GUESSES_PER_LEVEL; r++) {
+      for (let r = 0; r < component.MAX_INCORRECT_GUESSES; r++) {
         const row: ILetter[] = [];
         for (let c = 0; c < answer.length; c++) {
           row.push({ letter: '', state: 'default' });
@@ -210,18 +211,18 @@ describe('GameComponent', () => {
       expect(component.currentRow).toBe(1);
     });
 
-    it('triggers a loss after MAX_GUESSES_PER_LEVEL wrong guesses', () => {
+    it('triggers a loss after MAX_INCORRECT_GUESSES wrong guesses', () => {
       loadAnswer('CRANE');
 
-      for (let i = 0; i < component.MAX_GUESSES_PER_LEVEL; i++) {
+      for (let i = 0; i < component.MAX_INCORRECT_GUESSES; i++) {
         enter('DUMPS');
         component.checkAnswer();
       }
 
       expect(component.incorrectGuessesByLevel[0]).toBe(
-        component.MAX_GUESSES_PER_LEVEL
+        component.MAX_INCORRECT_GUESSES
       );
-      expect(component.currentRow).toBe(component.MAX_GUESSES_PER_LEVEL);
+      expect(component.currentRow).toBe(component.MAX_INCORRECT_GUESSES);
       expect(component.hasLost).toBe(true);
     });
 
@@ -243,8 +244,9 @@ describe('GameComponent', () => {
       component.givenLetter = answer[givenPos];
       component.currentLevel = 0;
       component.currentRow = 0;
+      component.incorrectGuesses = 0;
       component.board = [];
-      for (let r = 0; r < component.MAX_GUESSES_PER_LEVEL; r++) {
+      for (let r = 0; r < component.MAX_INCORRECT_GUESSES; r++) {
         const row: ILetter[] = [];
         for (let c = 0; c < answer.length; c++) {
           row.push({ letter: '', state: 'default' });
@@ -343,9 +345,10 @@ describe('GameComponent', () => {
       component.currentRow = 1;
       component.incorrectGuesses = 2;
       component.incorrectGuessesByLevel = [0, 1, 1, 0, 0, 0, 0];
-      // a realistic full board: 6 rows x 5, with one scored guess on row 0
+      // a saved in-progress board (4 rows = the remaining budget after 2 wrong),
+      // with one scored guess on row 0
       const savedBoard: ILetter[][] = [];
-      for (let r = 0; r < component.MAX_GUESSES_PER_LEVEL; r++) {
+      for (let r = 0; r < component.MAX_INCORRECT_GUESSES - 2; r++) {
         const row: ILetter[] = [];
         for (let c = 0; c < 5; c++) row.push({ letter: '', state: 'default' });
         savedBoard.push(row);

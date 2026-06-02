@@ -73,7 +73,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   currentDay: number = 0; //days since epoch
 
   //Board / entry variables
-  board: ILetter[][] = []; //MAX_GUESSES_PER_LEVEL rows x WORD_LENGTH cols
+  board: ILetter[][] = []; //(MAX_INCORRECT_GUESSES - incorrectGuesses) rows x WORD_LENGTH cols
   currentRow: number = 0; //active guess row
   currentCol: number = 0; //active cell within the row
   presentLetters: string[] = []; //keyboard highlighting
@@ -112,7 +112,7 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   //Constants
   WORD_LENGTH: number = 5;
-  MAX_GUESSES_PER_LEVEL: number = 6;
+  MAX_INCORRECT_GUESSES: number = 6; //shared wrong-guess budget for the whole game
   NUM_LEVELS: number = 7;
   MAX_TILE_PX: number = 56;
   MIN_TILE_PX: number = 28;
@@ -155,7 +155,8 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.setBoardSize();
   }
 
-  //sizes the tiles so all 6 rows fit between the clue and the keyboard
+  //sizes the tiles so the fullest board (MAX_INCORRECT_GUESSES rows) fits
+  //between the clue and the keyboard; the board only ever shrinks from there
   setBoardSize() {
     const clue = document.querySelector('.clue');
     const keyboard = document.querySelector('.keyboard-container');
@@ -172,7 +173,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     }
 
     const byHeight =
-      Math.floor(availHeight / this.MAX_GUESSES_PER_LEVEL) - this.ROW_MARGIN_PX;
+      Math.floor(availHeight / this.MAX_INCORRECT_GUESSES) - this.ROW_MARGIN_PX;
     const availWidth = Math.min(window.innerWidth, 480) - 16;
     const byWidth = Math.floor(availWidth / this.WORD_LENGTH) - 2;
 
@@ -252,9 +253,12 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.currentDisplayLevel = level;
   }
 
+  //the board only holds the wrong-guess budget still left for the whole game,
+  //so it shrinks as mistakes accumulate and is never refilled between levels
   private buildBoard() {
     this.board = [];
-    for (let r = 0; r < this.MAX_GUESSES_PER_LEVEL; r++) {
+    const rows = this.MAX_INCORRECT_GUESSES - this.incorrectGuesses;
+    for (let r = 0; r < rows; r++) {
       const row: ILetter[] = [];
       for (let c = 0; c < this.answer.length; c++) {
         row.push({ letter: '', state: 'default' });
@@ -435,7 +439,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     }, 300);
 
     this.currentRow++;
-    if (this.currentRow === this.MAX_GUESSES_PER_LEVEL) {
+    if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES) {
       this.guessNotAllowed = true;
       this.handleLoss();
     } else {
