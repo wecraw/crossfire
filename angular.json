@@ -3,6 +3,9 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
+    "cache": {
+      "enabled": false
+    },
     "schematicCollections": [
       "angular-eslint"
     ],
@@ -35,6 +38,13 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
+              "src/favicon-16x16.png",
+              "src/favicon-32x32.png",
+              "src/apple-touch-icon.png",
+              "src/android-chrome-144x144.png",
+              "src/mstile-150x150.png",
+              "src/site.webmanifest",
+              "src/browserconfig.xml",
               "src/assets"
             ],
             "styles": [

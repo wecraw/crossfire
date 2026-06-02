@@ -3,6 +3,7 @@ import puz
 import dateparser
 import json
 import os
+import re
 
 monday = open("clues.txt", "w")
 all_files = [
@@ -43,6 +44,8 @@ def contains_forbidden(clue, answer):
     if "circled" in clue:
         return True
     if len(answer) > 8:
+        return True
+    if not re.fullmatch(r'[A-Z]+', answer):
         return True
     if clue.isupper():
         return True

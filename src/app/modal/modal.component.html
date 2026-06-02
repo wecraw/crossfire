@@ -58,7 +58,7 @@
               </div>
             </div>
             <div class="guesses">
-              @for (j of numSequence(incorrectGuessesByLevel[i]); track j) {
+              @for (j of numSequence(incorrectGuessesByLevel[i]); track $index) {
                 <i class="wrong-guess fa-solid fa-xl fa-xmark"></i>
               }
             </div>

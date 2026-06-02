@@ -7,7 +7,6 @@ import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
 import seedrandom from 'seedrandom';
-import { allKeys } from '../keys';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
 
@@ -155,14 +154,14 @@ export class GameComponent implements OnInit {
     this.clueSeeds = [];
     if (this.practiceMode) {
       this.cluesArray.forEach((clueSet) => {
-        this.clueSeeds.push(this.getRandomInt(clueSet.length - 1));
+        this.clueSeeds.push(this.getRandomInt(clueSet.length));
       });
     } else {
       //sets the daily seed if not in practice mode
       let i = 0;
       this.cluesArray.forEach((clueSet) => {
         this.clueSeeds.push(
-          this.getRandomIntSeeded(clueSet.length - 1, this.daysSinceEpoch() + i)
+          this.getRandomIntSeeded(clueSet.length, this.daysSinceEpoch() + i)
         );
         i++;
       });
@@ -398,8 +397,7 @@ export class GameComponent implements OnInit {
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (!this.guessNotAllowed && !this.hasWon && !this.hasLost) {
-      if (this.isKeyPrintable(event)) {
-        //checks if entry is a letter or number and handles the entry
+      if (this.isLetterKey(event)) {
         this.handleLetterEntry(event.key.toUpperCase());
       }
       if (event.key === 'Backspace') {
@@ -573,13 +571,11 @@ export class GameComponent implements OnInit {
           localStorage.setItem('totalGamesPlayed', '1');
         }
 
-        const tW = localStorage.getItem('totalWins');
-        if (tW && this.hasWon) {
-          const tW_num = +tW;
-          localStorage.setItem('totalWins', tW_num + 1 + '');
-        } else {
-          localStorage.setItem('totalWins', '1');
-        }
+        const totalWins = +(localStorage.getItem('totalWins') || '0');
+        localStorage.setItem(
+          'totalWins',
+          '' + (totalWins + (this.hasWon ? 1 : 0))
+        );
 
         const tL = localStorage.getItem('totalLevels');
         if (tL) {
@@ -589,14 +585,11 @@ export class GameComponent implements OnInit {
           localStorage.setItem('totalLevels', this.currentLevel + '');
         }
 
-        const tGuess = localStorage.getItem('totalGuesses');
-        if (tGuess) {
-          const tGuess_num = +tGuess;
-          localStorage.setItem(
-            'totalGuesses',
-            tGuess_num + this.incorrectGuesses + ''
-          );
-        }
+        const totalGuesses = +(localStorage.getItem('totalGuesses') || '0');
+        localStorage.setItem(
+          'totalGuesses',
+          '' + (totalGuesses + this.incorrectGuesses)
+        );
 
         const streak = localStorage.getItem('streak');
         const streakLastPuzzle = localStorage.getItem('streakLastPuzzle');
@@ -642,6 +635,8 @@ export class GameComponent implements OnInit {
     localStorage.setItem('currentDay', '' + this.daysSinceEpoch());
     localStorage.removeItem('currentLevel');
     localStorage.removeItem('currentEntries');
+    localStorage.removeItem('hasWon');
+    localStorage.removeItem('hasLost');
   }
 
   loadFromLocalStorage() {
@@ -748,8 +743,8 @@ export class GameComponent implements OnInit {
     } else return false;
   }
 
-  isKeyPrintable(e: KeyboardEvent) {
-    return allKeys.indexOf(e.key) === -1;
+  isLetterKey(e: KeyboardEvent) {
+    return /^[a-z]$/i.test(e.key);
   }
 
   getRandomInt(max: number) {
@@ -821,6 +816,8 @@ export class GameComponent implements OnInit {
       angle: 120,
       origin: { y: 0.5, x: 1 },
     });
+
+    this.removeCanvasAfter(canvas, 1500);
   }
 
   renderWinConfetti() {
@@ -893,5 +890,13 @@ export class GameComponent implements OnInit {
         origin: { y: 0.8, x: 1 },
       });
     }, 1500);
+
+    this.removeCanvasAfter(canvas, 5500);
+  }
+
+  private removeCanvasAfter(canvas: HTMLCanvasElement, delay: number) {
+    setTimeout(() => {
+      this.renderer2.removeChild(this.elementRef.nativeElement, canvas);
+    }, delay);
   }
 }

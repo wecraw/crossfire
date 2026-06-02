@@ -11,7 +11,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 Angular 21 / TypeScript 5.9. Builds use the esbuild-based `@angular/build:application` builder — there is no `polyfills.ts`-as-entry or `webpack` config; build/serve/test options live in `angular.json`. Polyfills are listed in the build target's `polyfills` array (`zone.js` + `src/polyfills.ts`).
 
-Migration notes (kept deliberately, don't "fix"): the app stays **NgModule-based** (not standalone), so every `@Component` carries `standalone: false` and `eslint.config.js` disables `@angular-eslint/prefer-standalone`. The production `budgets` are intentionally large (6mb/8mb initial) because the bundled clue arrays are huge. `seedrandom`/`moment-timezone` are allow-listed CommonJS deps.
+Migration notes (kept deliberately, don't "fix"): the app stays **NgModule-based** (not standalone), so every `@Component` carries `standalone: false` and `eslint.config.js` disables `@angular-eslint/prefer-standalone`. The production `budgets` are intentionally large (6mb/8mb initial) because the bundled clue arrays are huge. `seedrandom`/`moment-timezone` are allow-listed CommonJS deps. Angular CLI persistent caching is disabled because its native LMDB addon crashes under the local macOS/Node toolchain.
 
 `npm run lint` is **clean** — keep it that way. Templates use built-in control flow (`@if`/`@for`, not `*ngIf`/`*ngForOf`), all component selectors are `app-`-prefixed (`app-square`, `app-progress-bar`, `app-keyboard-button` — note this means element-name CSS rules must use the `app-` selector too), and `GameComponent` uses `inject()` rather than constructor injection.
 
@@ -29,7 +29,7 @@ This is **Crossfire** (shown to users as "Crawsword"): a daily Wordle-style game
 
 **Persistence.** Game progress and lifetime stats live in `localStorage` (no backend). On load, `isNewDay()` decides whether to `loadFromLocalStorage()` (resume today's in-progress game, including a prior win/loss) or `resetLocalStorage()` (fresh daily). Daily keys (`currentLevel`, `currentEntries`, `hasWon`, …) reset each day; aggregate stats (`totalGamesPlayed`, `totalWins`, `streak`, `maxStreak`, `streakLastPuzzle`, `totalLevels`, `totalGuesses`) persist across days. `MAX_INCORRECT_GUESSES = 10` per puzzle.
 
-**Word validation.** `src/app/is-word.js` is a trie-based dictionary checker used to reject non-words.
+**Word validation.** Guesses must be filled A-Z entries. `src/app/is-word.js` is a legacy, unused trie-based dictionary checker; crossword answers intentionally are not restricted to dictionary words.
 
 ## `src/python/` — offline content pipeline (not part of the app build)
 

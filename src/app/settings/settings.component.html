@@ -3,16 +3,16 @@
     <h5>Settings</h5>
     <div class="setting-row">
         <div class="setting-label">Dark mode</div>
-        <div class="custom-control switch-right custom-switch">
-            <input [checked]="isDarkMode()" (change)="darkModeSwitchChange()" type="checkbox" class="custom-control-input" id="customSwitch1">
-            <label class="custom-control-label" for="customSwitch1"></label>
+        <div class="form-check form-switch switch-right">
+            <input [checked]="isDarkMode()" (change)="darkModeSwitchChange()" type="checkbox" class="form-check-input" role="switch" id="customSwitch1">
+            <label class="form-check-label" for="customSwitch1"></label>
         </div>
     </div>
     <div class="setting-row">
       <div class="setting-label">High contrast mode</div>
-      <div class="custom-control switch-right custom-switch">
-          <input [checked]="isContrastMode()" (change)="contrastSwitchChange()" type="checkbox" class="custom-control-input" id="customSwitch2">
-          <label class="custom-control-label" for="customSwitch2"></label>
+      <div class="form-check form-switch switch-right">
+          <input [checked]="isContrastMode()" (change)="contrastSwitchChange()" type="checkbox" class="form-check-input" role="switch" id="customSwitch2">
+          <label class="form-check-label" for="customSwitch2"></label>
       </div>
     </div>
     <div class="setting-row">
