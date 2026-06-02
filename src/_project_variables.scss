@@ -1,6 +1,6 @@
+// Cap the container at 540px from the `sm` breakpoint upward. A single entry
+// keeps this from tripping Bootstrap's ascending-order assert (equal values
+// for sm/md/lg/xl warn); the 540px max-width carries to larger breakpoints.
 $container-max-widths: (
-        sm: 540px,
-        md: 540px,
-        lg: 540px,
-        xl: 540px
+        sm: 540px
 ) !default;

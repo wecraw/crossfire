@@ -15,7 +15,7 @@ import { sundayClues } from '../clues/sunday';
 import seedrandom from 'seedrandom';
 import { allKeys } from '../keys';
 import * as confetti from 'canvas-confetti';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 export interface IClue {
   clueNumber: number;
@@ -29,6 +29,7 @@ export interface ILetter {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-game',
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
@@ -766,7 +767,7 @@ export class GameComponent implements OnInit {
   }
 
   getRandomIntSeeded(max: number, seed: number) {
-    let rand = seedrandom(seed);
+    let rand = seedrandom(String(seed));
     return Math.floor(rand() * max);
   }
 

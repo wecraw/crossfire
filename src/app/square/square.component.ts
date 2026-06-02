@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'square',
   templateUrl: './square.component.html',
   styleUrls: ['./square.component.scss']

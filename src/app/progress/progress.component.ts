@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'progress-bar',
   templateUrl: './progress.component.html',
   styleUrls: ['./progress.component.scss']

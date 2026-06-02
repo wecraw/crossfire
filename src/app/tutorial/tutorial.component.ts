@@ -1,6 +1,7 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'app-tutorial',
   templateUrl: './tutorial.component.html',
   styleUrls: ['./tutorial.component.scss']

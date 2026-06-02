@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'keyboard-button',
   templateUrl: './keyboard-button.component.html',
   styleUrls: ['./keyboard-button.component.scss']

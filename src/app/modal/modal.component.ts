@@ -1,7 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 @Component({
+  standalone: false,
   selector: 'app-modal',
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss'],

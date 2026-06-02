@@ -5,12 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 - `npm start` — dev server at http://localhost:4200 (alias for `ng serve`), live reload
-- `npm run build` — production build to `dist/` (swaps in `environment.prod.ts` per `angular.json`)
-- `npm test` — unit tests via Karma + Jasmine (launches Chrome, watch mode)
-- `npm run lint` — ESLint via `@angular-eslint`
-- Run a single spec: `ng test --include='**/game.component.spec.ts'`
+- `npm run build` — production build to `dist/crossfire-ng/` (swaps in `environment.prod.ts` per `angular.json`)
+- `npm test` — unit tests via Vitest + jsdom (`@angular/build:unit-test`)
+- `npm run lint` — ESLint (flat config `eslint.config.js`, `angular-eslint` v21)
 
-Angular 13.3 / TypeScript 4.6. No `vite`/`webpack` config to edit directly — go through Angular CLI and `angular.json`.
+Angular 21 / TypeScript 5.9. Builds use the esbuild-based `@angular/build:application` builder — there is no `polyfills.ts`-as-entry or `webpack` config; build/serve/test options live in `angular.json`. Polyfills are listed in the build target's `polyfills` array (`zone.js` + `src/polyfills.ts`).
+
+Migration notes (kept deliberately, don't "fix"): the app stays **NgModule-based** (not standalone), so every `@Component` carries `standalone: false` and `eslint.config.js` disables `@angular-eslint/prefer-standalone`. The production `budgets` are intentionally large (6mb/8mb initial) because the bundled clue arrays are huge. `seedrandom`/`moment-timezone` are allow-listed CommonJS deps. Lint surfaces pre-existing style debt (heavy `any`, legacy `*ngIf`, etc.) and the auto-generated `*.spec.ts` stubs don't compile in isolation — both are pre-existing, not migration regressions.
 
 ## Architecture
 
