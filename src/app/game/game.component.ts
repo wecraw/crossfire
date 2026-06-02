@@ -723,8 +723,14 @@ export class GameComponent implements OnInit, AfterViewInit {
     const hL = localStorage.getItem('v3:hasLost');
     if (hL) this.hasLost = hL === 'true';
 
-    //prime the level (clue, given letter, fresh board), then overlay saved board
-    this.loadLevel(this.currentLevel);
+    //prime the level (clue, given letter, fresh board), then overlay saved board.
+    //after a win currentLevel === NUM_LEVELS (past the last chain entry), so prime
+    //the final solved level instead and keep the won display level for the progress bar
+    const primeLevel = this.hasWon
+      ? this.NUM_LEVELS - 1
+      : this.currentLevel;
+    this.loadLevel(primeLevel);
+    if (this.hasWon) this.currentDisplayLevel = this.NUM_LEVELS;
 
     const savedBoard = localStorage.getItem('v3:board');
     if (savedBoard) {
