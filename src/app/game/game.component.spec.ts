@@ -65,6 +65,35 @@ describe('GameComponent', () => {
       expect(a.clueSeeds).not.toEqual(b.clueSeeds);
     });
 
+    it('preserves the legacy daily mapping until the v2 cutover', () => {
+      component.daysSinceEpoch = () =>
+        component.DAILY_CLUE_MAPPING_V2_FIRST_DAY - 1;
+
+      component.setClueSeeds();
+
+      expect(component.clueSeeds).toEqual([
+        1988, 10476, 10227, 202, 1980, 13632, 12452,
+      ]);
+
+      component.currentLevel = 6;
+      component.setClue();
+      expect(component.clue.answer).toBe('MOTO');
+    });
+
+    it('uses the corrected daily bound starting at the v2 cutover', () => {
+      component.daysSinceEpoch = () => component.DAILY_CLUE_MAPPING_V2_FIRST_DAY;
+      const seededRandomSpy = vi
+        .spyOn(component, 'getRandomIntSeeded')
+        .mockImplementation((max: number) => max - 1);
+
+      component.setClueSeeds();
+
+      expect(component.clueSeeds).toEqual(
+        component.cluesArray.map((clueSet) => clueSet.length - 1)
+      );
+      seededRandomSpy.mockRestore();
+    });
+
     it('keeps every seed within the bounds of its clue set', () => {
       component.daysSinceEpoch = () => 20000;
       component.setClueSeeds();

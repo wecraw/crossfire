@@ -21,6 +21,52 @@ export interface ILetter {
   state: 'default' | 'correct' | 'absent' | 'present';
 }
 
+const LEGACY_CLUE_INSERTIONS: Partial<Record<number, [number, string[]][]>> = {
+  3: [
+    [11528, ['72', 'Steak accompanier', 'A1SAUCE']],
+    [11530, ['74', 'Some I.R.S. forms', 'W2S']],
+    [11569, ['68', 'Palindromic number', '212']],
+  ],
+  6: [
+    [4764, ['18', 'Apple tablet option', 'aPADPRO']],
+    [4769, ['25', 'Voting "aye"', 'aNFAVOR']],
+    [4771, ['27', 'Give way', 'YaELD']],
+    [4775, ['33', "Much of Goya's output", 'FRaJOLES']],
+    [4776, ['35', 'Japanese beer brand', 'KaRIN']],
+    [4783, ['52', 'Less certain', 'IFFaER']],
+    [4786, ['56', 'Symbol of Mexico', 'DAHLaA']],
+    [4790, ['68', 'Guiding light', 'POLARaS']],
+    [
+      4795,
+      [
+        '77',
+        'Executive producer of HBO\'s "A Black Lady Sketch Show"',
+        'aSSARAE',
+      ],
+    ],
+    [4807, ['97', 'Online source for film facts, in brief', 'aMDB']],
+    [4823, ['1', 'They get the wheels turning', 'AaLES']],
+    [
+      4826,
+      [
+        '4',
+        'Company that makes recoverable and reusable rocket boosters',
+        'SPACEa',
+      ],
+    ],
+    [4831, ['12', 'Duty', 'TAa']],
+    [4832, ['13', 'About to enter the stage, say', 'ONNEaT']],
+    [4846, ['45', 'Rose of rock', 'AaL']],
+    [4847, ['46', 'Nickname on a ranch', 'TEa']],
+    [4850, ['50', 'Digital writing', 'ETEaT']],
+    [4862, ['70', "Singer Aguilera's alter ego", 'aTINA']],
+    [4864, ['73', 'This is a test', 'EaAM']],
+    [4869, ['83', '"That\'s just unacceptable"', 'NOEaCUSE']],
+    [4870, ['85', '1969-74, politically', 'NIaONERA']],
+    [4874, ['91', 'New wings', 'ANNEaES']],
+  ],
+};
+
 @Component({
   standalone: false,
   selector: 'app-game',
@@ -93,6 +139,9 @@ export class GameComponent implements OnInit {
   MAX_INCORRECT_GUESSES: number = 10;
   DEFAULT_TOAST_DURATION: number = 1500; //how long the toast appears for, in milliseconds
   PUZZLE_FIRST_DAY: number = 19120;
+  DAILY_CLUE_MAPPING_V2_FIRST_DAY: number = 20612; //2026-06-08 in Pacific time
+
+  private useLegacyDailyClueMapping: boolean = false;
 
   ngOnInit(): void {
     this.setTheme(); //set color theme e.g. dark, contrast
@@ -152,16 +201,24 @@ export class GameComponent implements OnInit {
 
   setClueSeeds() {
     this.clueSeeds = [];
+    this.useLegacyDailyClueMapping = false;
     if (this.practiceMode) {
       this.cluesArray.forEach((clueSet) => {
         this.clueSeeds.push(this.getRandomInt(clueSet.length));
       });
     } else {
       //sets the daily seed if not in practice mode
+      const day = this.daysSinceEpoch();
+      this.useLegacyDailyClueMapping =
+        day < this.DAILY_CLUE_MAPPING_V2_FIRST_DAY;
       let i = 0;
-      this.cluesArray.forEach((clueSet) => {
+      this.cluesArray.forEach((_, level) => {
+        const clueSet = this.getClueSet(level);
+        const max = this.useLegacyDailyClueMapping
+          ? clueSet.length - 1
+          : clueSet.length;
         this.clueSeeds.push(
-          this.getRandomIntSeeded(clueSet.length, this.daysSinceEpoch() + i)
+          this.getRandomIntSeeded(max, day + i)
         );
         i++;
       });
@@ -453,20 +510,24 @@ export class GameComponent implements OnInit {
   }
 
   setClue() {
+    const clueSet = this.getClueSet(this.currentLevel);
     this.clue = {
-      clueNumber:
-        +this.cluesArray[this.currentLevel][
-          this.clueSeeds[this.currentLevel]
-        ][0],
-      clue: this.cluesArray[this.currentLevel][
-        this.clueSeeds[this.currentLevel]
-      ][1],
-      answer:
-        this.cluesArray[this.currentLevel][
-          this.clueSeeds[this.currentLevel]
-        ][2],
+      clueNumber: +clueSet[this.clueSeeds[this.currentLevel]][0],
+      clue: clueSet[this.clueSeeds[this.currentLevel]][1],
+      answer: clueSet[this.clueSeeds[this.currentLevel]][2],
     };
     this.setLetters(this.clue.answer);
+  }
+
+  private getClueSet(level: number) {
+    const clueSet = this.cluesArray[level];
+    if (!this.useLegacyDailyClueMapping) return clueSet;
+
+    const legacyClueSet = [...clueSet];
+    LEGACY_CLUE_INSERTIONS[level]?.forEach(([index, clue]) => {
+      legacyClueSet.splice(index, 0, clue);
+    });
+    return legacyClueSet;
   }
 
   /*------------------------------Sharing-------------------------------------*/
