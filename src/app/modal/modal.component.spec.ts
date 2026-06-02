@@ -27,4 +27,13 @@ describe('ModalComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('clears its countdown interval when destroyed', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
+
+    component.ngOnDestroy();
+
+    expect(clearIntervalSpy).toHaveBeenCalledWith(component.interval);
+    clearIntervalSpy.mockRestore();
+  });
 });

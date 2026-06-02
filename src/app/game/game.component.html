@@ -42,7 +42,7 @@
         class="letters-row"
         [ngClass]="{ 'fade-out-bck': solved, 'fade-in-fwd': !solved }"
         >
-        @for (letter of letters; track letter; let i = $index; let isFirst = $first) {
+        @for (letter of letters; track $index; let i = $index; let isFirst = $first) {
           @if (isFirst) {
             <app-square
               [letterSize]="letters.length"
@@ -70,7 +70,7 @@
     <div class="checks" [ngClass]="{ 'pulsate-fwd': shakeChecks }">
       Guesses remaining:
 
-      @for (e of [].constructor(MAX_INCORRECT_GUESSES); track e; let i = $index) {
+      @for (e of [].constructor(MAX_INCORRECT_GUESSES); track $index; let i = $index) {
         <i
           class="guess-icon fa-circle"
           [ngClass]="{

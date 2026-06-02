@@ -65,6 +65,35 @@ describe('GameComponent', () => {
       expect(a.clueSeeds).not.toEqual(b.clueSeeds);
     });
 
+    it('preserves the legacy daily mapping until the v2 cutover', () => {
+      component.daysSinceEpoch = () =>
+        component.DAILY_CLUE_MAPPING_V2_FIRST_DAY - 1;
+
+      component.setClueSeeds();
+
+      expect(component.clueSeeds).toEqual([
+        1988, 10476, 10227, 202, 1980, 13632, 12452,
+      ]);
+
+      component.currentLevel = 6;
+      component.setClue();
+      expect(component.clue.answer).toBe('MOTO');
+    });
+
+    it('uses the corrected daily bound starting at the v2 cutover', () => {
+      component.daysSinceEpoch = () => component.DAILY_CLUE_MAPPING_V2_FIRST_DAY;
+      const seededRandomSpy = vi
+        .spyOn(component, 'getRandomIntSeeded')
+        .mockImplementation((max: number) => max - 1);
+
+      component.setClueSeeds();
+
+      expect(component.clueSeeds).toEqual(
+        component.cluesArray.map((clueSet) => clueSet.length - 1)
+      );
+      seededRandomSpy.mockRestore();
+    });
+
     it('keeps every seed within the bounds of its clue set', () => {
       component.daysSinceEpoch = () => 20000;
       component.setClueSeeds();
@@ -72,6 +101,24 @@ describe('GameComponent', () => {
       component.clueSeeds.forEach((seed, level) => {
         expect(seed).toBeGreaterThanOrEqual(0);
         expect(seed).toBeLessThan(component.cluesArray[level].length);
+      });
+    });
+
+    it('can select the final clue in each practice-mode clue set', () => {
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.999999);
+      component.practiceMode = true;
+
+      component.setClueSeeds();
+
+      component.clueSeeds.forEach((seed, level) => {
+        expect(seed).toBe(component.cluesArray[level].length - 1);
+      });
+      randomSpy.mockRestore();
+    });
+
+    it('ships only answers supported by the keyboard', () => {
+      component.cluesArray.flat().forEach(([, , answer]) => {
+        expect(answer).toMatch(/^[A-Z]+$/);
       });
     });
   });
@@ -201,6 +248,20 @@ describe('GameComponent', () => {
     });
   });
 
+  describe('keyboard input', () => {
+    it('accepts letters and rejects unsupported physical keys', () => {
+      expect(component.isLetterKey(new KeyboardEvent('keyup', { key: 'a' }))).toBe(
+        true
+      );
+      expect(component.isLetterKey(new KeyboardEvent('keyup', { key: '?' }))).toBe(
+        false
+      );
+      expect(component.isLetterKey(new KeyboardEvent('keyup', { key: '1' }))).toBe(
+        false
+      );
+    });
+  });
+
   describe('localStorage persistence', () => {
     it('detects a new day when the stored day is in the past', () => {
       component.daysSinceEpoch = () => 20000;
@@ -237,6 +298,32 @@ describe('GameComponent', () => {
       component.currentLevel = 5;
       component.updateLocalStorage();
       expect(localStorage.getItem('currentLevel')).toBeNull();
+    });
+
+    it('clears terminal state when starting a new daily puzzle', () => {
+      localStorage.setItem('hasWon', 'true');
+      localStorage.setItem('hasLost', 'true');
+
+      component.resetLocalStorage();
+
+      expect(localStorage.getItem('hasWon')).toBeNull();
+      expect(localStorage.getItem('hasLost')).toBeNull();
+    });
+  });
+
+  describe('lifetime statistics', () => {
+    it('preserves total wins after a loss and initializes total guesses', () => {
+      component.daysSinceEpoch = () => 20000;
+      component.hasLost = true;
+      component.currentLevel = 3;
+      component.incorrectGuesses = 10;
+      localStorage.setItem('totalWins', '4');
+
+      component.updateStats();
+
+      expect(localStorage.getItem('totalGamesPlayed')).toBe('1');
+      expect(localStorage.getItem('totalWins')).toBe('4');
+      expect(localStorage.getItem('totalGuesses')).toBe('10');
     });
   });
 });

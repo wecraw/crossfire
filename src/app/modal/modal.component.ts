@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
 import moment from 'moment-timezone';
 
 export interface GameStats {
@@ -14,7 +21,7 @@ export interface GameStats {
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss'],
 })
-export class ModalComponent implements OnInit {
+export class ModalComponent implements OnDestroy, OnInit {
   @Input() decisionModal: boolean = false;
   @Input() primaryLabel: string = 'Confirm';
   @Input() secondaryLabel: string = 'Cancel';
@@ -38,6 +45,10 @@ export class ModalComponent implements OnInit {
     this.interval = setInterval(() => {
       this.secondsUntilTomorrow = this.getSecondsUntilTomorrow();
     }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.interval);
   }
 
   refresh() {
