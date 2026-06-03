@@ -146,17 +146,31 @@
     50%, 100% { color: var(--letter-checked-color); }
 }
 
-// Inter-level fade: only the colored fill + letter fade away, the empty-cell
-// skeleton (default background + borders) stays in place.
+// Inter-level flip-out: the reverse of the Wordle-style flip reveal. The tile
+// rotates edge-on and back, swapping the graded fill + letter out for the empty
+// skeleton at the midpoint. Unlike the reveal there's no per-column stagger —
+// every tile in the solved row flips out simultaneously. `both` fill mode holds
+// the emptied end state so the cell stays put once the next level loads.
 :host(.fade-out-letter) .square {
-    background-color: var(--square-default-color);
-    transition: background-color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: flip-out 0.5s ease both;
+    transform-origin: center;
 
     .letter,
     .clue-number {
-        opacity: 0;
-        transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: flip-out-text 0.5s ease both;
     }
+}
+
+@keyframes flip-out {
+    0%   { transform: rotateX(0deg);   background-color: var(--reveal-target); }
+    49%  { background-color: var(--reveal-target); }
+    50%  { transform: rotateX(-90deg); background-color: var(--square-default-color); }
+    100% { transform: rotateX(0deg);   background-color: var(--square-default-color); }
+}
+
+@keyframes flip-out-text {
+    0%, 49%   { color: var(--letter-checked-color); opacity: 1; }
+    50%, 100% { opacity: 0; }
 }
 
 @media (max-width: 767.98px) {
