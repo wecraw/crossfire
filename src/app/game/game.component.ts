@@ -109,6 +109,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   fadeKeepPos: number = -1; //column of the letter carried out to the next level
   animateGiven: boolean = false; //pops the level-1 freebie in shortly after load
   boardTransition: boolean = true; //false = snap (no animation) when swapping levels
+  revealRow: number = -1; //row currently playing the staggered flip reveal
 
   //Toast variables
   showToast: boolean = false;
@@ -141,6 +142,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   MIN_TILE_PX: number = 28;
   DEFAULT_TOAST_DURATION: number = 1500;
   PUZZLE_FIRST_DAY: number = 19120;
+  FLIP_DURATION_MS: number = 500; //one tile's flip, mirrored in square.component.scss
+  FLIP_STAGGER_MS: number = 250; //delay between consecutive tile flips
 
   ngOnInit(): void {
     this.setTheme();
@@ -352,6 +355,19 @@ export class GameComponent implements OnInit, AfterViewInit {
     return this.animateGiven && row === 0 && col === this.givenPos;
   }
 
+  //true for tiles in the row playing the Wordle-style staggered flip reveal;
+  //the pre-filled given is already known-correct, so it sits the reveal out
+  isRevealing(row: number, col: number): boolean {
+    return this.revealRow === row && col !== this.givenPos;
+  }
+
+  //per-column flip delay so tiles reveal one after another, left to right;
+  //columns past the skipped given shift back a step so there's no gap
+  revealDelay(col: number): string {
+    const index = this.givenPos >= 0 && col > this.givenPos ? col - 1 : col;
+    return index * this.FLIP_STAGGER_MS + 'ms';
+  }
+
   setCell(row: number, col: number) {
     if (this.guessNotAllowed || this.hasWon || this.hasLost) return;
     if (row !== this.currentRow) return;
@@ -422,11 +438,24 @@ export class GameComponent implements OnInit, AfterViewInit {
       row.map((cell) => ({ ...cell }))
     );
 
-    if (correctCount === this.answer.length) {
-      this.handleCorrect();
-    } else {
-      this.handleIncorrect();
-    }
+    const solved = correctCount === this.answer.length;
+
+    //play the staggered flip reveal, then act on the result once it finishes
+    this.guessNotAllowed = true;
+    this.revealRow = this.currentRow;
+    //one fewer tile flips when a given is skipped, so the row finishes sooner
+    const flipCount =
+      this.givenPos >= 0 ? this.answer.length - 1 : this.answer.length;
+    const revealTime =
+      (flipCount - 1) * this.FLIP_STAGGER_MS + this.FLIP_DURATION_MS;
+    setTimeout(() => {
+      this.revealRow = -1;
+      if (solved) {
+        this.handleCorrect();
+      } else {
+        this.handleIncorrect();
+      }
+    }, revealTime);
   }
 
   private handleCorrect() {
@@ -483,6 +512,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     } else {
       this.prefillRow(this.currentRow);
       this.currentCol = this.firstEditableCol();
+      this.guessNotAllowed = false; //re-enable input after the flip reveal
     }
     this.updateLocalStorage();
   }

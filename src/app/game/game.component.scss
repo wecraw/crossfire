@@ -20,6 +20,7 @@ $page-background-color: #fefefe;
   display: flex;
   width: 100%;
   justify-content: center;
+  perspective: 700px; //gives the flip-reveal tile rotation depth
 }
 
 .board-viewport {

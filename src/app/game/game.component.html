@@ -35,9 +35,11 @@
                 [clueNumber]="r === 0 && c === 0 ? '' + clue.clueNumber : ''"
                 [state]="cell.state"
                 [letter]="cell.letter"
+                [style.--flip-delay]="isRevealing(r, c) ? revealDelay(c) : null"
                 [ngClass]="{
                   'fade-out-letter': isFading(r, c),
-                  'given-reveal': isGivenReveal(r, c)
+                  'given-reveal': isGivenReveal(r, c),
+                  'revealing': isRevealing(r, c)
                 }"
               ></app-square>
             }

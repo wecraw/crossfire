@@ -154,6 +154,20 @@ describe('GameComponent', () => {
       );
     }
 
+    // checkAnswer now grades synchronously but defers the win/loss/advance
+    // outcome until the flip reveal finishes; flush past that timeout to assert
+    // the result. Stays short of handleCorrect's later slide/loadLevel timers.
+    function flushReveal() {
+      vi.advanceTimersByTime(
+        (component.answer.length - 1) * component.FLIP_STAGGER_MS +
+          component.FLIP_DURATION_MS +
+          1
+      );
+    }
+
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
     it('marks an exact match as all correct and advances the level', () => {
       loadAnswer('CRANE');
       enter('CRANE');
@@ -168,6 +182,7 @@ describe('GameComponent', () => {
         'correct',
         'correct',
       ]);
+      flushReveal();
       expect(component.currentLevel).toBe(before + 1);
       expect(component.incorrectGuesses).toBe(0);
     });
@@ -206,6 +221,7 @@ describe('GameComponent', () => {
 
       const level = component.currentLevel;
       component.checkAnswer();
+      flushReveal();
 
       expect(component.incorrectGuesses).toBe(1);
       expect(component.incorrectGuessesByLevel[0]).toBe(1);
@@ -219,6 +235,7 @@ describe('GameComponent', () => {
       for (let i = 0; i < component.MAX_INCORRECT_GUESSES; i++) {
         enter('DUMPS');
         component.checkAnswer();
+        flushReveal();
       }
 
       expect(component.incorrectGuessesByLevel[0]).toBe(
