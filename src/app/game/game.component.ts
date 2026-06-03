@@ -647,12 +647,12 @@ export class GameComponent implements OnInit, AfterViewInit {
     }
   }
 
-  //one replay page per level the player actually attempted, in chain order
+  //one replay page per level, in chain order; levels the player never reached
+  //have no graded guesses and simply show their clue and answer
   getReplays(): LevelReplay[] {
     const replays: LevelReplay[] = [];
     for (let level = 0; level < this.NUM_LEVELS; level++) {
-      const guesses = this.guessHistoryByLevel[level];
-      if (!guesses || guesses.length === 0) continue;
+      const guesses = this.guessHistoryByLevel[level] ?? [];
 
       const answer = this.chain[level][0];
       const clue = this.clueByAnswer[level].get(answer);

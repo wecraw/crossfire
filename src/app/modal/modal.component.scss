@@ -162,10 +162,15 @@
 }
 
 .breakdown{
-    margin-left: 20px;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
     .day{
         display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 }
 
@@ -178,13 +183,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 5px;
-    margin-bottom: 2.5px;
-    margin-top: 2.5px;
     transition: all 0.2s ease-in;
-    &:last-of-type{
-        margin-right: 0;
-    }
     &.upcoming{
         color: var(--level-upcoming-text-color);
         border: 1px solid var(--level-upcoming-border-color);
@@ -203,14 +202,15 @@
 }
 
 .wrong-guess {
-    margin-left: 5px;
+    font-size: 1.25rem;
     color: #B50000;
-    margin-top: auto;
-    margin-bottom: auto;
+    margin-top: 5px;
   }
 
   .guesses{
       display: flex;
+      flex-direction: column;
+      align-items: center;
   }
 
 .puzzle-tag{

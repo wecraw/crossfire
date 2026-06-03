@@ -69,11 +69,11 @@ export class ModalComponent implements OnDestroy, OnInit, AfterViewInit {
   }
 
   nextPage(): void {
-    this.goToPage(this.currentPage + 1);
+    this.currentPage = (this.currentPage + 1) % this.totalPages;
   }
 
   prevPage(): void {
-    this.goToPage(this.currentPage - 1);
+    this.currentPage = (this.currentPage - 1 + this.totalPages) % this.totalPages;
   }
 
   constructor() {}
