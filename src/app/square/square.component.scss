@@ -90,6 +90,30 @@
     }
 }
 
+// Level-1 freebie reveal: the empty-cell skeleton paints first, then after a
+// short delay the green fill + letter pop in. `both` fill mode holds the
+// pre-reveal state (default fill, invisible letter) through the delay, and the
+// end state matches the steady `.correct` rule so it stays put afterward.
+:host(.given-reveal) .square {
+    animation: given-fill-in 0.26s ease both;
+    animation-delay: 0.22s;
+
+    .letter {
+        animation: given-letter-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        animation-delay: 0.22s;
+    }
+}
+
+@keyframes given-fill-in {
+    from { background-color: var(--square-default-color); }
+    to   { background-color: var(--square-correct-bg-color); }
+}
+
+@keyframes given-letter-pop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
+}
+
 // Inter-level fade: only the colored fill + letter fade away, the empty-cell
 // skeleton (default background + borders) stays in place.
 :host(.fade-out-letter) .square {

@@ -107,6 +107,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   solvedRow: number = -1; //the row that was just solved (kept visible at top)
   fadeNonCarry: boolean = false; //fades every solved-row letter except the carry
   fadeKeepPos: number = -1; //column of the letter carried out to the next level
+  animateGiven: boolean = false; //pops the level-1 freebie in shortly after load
   boardTransition: boolean = true; //false = snap (no animation) when swapping levels
 
   //Toast variables
@@ -269,6 +270,9 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.slideOffset = 0;
     this.solvedRow = -1;
     this.fadeNonCarry = false;
+    //levels 2-7 carry their given in via the inter-level fade; level 1 has no
+    //predecessor, so its freebie pops in on a short delay instead
+    this.animateGiven = level === 0;
     this.buildBoard();
     this.currentRow = 0;
     this.prefillRow(0);
@@ -341,6 +345,11 @@ export class GameComponent implements OnInit, AfterViewInit {
   //fade everything in the solved row except the letter being carried forward
   isFading(row: number, col: number): boolean {
     return this.fadeNonCarry && row === this.solvedRow && col !== this.fadeKeepPos;
+  }
+
+  //the level-1 freebie square that pops in shortly after the board loads
+  isGivenReveal(row: number, col: number): boolean {
+    return this.animateGiven && row === 0 && col === this.givenPos;
   }
 
   setCell(row: number, col: number) {

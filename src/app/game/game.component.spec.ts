@@ -77,7 +77,9 @@ describe('GameComponent', () => {
     it('links every level to the previous via the carried letter', () => {
       for (const chain of dailyChains) {
         expect(chain.length).toBe(7);
-        expect(chain[0][1]).toBe(-1); // Monday has no given letter
+        // Monday's given is a standalone reveal (0..4), not a carried link.
+        expect(chain[0][1]).toBeGreaterThanOrEqual(0);
+        expect(chain[0][1]).toBeLessThan(5);
         for (let d = 1; d < 7; d++) {
           const [answer, carryPos] = chain[d];
           expect(carryPos).toBeGreaterThanOrEqual(0);

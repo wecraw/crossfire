@@ -35,7 +35,10 @@
                 [clueNumber]="r === 0 && c === 0 ? '' + clue.clueNumber : ''"
                 [state]="cell.state"
                 [letter]="cell.letter"
-                [ngClass]="{ 'fade-out-letter': isFading(r, c) }"
+                [ngClass]="{
+                  'fade-out-letter': isFading(r, c),
+                  'given-reveal': isGivenReveal(r, c)
+                }"
               ></app-square>
             }
           </div>
