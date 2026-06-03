@@ -37,20 +37,76 @@
     .modal-footer{
         padding: 0;
         padding-top: 10px;
+        align-items: flex-end;
         .buttons {
             margin-left: auto;
             margin-right: 0;
         }
 
-        .btn-primary{
-            background-color: #2a59e0;
-        }
         button{
             margin: 4px;
         }
         justify-content: flex-start;
     }
 
+}
+
+/*------------------------------Themed buttons-------------------------------------*/
+
+.modal-frame .btn{
+    border-radius: 999px;
+    padding: 9px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1.5px solid transparent;
+    transition: transform 0.05s ease, filter 0.15s ease, background-color 0.15s ease;
+    cursor: pointer;
+
+    &:active{
+        transform: scale(0.96);
+    }
+    &:focus,
+    &:focus-visible{
+        outline: none;
+        box-shadow: none;
+    }
+}
+
+.modal-frame .btn-primary{
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border-color: var(--btn-primary-bg);
+
+    &:hover,
+    &:focus{
+        background-color: var(--btn-primary-bg);
+        border-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        filter: brightness(1.08);
+    }
+}
+
+.modal-frame .btn-secondary{
+    background-color: transparent;
+    color: var(--btn-secondary-text);
+    border-color: var(--btn-secondary-border);
+
+    &:hover,
+    &:focus{
+        background-color: var(--btn-secondary-hover-bg);
+        border-color: var(--btn-secondary-border);
+        color: var(--btn-secondary-text);
+    }
+}
+
+.modal-frame .new-label.btn-link{
+    color: var(--btn-primary-bg);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover{
+        text-decoration: underline;
+    }
 }
 
 .timer-label{
@@ -147,7 +203,7 @@
 }
 
 .wrong-guess {
-    margin-left: 5px; 
+    margin-left: 5px;
     color: #B50000;
     margin-top: auto;
     margin-bottom: auto;
@@ -156,3 +212,110 @@
   .guesses{
       display: flex;
   }
+
+.puzzle-tag{
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.55;
+    margin-bottom: 8px;
+}
+
+/*------------------------------Replay pages-------------------------------------*/
+
+//pinned to the summary page's height (see minPagesHeight); center shorter
+//replay pages within it so the modal frame stays a constant size
+.pages{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.replay{
+    .replay-clue{
+        font-family: Georgia, "Times New Roman", Times, serif;
+        text-align: center;
+        margin-bottom: 14px;
+        min-height: 2.6em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .replay-board{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .replay-row{
+        display: flex;
+        justify-content: center;
+        margin-bottom: 5px;
+
+        // the game's view-scoped `app-square:last-of-type` border rule doesn't
+        // reach here, so close off the right edge of each row ourselves
+        app-square:last-of-type{
+            border-right: 1px solid var(--square-border-color);
+        }
+    }
+
+    .answer-reveal{
+        text-align: center;
+        margin-top: 8px;
+        font-size: 14px;
+
+        .answer-text{
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+    }
+}
+
+/*------------------------------Pager-------------------------------------*/
+
+.pager{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 16px;
+
+    .pager-arrow{
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--modal-text-color);
+        font-size: 16px;
+        padding: 4px 8px;
+
+        &:disabled{
+            opacity: 0.25;
+            cursor: default;
+        }
+    }
+
+    .pager-dots{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pager-dot{
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        padding: 0;
+        border: 1px solid var(--modal-text-color);
+        background: transparent;
+        cursor: pointer;
+        opacity: 0.5;
+
+        &.active{
+            background: var(--modal-text-color);
+            opacity: 1;
+        }
+    }
+}

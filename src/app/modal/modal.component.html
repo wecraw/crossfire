@@ -3,6 +3,13 @@
 </div>
 <div class="modal-frame">
   <div class="modal-body">
+    <div
+      #pages
+      class="pages"
+      [style.minHeight.px]="minPagesHeight"
+    >
+    @if (currentPage === 0) {
+    <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
     @if (stats) {
       <div>
         <div class="header">
@@ -66,6 +73,72 @@
         }
       </div>
     </div>
+    } @else {
+      @let replay = replays[currentPage - 1];
+      <div class="replay">
+        <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
+        <div class="header">{{ replay.dayName }}</div>
+        <div class="replay-clue">{{ replay.clueNumber }}. {{ replay.clue }}</div>
+        <div
+          class="replay-board"
+          [style.--square-size]="'40px'"
+          [style.--square-letter-size]="'1.4rem'"
+          [style.--square-letter-margin]="'5px'"
+        >
+          @for (guessRow of replay.guesses; track $index) {
+            <div class="replay-row">
+              @for (cell of guessRow; track $index) {
+                <app-square
+                  [letterSize]="replay.answer.length"
+                  [state]="cell.state"
+                  [letter]="cell.letter"
+                ></app-square>
+              }
+            </div>
+          }
+        </div>
+        @if (!replay.solved) {
+          <div class="answer-reveal">
+            Answer: <span class="answer-text">{{ replay.answer }}</span>
+          </div>
+        }
+      </div>
+    }
+    </div>
+
+    @if (totalPages > 1) {
+      <div class="pager">
+        <button
+          type="button"
+          class="pager-arrow"
+          [disabled]="currentPage === 0"
+          (click)="prevPage()"
+          aria-label="Previous page"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="pager-dots">
+          @for (dot of numSequence(totalPages); track $index) {
+            <button
+              type="button"
+              class="pager-dot"
+              [ngClass]="{ active: currentPage === $index }"
+              (click)="goToPage($index)"
+              [attr.aria-label]="'Go to page ' + ($index + 1)"
+            ></button>
+          }
+        </div>
+        <button
+          type="button"
+          class="pager-arrow"
+          [disabled]="currentPage === totalPages - 1"
+          (click)="nextPage()"
+          aria-label="Next page"
+        >
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    }
     <div class="modal-footer">
       @if (!newDay) {
         <div class="timer">

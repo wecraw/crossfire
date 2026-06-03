@@ -109,6 +109,7 @@
       <app-modal
         [currentLevel]="currentDisplayLevel"
         [incorrectGuessesByLevel]="incorrectGuessesByLevel"
+        [replays]="getReplays()"
         [decisionModal]="true"
         primaryLabel="New game"
         secondaryLabel="Share"
@@ -121,6 +122,8 @@
         [stats]="getStats()"
         [currentLevel]="currentDisplayLevel"
         [incorrectGuessesByLevel]="incorrectGuessesByLevel"
+        [replays]="getReplays()"
+        [puzzleNumber]="getPuzzleNumber()"
         [decisionModal]="true"
         primaryLabel="Share"
         secondaryLabel="Practice"

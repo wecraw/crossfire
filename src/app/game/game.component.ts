@@ -30,6 +30,26 @@ export interface ILetter {
   locked?: boolean; //true for the carried green "given" letter
 }
 
+//one page of the postgame replay: a level's clue and the guesses made on it
+export interface LevelReplay {
+  dayName: string;
+  clueNumber: number;
+  clue: string;
+  answer: string;
+  solved: boolean;
+  guesses: ILetter[][];
+}
+
+const DAY_NAMES = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
 @Component({
   standalone: false,
   selector: 'app-game',
@@ -66,6 +86,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   currentDisplayLevel: number = 0; //lags currentLevel so the progress bar can transition
   incorrectGuesses: number = 0; //running total across all levels (for stats)
   incorrectGuessesByLevel: number[] = [0, 0, 0, 0, 0, 0, 0];
+  //every submitted guess per level (incl. the solving guess), for the postgame replay
+  guessHistoryByLevel: ILetter[][][] = [[], [], [], [], [], [], []];
   hasWon: boolean = false;
   hasLost: boolean = false;
   guessNotAllowed: boolean = false; //disables input during transitions / end states
@@ -189,6 +211,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.absentLetters = [];
     this.correctLetters = [];
     this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0];
+    this.guessHistoryByLevel = [[], [], [], [], [], [], []];
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = 0;
     this.slideOffset = 0;
     this.solvedRow = -1;
@@ -383,6 +406,12 @@ export class GameComponent implements OnInit, AfterViewInit {
         }
       }
     });
+
+    //snapshot the graded guess for the postgame replay (currentLevel is still
+    //the level just guessed; handleCorrect advances it)
+    this.guessHistoryByLevel[this.currentLevel].push(
+      row.map((cell) => ({ ...cell }))
+    );
 
     if (correctCount === this.answer.length) {
       this.handleCorrect();
@@ -579,6 +608,29 @@ export class GameComponent implements OnInit, AfterViewInit {
     }
   }
 
+  //one replay page per level the player actually attempted, in chain order
+  getReplays(): LevelReplay[] {
+    const replays: LevelReplay[] = [];
+    for (let level = 0; level < this.NUM_LEVELS; level++) {
+      const guesses = this.guessHistoryByLevel[level];
+      if (!guesses || guesses.length === 0) continue;
+
+      const answer = this.chain[level][0];
+      const clue = this.clueByAnswer[level].get(answer);
+      const solved = guesses.some((g) => g.every((cell) => cell.state === 'correct'));
+
+      replays.push({
+        dayName: DAY_NAMES[level],
+        clueNumber: clue?.clueNumber ?? 0,
+        clue: clue?.clue ?? '',
+        answer,
+        solved,
+        guesses,
+      });
+    }
+    return replays;
+  }
+
   /*------------------------------Local Storage Helpers-------------------------------------*/
 
   updateLocalStorage() {
@@ -587,6 +639,10 @@ export class GameComponent implements OnInit, AfterViewInit {
       localStorage.setItem(
         'v3:incorrectGuessesByLevel',
         JSON.stringify(this.incorrectGuessesByLevel)
+      );
+      localStorage.setItem(
+        'v3:guessHistory',
+        JSON.stringify(this.guessHistoryByLevel)
       );
       localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
       localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
@@ -695,6 +751,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   resetLocalStorage() {
     localStorage.removeItem('v3:incorrectGuesses');
     localStorage.removeItem('v3:incorrectGuessesByLevel');
+    localStorage.removeItem('v3:guessHistory');
     localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
     localStorage.removeItem('v3:currentLevel');
     localStorage.removeItem('v3:currentRow');
@@ -716,6 +773,9 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     const iGBL = localStorage.getItem('v3:incorrectGuessesByLevel');
     if (iGBL) this.incorrectGuessesByLevel = JSON.parse(iGBL);
+
+    const gH = localStorage.getItem('v3:guessHistory');
+    if (gH) this.guessHistoryByLevel = JSON.parse(gH);
 
     const hW = localStorage.getItem('v3:hasWon');
     if (hW) this.hasWon = hW === 'true';

@@ -75,6 +75,13 @@ body {
   --modal-bg-color: #fff;
   --modal-border-color: transparent;
 
+  //buttons
+  --btn-primary-bg: var(--square-correct-bg-color);
+  --btn-primary-text: #fff;
+  --btn-secondary-text: var(--modal-text-color);
+  --btn-secondary-border: rgba(0, 0, 0, 0.2);
+  --btn-secondary-hover-bg: rgba(0, 0, 0, 0.05);
+
   //toast
   --toast-bg-color: #000;
   --toast-text-color: #fff;
@@ -133,6 +140,13 @@ html[data-theme="dark"] {
   --modal-text-color: #fff;
   --modal-bg-color: #222;
   --modal-border-color: #333;
+
+  //buttons
+  --btn-primary-bg: var(--square-correct-bg-color);
+  --btn-primary-text: #fff;
+  --btn-secondary-text: var(--modal-text-color);
+  --btn-secondary-border: rgba(255, 255, 255, 0.3);
+  --btn-secondary-hover-bg: rgba(255, 255, 255, 0.08);
 
   //toast
   --toast-bg-color: #fff;
