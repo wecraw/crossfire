@@ -1,9 +1,19 @@
 <div class="container">
-  <i (click)="closeEvent()" (keyup.enter)="closeEvent()" tabindex="0" role="button" aria-label="Close" class="close-icon fa-solid fa-xl fa-xmark"></i>
+  <i
+    (click)="closeEvent()"
+    (keyup.enter)="closeEvent()"
+    tabindex="0"
+    role="button"
+    aria-label="Close"
+    class="close-icon fa-solid fa-xl fa-xmark"
+  ></i>
   <h5>About</h5>
   <p>
-    Crawsword is a daily word game where players have ten attempts to answer
-    seven Crossword clues.
+    Crawsword is a daily word game where players attempt to answer seven
+    Crossword clues, one at a time. You get six guesses to solve all seven
+    clues, but a guess is only used up if your answer isn't correct, so be
+    careful! A free correct letter carries over to the next clue after each
+    solved level.
   </p>
   <p class="last">
     Feedback for each guess is given in the form of colored tiles to indicate if

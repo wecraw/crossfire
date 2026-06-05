@@ -38,9 +38,11 @@
         padding: 0;
         padding-top: 10px;
         align-items: flex-end;
+        flex-wrap: nowrap;
         .buttons {
             margin-left: auto;
             margin-right: 0;
+            flex-shrink: 0;
         }
 
         button{
@@ -109,8 +111,14 @@
     }
 }
 
+.timer {
+    min-width: 0;
+}
+
 .timer-label{
     text-align: center;
+    white-space: nowrap;
+    font-size: 14px;
 }
 
 .new-label{
@@ -119,8 +127,9 @@
 }
 
 .time{
-    font-size: 24px;
+    font-size: 18px;
     text-align: center;
+    white-space: nowrap;
 }
 
 @media (max-width: 374.98px) { //iphone 5
@@ -254,12 +263,6 @@
         display: flex;
         justify-content: center;
         margin-bottom: 5px;
-
-        // the game's view-scoped `app-square:last-of-type` border rule doesn't
-        // reach here, so close off the right edge of each row ourselves
-        app-square:last-of-type{
-            border-right: 1px solid var(--square-border-color);
-        }
     }
 
     .answer-reveal{

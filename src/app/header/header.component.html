@@ -21,26 +21,17 @@
       <i class="fa-solid fa-bars" id="dropdownBasic1" ngbDropdownToggle></i>
       <div class="noselect" ngbDropdownMenu aria-labelledby="dropdownBasic1">
         @if (!practiceMode) {
-          <button
-            (click)="onMenuPress('practice')"
-            ngbDropdownItem
-            >
+          <button (click)="onMenuPress('practice')" ngbDropdownItem>
             Practice mode
           </button>
         }
         @if (practiceMode) {
-          <button
-            (click)="onMenuPress('practice')"
-            ngbDropdownItem
-            >
+          <button (click)="onMenuPress('practice')" ngbDropdownItem>
             Daily puzzle
           </button>
         }
         @if (practiceMode) {
-          <button
-            (click)="onMenuPress('restart')"
-            ngbDropdownItem
-            >
+          <button (click)="onMenuPress('restart')" ngbDropdownItem>
             Restart practice
           </button>
         }
@@ -48,7 +39,7 @@
           Settings
         </button>
         <button (click)="onMenuPress('about')" ngbDropdownItem>About</button>
-        <button (click)="onDonatePress()" ngbDropdownItem>Donate</button>
+        <!-- <button (click)="onDonatePress()" ngbDropdownItem>Donate</button> -->
       </div>
     </div>
   </div>

@@ -64,9 +64,6 @@ canvas {
   margin-bottom: 10px;
 }
 
-app-square:last-of-type {
-  border-right: 1px solid var(--square-border-color);
-}
 
 .letters-wrapper {
   height: var(--square-size, 49px);

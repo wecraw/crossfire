@@ -96,6 +96,7 @@ html[data-theme="dark"] {
 
   //header
   --header-square-color: #3a3a3c;
+  --header-square-border-color: #1a1a1c;
   --menu-border-color: rgba(255, 255, 255, 0.15);
   --menu-hover-color: #473f7b;
 
@@ -111,6 +112,9 @@ html[data-theme="dark"] {
   --square-present-bg-color: #b59f3b;
   --square-correct-bg-color: #538d4e;
   --square-absent-bg-color: #3a3a3c;
+  --square-correct-border-color: var(--body-color);
+  --square-present-border-color: var(--body-color);
+  --square-absent-border-color: var(--body-color);
 
   --tutorial-square-color: #121213;
   --tutorial-square-border-color: #888;

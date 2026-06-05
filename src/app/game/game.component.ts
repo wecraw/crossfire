@@ -141,7 +141,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   MAX_TILE_PX: number = 56;
   MIN_TILE_PX: number = 28;
   DEFAULT_TOAST_DURATION: number = 1500;
-  PUZZLE_FIRST_DAY: number = 19120;
+  PUZZLE_FIRST_DAY: number = 20609;
   FLIP_DURATION_MS: number = 500; //one tile's flip, mirrored in square.component.scss
   FLIP_STAGGER_MS: number = 250; //delay between consecutive tile flips
 
