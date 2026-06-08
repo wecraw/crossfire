@@ -124,6 +124,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   showHelpModal: boolean = false;
   showSettingsModal: boolean = false;
   showAboutModal: boolean = false;
+  showWelcomeModal: boolean = false;
 
   //Animation variables
   shakeChecks: boolean = false;
@@ -167,6 +168,11 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.handleWin();
     } else if (this.hasLost) {
       this.handleLoss();
+    }
+
+    //first-ever visit: auto-show the quick beginner tutorial (skipped in practice mode)
+    if (!this.practiceMode && !localStorage.getItem('hasSeenWelcome')) {
+      this.showWelcomeModal = true;
     }
   }
 
@@ -552,6 +558,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   onMenuClick(selection: string) {
     if (selection === 'settings') this.toggleSettingsModal();
     if (selection === 'about') this.toggleAboutModal();
+    if (selection === 'welcome') this.toggleWelcomeModal();
     if (selection === 'practice') this.togglePracticeMode();
     if (selection === 'restart') this.reset();
   }
@@ -884,6 +891,12 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   toggleAboutModal() {
     this.showAboutModal = !this.showAboutModal;
+  }
+
+  toggleWelcomeModal() {
+    this.showWelcomeModal = !this.showWelcomeModal;
+    //once seen, never auto-show again (menu can still reopen it)
+    localStorage.setItem('hasSeenWelcome', 'true');
   }
 
   /*------------------------------Other Helpers-------------------------------------*/

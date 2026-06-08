@@ -71,6 +71,12 @@
     [presentLetters]="presentLetters"
   ></app-keyboard>
 </div>
+@if (showWelcomeModal) {
+  <app-welcome
+    (howToPlay)="toggleWelcomeModal(); toggleHelpModal()"
+    (closed)="toggleWelcomeModal()"
+  ></app-welcome>
+}
 @if (showHelpModal) {
   <div class="help-overlay">
     <app-tutorial

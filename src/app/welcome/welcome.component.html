@@ -1,0 +1,48 @@
+<div class="welcome-backdrop">
+  <div class="welcome-modal">
+    <i
+      (click)="closeEvent()"
+      (keyup.enter)="closeEvent()"
+      tabindex="0"
+      role="button"
+      aria-label="Close"
+      class="close-icon fa-solid fa-xl fa-xmark"
+    ></i>
+    <h5>Welcome to Crawsword!</h5>
+    <p>
+      Solve <b>7 crossword clues</b>, one at a time. Each answer is exactly
+      <b>five letters</b>. You get <b>6 guesses total</b> for the whole run, and
+      the puzzles get harder as you go!
+    </p>
+
+    <div class="callout">
+      <i class="callout-icon fa-solid fa-lightbulb"></i>
+      <p class="callout-text">
+        Answers aren't just dictionary words! A crossword answer can be a
+        <b>proper noun</b>, a <b>name</b>, or even <b>multiple words</b>
+      </p>
+    </div>
+
+    <p class="legend-intro">
+      After each guess, the tiles show how close you were:
+    </p>
+    <div class="legend">
+      <div class="legend-row">
+        <app-square state="correct" letter="C"></app-square>
+        <span>In the answer, and in the right spot.</span>
+      </div>
+      <div class="legend-row">
+        <app-square state="present" letter="O"></app-square>
+        <span>In the answer, but in the wrong spot.</span>
+      </div>
+      <div class="legend-row">
+        <app-square state="absent" letter="T"></app-square>
+        <span>Not in the answer at all.</span>
+      </div>
+    </div>
+
+    <button (click)="closeEvent()" type="button" class="btn btn-primary got-it">
+      Got it
+    </button>
+  </div>
+</div>

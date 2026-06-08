@@ -1,0 +1,114 @@
+.welcome-backdrop{
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.welcome-modal{
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding: 8px 22px 4px;
+    border-radius: 12px;
+    color: var(--modal-text-color);
+    background-color: var(--modal-bg-color);
+    border: 1px solid var(--modal-border-color);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+h5{
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.callout{
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    margin: 20px 0;
+    border-radius: 10px;
+    border: 1.5px solid var(--btn-primary-bg);
+    background: var(--btn-secondary-hover-bg);
+}
+
+.callout-icon{
+    color: var(--btn-primary-bg);
+    margin-top: 3px;
+    font-size: 1.1rem;
+}
+
+.callout-text{
+    margin: 0;
+}
+
+.legend-intro{
+    margin-bottom: 12px;
+}
+
+.legend-row{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.legend-row span{
+    font-size: 15px;
+}
+
+app-square::ng-deep {
+    .square {
+        background-color: var(--tutorial-square-color);
+        border: 1px solid var(--tutorial-square-border-color);
+    }
+}
+
+.got-it{
+    display: block;
+    width: 100%;
+    margin: 24px 0 8px;
+    border-radius: 999px;
+    padding: 11px 16px;
+    font-weight: 600;
+    font-size: 16px;
+    border: 1.5px solid var(--btn-primary-bg);
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    cursor: pointer;
+    transition: transform 0.05s ease, filter 0.15s ease;
+
+    &:hover,
+    &:focus{
+        filter: brightness(1.08);
+    }
+    &:active{
+        transform: scale(0.98);
+    }
+    &:focus,
+    &:focus-visible{
+        outline: none;
+        box-shadow: none;
+    }
+}
+
+.last{
+    text-align: center;
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+}
+
+.close-icon{
+    cursor: pointer;
+    float: right;
+    margin-top: 12px;
+    margin-right: -8px;
+}

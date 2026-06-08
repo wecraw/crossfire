@@ -14,6 +14,7 @@ import { GameComponent } from './game/game.component';
 import { TutorialComponent } from './tutorial/tutorial.component';
 import { SettingsComponent } from './settings/settings.component';
 import { AboutComponent } from './about/about.component';
+import { WelcomeComponent } from './welcome/welcome.component';
 
 const routes: Routes = [
   { path: '', component: GameComponent},
@@ -31,7 +32,8 @@ const routes: Routes = [
     GameComponent,
     TutorialComponent,
     SettingsComponent,
-    AboutComponent
+    AboutComponent,
+    WelcomeComponent
   ],
   imports: [
     BrowserModule,
