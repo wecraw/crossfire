@@ -208,6 +208,11 @@
         border: 1px solid var(--level-current-border-color);
         background-color: var(--level-current-bg-color);
     }
+    &.failed{
+        color: var(--level-failed-text-color);
+        border: 1px solid var(--level-failed-border-color);
+        background-color: var(--level-failed-bg-color);
+    }
 }
 
 .wrong-guess {
@@ -230,6 +235,14 @@
     text-transform: uppercase;
     opacity: 0.55;
     margin-bottom: 8px;
+}
+
+.flawless-badge{
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
 }
 
 /*------------------------------Replay pages-------------------------------------*/

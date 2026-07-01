@@ -42,7 +42,7 @@ describe('GameComponent', () => {
       const a = makeComponent();
       const b = makeComponent();
 
-      const fixedDay = 20000;
+      const fixedDay = a.PUZZLE_FIRST_DAY + 91; // a real puzzle day (index in range)
       a.daysSinceEpoch = () => fixedDay;
       b.daysSinceEpoch = () => fixedDay;
 
@@ -130,7 +130,7 @@ describe('GameComponent', () => {
       component.clue = { clueNumber: 1, clue: 'test', answer };
       component.incorrectGuesses = 0;
       component.board = [];
-      for (let r = 0; r < component.MAX_INCORRECT_GUESSES; r++) {
+      for (let r = 0; r < component.GUESSES_PER_LEVEL; r++) {
         const row: ILetter[] = [];
         for (let c = 0; c < answer.length; c++) {
           row.push({ letter: '', state: 'default' });
@@ -229,20 +229,24 @@ describe('GameComponent', () => {
       expect(component.currentRow).toBe(1);
     });
 
-    it('triggers a loss after MAX_INCORRECT_GUESSES wrong guesses', () => {
+    it('reveals the answer and advances (no game-over) after a level is exhausted', () => {
+      component.buildClueMaps();
+      component.chain = dailyChains[0];
       loadAnswer('CRANE');
 
-      for (let i = 0; i < component.MAX_INCORRECT_GUESSES; i++) {
+      for (let i = 0; i < component.GUESSES_PER_LEVEL; i++) {
         enter('DUMPS');
         component.checkAnswer();
         flushReveal();
       }
 
       expect(component.incorrectGuessesByLevel[0]).toBe(
-        component.MAX_INCORRECT_GUESSES
+        component.GUESSES_PER_LEVEL
       );
-      expect(component.currentRow).toBe(component.MAX_INCORRECT_GUESSES);
-      expect(component.hasLost).toBe(true);
+      // the level is flagged failed and the game moves on rather than ending
+      expect(component.failedByLevel[0]).toBe(true);
+      expect(component.currentLevel).toBe(1);
+      expect(component.hasWon).toBe(false);
     });
 
     it('rejects an incomplete guess without counting it', () => {
@@ -265,7 +269,7 @@ describe('GameComponent', () => {
       component.currentRow = 0;
       component.incorrectGuesses = 0;
       component.board = [];
-      for (let r = 0; r < component.MAX_INCORRECT_GUESSES; r++) {
+      for (let r = 0; r < component.GUESSES_PER_LEVEL; r++) {
         const row: ILetter[] = [];
         for (let c = 0; c < answer.length; c++) {
           row.push({ letter: '', state: 'default' });
@@ -312,24 +316,36 @@ describe('GameComponent', () => {
       expect(component.getPuzzleNumber()).toBe(42);
     });
 
-    it('builds a share string reflecting progress and incorrect guesses', () => {
-      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY; // puzzle #1
-      component.practiceMode = false;
-      component.hasWon = false;
-      component.currentLevel = 2;
-      component.incorrectGuessesByLevel = [1, 0, 0, 0, 0, 0, 0];
-
+    function shareText(): string {
       (navigator as unknown as { share?: unknown }).share = undefined;
       const writeText = vi.fn();
       Object.assign(navigator, { clipboard: { writeText } });
-
       component.share();
+      return writeText.mock.calls[0][0] as string;
+    }
 
-      const shared = writeText.mock.calls[0][0] as string;
-      expect(shared).toContain('Crawsword #1 2/7');
+    it('builds a share string reflecting solved count and revealed levels', () => {
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY; // puzzle #1
+      component.practiceMode = false;
+      component.incorrectGuessesByLevel = [1, 5, 0, 2, 0, 0, 0];
+      component.failedByLevel = [false, true, false, false, false, false, false];
+
+      const shared = shareText();
+      expect(shared).toContain('Crawsword #1  6/7'); // one level revealed
+      expect(shared).not.toContain('🏆'); // not flawless
       expect(shared).toContain('🟩❌'); // level 0 solved with one wrong guess
-      expect(shared).toContain('🟨'); // current level marker
-      expect(shared).toContain('⬛'); // future, unreached levels
+      expect(shared).toContain('🟥'); // level 1 revealed
+    });
+
+    it('awards the trophy on a flawless run', () => {
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
+      component.practiceMode = false;
+      component.incorrectGuessesByLevel = [0, 0, 1, 0, 0, 0, 0];
+      component.failedByLevel = [false, false, false, false, false, false, false];
+
+      const shared = shareText();
+      expect(shared).toContain('Crawsword #1  7/7 🏆');
+      expect(shared).not.toContain('🟥');
     });
   });
 
@@ -358,16 +374,17 @@ describe('GameComponent', () => {
     });
 
     it('round-trips the in-progress board through localStorage', () => {
-      component.daysSinceEpoch = () => 20000;
+      const day = component.PUZZLE_FIRST_DAY + 91; // a real puzzle day (index in range)
+      component.daysSinceEpoch = () => day;
       component.practiceMode = false;
       component.currentLevel = 3;
       component.currentRow = 1;
       component.incorrectGuesses = 2;
       component.incorrectGuessesByLevel = [0, 1, 1, 0, 0, 0, 0];
-      // a saved in-progress board (4 rows = the remaining budget after 2 wrong),
-      // with one scored guess on row 0
+      component.failedByLevel = [false, true, false, false, false, false, false];
+      // a saved in-progress board for the current level, with one scored guess
       const savedBoard: ILetter[][] = [];
-      for (let r = 0; r < component.MAX_INCORRECT_GUESSES - 2; r++) {
+      for (let r = 0; r < component.GUESSES_PER_LEVEL; r++) {
         const row: ILetter[] = [];
         for (let c = 0; c < 5; c++) row.push({ letter: '', state: 'default' });
         savedBoard.push(row);
@@ -381,12 +398,11 @@ describe('GameComponent', () => {
       ];
       component.board = savedBoard;
       component.hasWon = false;
-      component.hasLost = false;
 
       component.updateLocalStorage();
 
       const fresh = makeComponent();
-      fresh.daysSinceEpoch = () => 20000;
+      fresh.daysSinceEpoch = () => day;
       fresh.buildClueMaps();
       fresh.setChain();
       const resumed = fresh.loadFromLocalStorage();
@@ -396,6 +412,9 @@ describe('GameComponent', () => {
       expect(fresh.currentRow).toBe(1);
       expect(fresh.incorrectGuesses).toBe(2);
       expect(fresh.incorrectGuessesByLevel).toEqual([0, 1, 1, 0, 0, 0, 0]);
+      expect(fresh.failedByLevel).toEqual([
+        false, true, false, false, false, false, false,
+      ]);
       expect(fresh.board).toEqual(savedBoard);
     });
 
@@ -418,18 +437,33 @@ describe('GameComponent', () => {
   });
 
   describe('lifetime statistics', () => {
-    it('preserves total wins after a loss and initializes total guesses', () => {
+    it('does not count a non-flawless run as a win but initializes total guesses', () => {
       component.daysSinceEpoch = () => 20000;
-      component.hasLost = true;
-      component.currentLevel = 3;
+      component.failedByLevel = [false, false, false, true, false, false, false];
+      component.currentLevel = component.NUM_LEVELS;
       component.incorrectGuesses = 10;
       localStorage.setItem('totalWins', '4');
 
       component.updateStats();
 
       expect(localStorage.getItem('totalGamesPlayed')).toBe('1');
-      expect(localStorage.getItem('totalWins')).toBe('4');
+      expect(localStorage.getItem('totalWins')).toBe('4'); // unchanged: not flawless
       expect(localStorage.getItem('totalGuesses')).toBe('10');
+    });
+
+    it('counts a flawless run as a win and extends the streak', () => {
+      component.daysSinceEpoch = () => 20000;
+      component.failedByLevel = [false, false, false, false, false, false, false];
+      component.currentLevel = component.NUM_LEVELS;
+      component.incorrectGuesses = 2;
+      localStorage.setItem('totalWins', '4');
+      localStorage.setItem('streak', '3');
+      localStorage.setItem('streakLastPuzzle', '' + (component.getPuzzleNumber() - 1));
+
+      component.updateStats();
+
+      expect(localStorage.getItem('totalWins')).toBe('5');
+      expect(localStorage.getItem('streak')).toBe('4');
     });
   });
 });

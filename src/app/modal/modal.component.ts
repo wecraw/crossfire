@@ -33,6 +33,8 @@ export class ModalComponent implements OnDestroy, OnInit, AfterViewInit {
   @Input() primaryLabel: string = 'Confirm';
   @Input() secondaryLabel: string = 'Cancel';
   @Input() incorrectGuessesByLevel: number[];
+  @Input() failedByLevel: boolean[] = [];
+  @Input() flawless: boolean = false;
   @Input() stats: GameStats;
   @Input() currentLevel: number;
   @Input() replays: LevelReplay[] = [];

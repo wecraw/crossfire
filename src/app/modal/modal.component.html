@@ -10,6 +10,9 @@
     >
     @if (currentPage === 0) {
     <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
+    @if (flawless) {
+      <div class="flawless-badge">🏆 Flawless</div>
+    }
     @if (stats) {
       <div>
         <div class="header">
@@ -29,7 +32,7 @@
               {{stats.winPercent}}
             </div>
             <div class="stat-label">
-              Win %
+              Flawless %
             </div>
           </div>
           <div class="stat">
@@ -59,7 +62,7 @@
       <div class="breakdown">
         @for (level of levels; track level; let i = $index) {
           <div class="day">
-            <div class="level" [ngClass]="{'completed': currentLevel > i, 'upcoming': currentLevel < i, 'current': currentLevel === i}">
+            <div class="level" [ngClass]="{'completed': !failedByLevel[i], 'failed': failedByLevel[i]}">
               <div class="level-name">
                 {{level}}
               </div>

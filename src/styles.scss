@@ -70,6 +70,10 @@ body {
   --level-upcoming-bg-color: #fff;
   --level-upcoming-border-color: #ccc;
 
+  --level-failed-text-color: #fff;
+  --level-failed-bg-color: #c94b4b;
+  --level-failed-border-color: #000;
+
   //modals
   --modal-text-color: #000;
   --modal-bg-color: #fff;
@@ -140,6 +144,10 @@ html[data-theme="dark"] {
   --level-upcoming-bg-color: #121213;
   --level-upcoming-border-color: #888;
 
+  --level-failed-text-color: #fff;
+  --level-failed-bg-color: #a83232;
+  --level-failed-border-color: #000;
+
   //modals
   --modal-text-color: #fff;
   --modal-bg-color: #222;
@@ -164,6 +172,10 @@ html[data-contrast-theme="contrast"] {
   --level-completed-bg-color: #e84a27;
   --level-current-bg-color: #0455a4;
   --level-current-text-color: #fff;
+
+  //keep failed distinct from the orange "completed" in high-contrast mode
+  --level-failed-bg-color: #767676;
+  --level-failed-text-color: #fff;
 }
 
 a {
