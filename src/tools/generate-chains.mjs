@@ -42,27 +42,31 @@ const DENYLIST = new Set([
   'ABRAM', 'ADLER', 'ADUBA', 'AGNEW', 'AHMAD', 'AIDAN', 'AIKEN', 'AILEY', 'AIMEE', 'AISHA',
   'AKINS', 'AKIRA', 'ALBEE', 'ALGER', 'ALICE', 'ALLAN', 'ALVIN', 'ANAIS', 'ANDIE', 'ANNAS',
   'ANOUK', 'ANSON', 'ANTON', 'ARLEN', 'ARLOS', 'ARMIE', 'ARRAU', 'ARTIE', 'ASTIN', 'ATHOL',
-  'AUDRA', 'AVRIL', 'BEENE', 'BILES', 'BLIGE', 'BOLET', 'BONET', 'BOWEN', 'BREES', 'BRIAN',
-  'CARLA', 'CENAC', 'CHAKA', 'CHITA', 'CHRIS', 'CLEEF', 'CLINT', 'COKIE', 'COMEY', 'CRAPO',
-  'CROWE', 'DARIN', 'DEBRA', 'DIDDY', 'DIGGS', 'DINAH', 'DOBBS', 'DONNA', 'DUNST', 'EAMES',
-  'EARLE', 'EBSEN', 'EDDIE', 'EDGAR', 'EDITH', 'EFREM', 'ELENA', 'ELISA', 'ELLIS', 'ELWES',
-  'EMILE', 'EMILY', 'ENGEL', 'ENNIO', 'ENSOR', 'ERICA', 'ERIKA', 'ERIKS', 'ERNST', 'ETHAN',
-  'EYDIE', 'FAGEN', 'FERMI', 'GAYLE', 'GEENA', 'GEIST', 'GEORG', 'GILDA', 'GORKI', 'GRAMM',
-  'GREGG', 'GRETA', 'HAGEN', 'HASAN', 'HAUER', 'HECHE', 'HEGEL', 'HEIGL', 'HENRI', 'HILDA',
-  'HOAGY', 'HOSEA', 'IBSEN', 'IDRIS', 'IFILL', 'ILENE', 'INNES', 'IRINA', 'ISAAK', 'ITALO',
-  'JAMAL', 'JAMIE', 'JANET', 'JOYCE', 'JULES', 'KARAN', 'KAZAN', 'KEATS', 'KEIRA', 'KEITH',
-  'KELLI', 'KERRI', 'KLIMT', 'LAHTI', 'LAINE', 'LANGE', 'LAURA', 'LEMAT', 'LENNY', 'LEONE',
-  'LEWIS', 'LISZT', 'LLOSA', 'LOREN', 'LOTTE', 'LYDIA', 'MALEK', 'MAMET', 'MARCI', 'MARCO',
-  'MARON', 'MEARA', 'MEGAN', 'MEGYN', 'MINAJ', 'MINEO', 'MITZI', 'MONAE', 'NANCE', 'NANTZ',
-  'NAOMI', 'NEALE', 'NEGGA', 'NEILL', 'NIALL', 'NICOL', 'NIETO', 'NORAH', 'NOURI', 'OATES',
-  'ODETS', 'OGDEN', 'OHARA', 'OLSEN', 'ORRIN', 'ORTIZ', 'OSHEA', 'OSLIN', 'PABLO', 'PATTI',
-  'PAULA', 'PEABO', 'PEALE', 'PEDRO', 'PEPIN', 'PEREC', 'PEREZ', 'PESCI', 'PRATT', 'QUAID',
-  'RALPH', 'READE', 'REECE', 'REGIS', 'RENES', 'RICCI', 'ROGEN', 'RONAN', 'ROSEN', 'ROSIE',
-  'ROWAN', 'RUSSO', 'SALLY', 'SALMA', 'SATIE', 'SEGAL', 'SEGER', 'SELMA', 'SHARI', 'SMITH',
-  'SNEAD', 'SNOWE', 'SOFIA', 'SOLTI', 'SOREN', 'SPIRO', 'SPYRI', 'STACY', 'STEEN', 'STIEG',
-  'STROM', 'STYNE', 'SUSAN', 'SYKES', 'SZELL', 'TAKEI', 'TANIA', 'TARTT', 'TERRI', 'TESSA',
-  'THARP', 'THEDA', 'TILDA', 'TIPPI', 'TOMEI', 'TRINI', 'UPTON', 'URIAH', 'URICH', 'UTHER',
-  'VERNE', 'VIJAY', 'VOLTA', 'WANDA', 'WELCH', 'WILLA', 'WOPAT', 'XTINA', 'YAKOV', 'ZELDA',
+  'AUDRA', 'AVRIL', 'BEENE', 'BETTE', 'BILES', 'BLIGE', 'BOLET', 'BONET', 'BORGE', 'BOWEN',
+  'BRATT', 'BRAUN', 'BREES', 'BRIAN', 'BUSTA', 'CARLA', 'CENAC', 'CHAKA', 'CHITA', 'CHRIS',
+  'CLEEF', 'CLINT', 'COKIE', 'COMEY', 'COREA', 'CRAPO', 'CROWE', 'CUGAT', 'DARIN', 'DEBRA',
+  'DELIA', 'DIANE', 'DIDDY', 'DIGGS', 'DINAH', 'DOBBS', 'DONNA', 'DUNNE', 'DUNST', 'EAMES',
+  'EARLE', 'EBSEN', 'EDDIE', 'EDGAR', 'EDITH', 'EFREM', 'EISEN', 'ELENA', 'ELISA', 'ELLIS',
+  'ELWES', 'EMILE', 'EMILY', 'ENGEL', 'ENNIO', 'ENSOR', 'ERICA', 'ERIKA', 'ERIKS', 'ERNST',
+  'ETHAN', 'EYDIE', 'FAGEN', 'FERMI', 'FONSI', 'GARTH', 'GAYLE', 'GEENA', 'GEIST', 'GEORG',
+  'GILDA', 'GORKI', 'GRAMM', 'GREGG', 'GRETA', 'HAGAN', 'HAGEN', 'HASAN', 'HAUER', 'HECHE',
+  'HEGEL', 'HEIGL', 'HENRI', 'HILDA', 'HOAGY', 'HORST', 'HOSEA', 'HUANG', 'IBSEN', 'IDRIS',
+  'IFILL', 'ILENE', 'INNES', 'IRINA', 'ISAAC', 'ISAAK', 'ITALO', 'JAMAL', 'JAMIE', 'JANET',
+  'JODIE', 'JOYCE', 'JULES', 'KARAN', 'KAZAN', 'KEATS', 'KEIRA', 'KEITH', 'KELLI', 'KERRI',
+  'KEVIN', 'KLIMT', 'KLINE', 'LAHTI', 'LAILA', 'LAINE', 'LAMAR', 'LANGE', 'LASSE', 'LAURA',
+  'LEMAT', 'LENNY', 'LEONE', 'LEWIS', 'LINDA', 'LISZT', 'LLOSA', 'LORCA', 'LOREN', 'LOTTE',
+  'LYDIA', 'MAEVE', 'MALEK', 'MAMET', 'MARCI', 'MARCO', 'MARLA', 'MARON', 'MCRAE', 'MEARA',
+  'MEGAN', 'MEGYN', 'MERLE', 'MINAJ', 'MINEO', 'MITZI', 'MONAE', 'MOORE', 'NANCE', 'NANTZ',
+  'NAOMI', 'NEALE', 'NEGGA', 'NEILL', 'NIALL', 'NICKI', 'NICOL', 'NIETO', 'NORAH', 'NOURI',
+  'OATES', 'ODETS', 'OGDEN', 'OHARA', 'OLMOS', 'OLSEN', 'ORRIN', 'ORTIZ', 'OSHEA', 'OSLIN',
+  'PABLO', 'PATTI', 'PAULA', 'PEABO', 'PEALE', 'PEDRO', 'PEPIN', 'PEREC', 'PEREZ', 'PESCI',
+  'PRATT', 'QUAID', 'RALPH', 'READE', 'REECE', 'REESE', 'REGIS', 'RENES', 'RICCI', 'ROGEN',
+  'RONAN', 'ROSEN', 'ROSIE', 'ROWAN', 'RUBIO', 'RUSSO', 'RYDER', 'SALLY', 'SALMA', 'SASSE',
+  'SATIE', 'SEGAL', 'SEGER', 'SELMA', 'SHARI', 'SMITH', 'SNEAD', 'SNOWE', 'SOFIA', 'SOLTI',
+  'SOREN', 'SPIRO', 'SPYRI', 'STACY', 'STEEN', 'STIEG', 'STROM', 'STYNE', 'SUSAN', 'SYKES',
+  'SZELL', 'TAKEI', 'TANIA', 'TARTT', 'TEENA', 'TERRI', 'TESSA', 'THARP', 'THEDA', 'TILDA',
+  'TIPPI', 'TOMEI', 'TOTIE', 'TRINI', 'TYNER', 'UPTON', 'URIAH', 'URICH', 'UTHER', 'VERNE',
+  'VIJAY', 'VOLTA', 'WANDA', 'WELCH', 'WILLA', 'WOPAT', 'XTINA', 'YAKOV', 'ZELDA',
 ]);
 
 // Deterministic PRNG so regeneration is reproducible.
@@ -89,15 +93,20 @@ function shuffle(arr) {
 
 // Parse a clue file, returning the de-duplicated list of 5-letter A-Z answers
 // (first occurrence wins, matching the runtime answer->clue resolution).
+// Evaluates the array literal directly (like analyze-clues.mjs) rather than
+// scraping with a regex -- a regex here previously missed any tuple written
+// across multiple lines (e.g. a long or quote-containing clue reformatted
+// onto its own lines with a trailing comma before the closing `]`), silently
+// undercounting the pool for days with those tuples (thursday.ts, -22 words).
 function loadPool(day) {
   const txt = fs.readFileSync(path.join(CLUES_DIR, `${day}.ts`), 'utf8');
-  // Capture the 3rd tuple element (the answer) for both ' and " quote styles.
-  const re = /,\s*(['"])([A-Za-z0-9]+)\1\s*\]/g;
+  const start = txt.indexOf('[');
+  const end = txt.lastIndexOf(']');
+  // eslint-disable-next-line no-new-func
+  const arr = new Function(`return (${txt.slice(start, end + 1)});`)();
   const seen = new Set();
   const pool = [];
-  let m;
-  while ((m = re.exec(txt))) {
-    const ans = m[2];
+  for (const [, , ans] of arr) {
     if (/^[A-Z]{5}$/.test(ans) && !seen.has(ans) && !DENYLIST.has(ans)) {
       seen.add(ans);
       pool.push(ans);
