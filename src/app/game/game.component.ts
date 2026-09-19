@@ -477,10 +477,23 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.givenPos >= 0 ? this.answer.length - 1 : this.answer.length;
     const revealTime =
       (flipCount - 1) * this.FLIP_STAGGER_MS + this.FLIP_DURATION_MS;
+
+    //the final guess of a level missed: commit the failed/advanced result to
+    //storage NOW, before the flip animation, so a reload during the flip can't
+    //hand back the final guess or preserve a stale flawless result. The board
+    //keeps animating; only the visual reveal (answer toast, next-level swap) is
+    //deferred behind the flip. Capture the answer first, since the commit
+    //advances currentLevel (this.answer isn't reloaded until the reveal).
+    const outOfGuesses = !solved && this.currentRow >= this.GUESSES_PER_LEVEL - 1;
+    const failedAnswer = this.answer;
+    if (outOfGuesses) this.commitLevelFailed();
+
     setTimeout(() => {
       this.revealRow = -1;
       if (solved) {
         this.handleCorrect();
+      } else if (outOfGuesses) {
+        this.revealLevelFailed(failedAnswer);
       } else {
         this.handleIncorrect();
       }
@@ -527,6 +540,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   private handleIncorrect() {
+    //a non-terminal miss (the level still has guesses left); the terminal miss
+    //is committed synchronously in checkAnswer and revealed by revealLevelFailed
     this.incorrectGuesses++;
     this.incorrectGuessesByLevel[this.currentLevel]++;
     this.shakeChecks = true;
@@ -535,40 +550,66 @@ export class GameComponent implements OnInit, AfterViewInit {
     }, 300);
 
     this.currentRow++;
-    //out of rows for this level: reveal the answer and move on (no game-over)
-    if (this.currentRow >= this.GUESSES_PER_LEVEL) {
-      this.handleLevelFailed();
-    } else {
-      this.prefillRow(this.currentRow);
-      this.currentCol = this.firstEditableCol();
-      this.guessNotAllowed = false; //re-enable input after the flip reveal
-      this.updateLocalStorage();
-    }
+    this.prefillRow(this.currentRow);
+    this.currentCol = this.firstEditableCol();
+    this.guessNotAllowed = false; //re-enable input after the flip reveal
+    this.updateLocalStorage();
   }
 
-  //the level's guess pool ran out: flag it, show the answer, then advance.
-  //the terminal result is persisted immediately (before the reveal delay) so a
-  //reload/close during the 2.5s reveal can't hand back the final guess or keep
-  //a stale flawless result; the on-screen board keeps animating undisturbed
-  //while storage already reflects the next level (or the completed game).
+  //the level's guess pool ran out: flag it, show the answer, then advance. Split
+  //into a synchronous commit + a deferred visual reveal so the terminal result
+  //is persisted the instant the final guess is submitted (before the flip), not
+  //only after the flip/reveal animations -- otherwise a reload during the flip
+  //could hand back the final guess or keep a stale flawless result. Retained as
+  //a single entry point (commit + reveal) for direct callers/tests.
   private handleLevelFailed() {
-    this.failedByLevel[this.currentLevel] = true;
-    this.guessNotAllowed = true;
-    const revealDuration = 2250;
-    this.toast(this.answer, revealDuration);
+    const failedAnswer = this.answer;
+    this.commitLevelFailed();
+    this.revealLevelFailed(failedAnswer);
+  }
 
+  //synchronous state + storage commit for a level's terminal failure. Counts the
+  //final wrong guess, flags the level, advances, and persists the next level's
+  //fresh board (or records the finished game when it was the last level). Does
+  //NOT touch the on-screen board/answer, which keep animating the failed row
+  //until revealLevelFailed swaps them out.
+  private commitLevelFailed() {
+    this.incorrectGuesses++;
+    this.incorrectGuessesByLevel[this.currentLevel]++;
+    this.failedByLevel[this.currentLevel] = true;
+    this.currentRow++;
     this.currentLevel++;
 
     if (this.currentLevel === this.NUM_LEVELS) {
-      this.currentDisplayLevel = this.NUM_LEVELS;
-      //record the finished game (stats + save) now; only the modal is delayed
+      //record the finished game (hasWon + save + stats) now; only the modal is
+      //delayed by revealLevelFailed
       this.finalizeComplete();
-      setTimeout(() => this.revealComplete(), revealDuration + 250);
       return;
     }
 
     //snapshot the advanced level's fresh starting board into storage right away
     this.persistAdvancedLevel();
+  }
+
+  //deferred visual reveal for a failed level: show the just-failed answer, then
+  //(after the reveal delay) swap in the already-committed next level, or reveal
+  //the postgame modal when the failed level was the last. State/storage were
+  //committed up front by commitLevelFailed; this only drives the animation.
+  private revealLevelFailed(failedAnswer: string) {
+    this.guessNotAllowed = true;
+    this.shakeChecks = true;
+    setTimeout(() => {
+      this.shakeChecks = false;
+    }, 300);
+
+    const revealDuration = 2250;
+    this.toast(failedAnswer, revealDuration);
+
+    if (this.currentLevel === this.NUM_LEVELS) {
+      this.currentDisplayLevel = this.NUM_LEVELS;
+      setTimeout(() => this.revealComplete(), revealDuration + 250);
+      return;
+    }
 
     //after the answer has been shown, snap the next level's board into place
     setTimeout(() => {

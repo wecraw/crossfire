@@ -249,6 +249,31 @@ describe('GameComponent', () => {
       expect(component.hasWon).toBe(false);
     });
 
+    it('commits the failed level to storage before the flip reveal completes', () => {
+      component.buildClueMaps();
+      component.chain = dailyChains[0];
+      loadAnswer('CRANE');
+
+      // burn every guess but the last, flushing each flip reveal
+      for (let i = 0; i < component.GUESSES_PER_LEVEL - 1; i++) {
+        enter('DUMPS'); // no shared letters with CRANE
+        component.checkAnswer();
+        flushReveal();
+      }
+      expect(component.failedByLevel[0]).toBe(false);
+
+      // submit the final (losing) guess but do NOT flush the flip animation --
+      // this is the ~1.25-1.5s reload window the commit-before-flip fix closes
+      enter('DUMPS');
+      component.checkAnswer();
+
+      // storage already reflects the failed + advanced state mid-flip, so a
+      // reload here can't hand back the final guess or keep a stale flawless run
+      expect(JSON.parse(localStorage.getItem('v3:failedByLevel')!)[0]).toBe(true);
+      expect(localStorage.getItem('v3:currentLevel')).toBe('1');
+      expect(localStorage.getItem('v3:currentRow')).toBe('0');
+    });
+
     it('rejects an incomplete guess without counting it', () => {
       loadAnswer('CRANE');
       component.board[0][0].letter = 'C'; // leave the rest blank
