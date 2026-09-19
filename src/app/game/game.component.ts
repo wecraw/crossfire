@@ -141,6 +141,10 @@ export class GameComponent implements OnInit, AfterViewInit {
   WORD_LENGTH: number = 5;
   GUESSES_PER_LEVEL: number = 5; //fresh wrong-guess pool per level; no game-over
   NUM_LEVELS: number = 7;
+  //stamped into each daily save; bump whenever the save shape OR the generated
+  //chains change so stale same-day saves from an older build are discarded
+  //rather than restored into an incompatible board (see loadFromLocalStorage)
+  SCHEMA_VERSION: string = '4';
   MAX_TILE_PX: number = 56;
   MIN_TILE_PX: number = 28;
   DEFAULT_TOAST_DURATION: number = 1500;
@@ -305,15 +309,22 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   //each level gets a fresh board with its own pool of GUESSES_PER_LEVEL rows
   private buildBoard() {
-    this.board = [];
-    const rows = this.GUESSES_PER_LEVEL;
-    for (let r = 0; r < rows; r++) {
+    this.board = this.makeEmptyBoard(this.answer.length);
+  }
+
+  //builds a fresh GUESSES_PER_LEVEL x width board of empty cells, without
+  //touching this.board (used both for the live board and for snapshotting the
+  //next level into storage mid-reveal)
+  private makeEmptyBoard(width: number): ILetter[][] {
+    const board: ILetter[][] = [];
+    for (let r = 0; r < this.GUESSES_PER_LEVEL; r++) {
       const row: ILetter[] = [];
-      for (let c = 0; c < this.answer.length; c++) {
+      for (let c = 0; c < width; c++) {
         row.push({ letter: '', state: 'default' });
       }
-      this.board.push(row);
+      board.push(row);
     }
+    return board;
   }
 
   //drops the carried green letter into a row as a locked given
@@ -536,9 +547,10 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   //the level's guess pool ran out: flag it, show the answer, then advance.
-  //persistence is deferred until the next level (or completion) is in place, so
-  //reloading mid-reveal resumes cleanly on the level just played rather than
-  //stranding the old board under the next level's clue.
+  //the terminal result is persisted immediately (before the reveal delay) so a
+  //reload/close during the 2.5s reveal can't hand back the final guess or keep
+  //a stale flawless result; the on-screen board keeps animating undisturbed
+  //while storage already reflects the next level (or the completed game).
   private handleLevelFailed() {
     this.failedByLevel[this.currentLevel] = true;
     this.guessNotAllowed = true;
@@ -549,9 +561,14 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     if (this.currentLevel === this.NUM_LEVELS) {
       this.currentDisplayLevel = this.NUM_LEVELS;
-      setTimeout(() => this.handleComplete(), revealDuration + 250);
+      //record the finished game (stats + save) now; only the modal is delayed
+      this.finalizeComplete();
+      setTimeout(() => this.revealComplete(), revealDuration + 250);
       return;
     }
+
+    //snapshot the advanced level's fresh starting board into storage right away
+    this.persistAdvancedLevel();
 
     //after the answer has been shown, snap the next level's board into place
     setTimeout(() => {
@@ -565,12 +582,44 @@ export class GameComponent implements OnInit, AfterViewInit {
     }, revealDuration + 250);
   }
 
-  //all 7 levels done (solved or revealed); a flawless run is the "win"
+  //writes the just-advanced level's starting state (fresh board + carried
+  //given) to storage without touching the live board, which is still mid-reveal
+  //-- mirrors what loadLevel/loadFromLocalStorage would produce for that level
+  private persistAdvancedLevel() {
+    if (this.practiceMode) return;
+    const [answer, carryPos] = this.chain[this.currentLevel];
+    const board = this.makeEmptyBoard(answer.length);
+    if (carryPos >= 0) {
+      board[0][carryPos] = {
+        letter: answer[carryPos],
+        state: 'correct',
+        locked: true,
+      };
+    }
+    this.writeDailySave(board, 0, false);
+  }
+
+  //all 7 levels done (solved or revealed); a flawless run is the "win".
+  //the solved-last-level path records the game and reveals the modal together;
+  //the revealed-last-level path (handleLevelFailed) records it up front and
+  //delays only revealComplete so the answer reveal plays first.
   handleComplete() {
+    this.finalizeComplete();
+    this.revealComplete();
+  }
+
+  //record the finished game synchronously (hasWon + save + stats) so it survives
+  //a reload even while the celebratory modal is still pending. Idempotent:
+  //updateStats is guarded on the puzzle number, so it counts a game only once.
+  private finalizeComplete() {
     this.guessNotAllowed = true;
     this.hasWon = true;
     this.updateLocalStorage();
     this.updateStats();
+  }
+
+  //show the postgame modal, after the win confetti when the run was flawless
+  private revealComplete() {
     if (this.flawless) {
       this.renderWinConfetti();
       setTimeout(() => {
@@ -715,26 +764,33 @@ export class GameComponent implements OnInit, AfterViewInit {
   /*------------------------------Local Storage Helpers-------------------------------------*/
 
   updateLocalStorage() {
-    if (!this.practiceMode) {
-      localStorage.setItem('v3:incorrectGuesses', '' + this.incorrectGuesses);
-      localStorage.setItem(
-        'v3:incorrectGuessesByLevel',
-        JSON.stringify(this.incorrectGuessesByLevel)
-      );
-      localStorage.setItem(
-        'v3:guessHistory',
-        JSON.stringify(this.guessHistoryByLevel)
-      );
-      localStorage.setItem(
-        'v3:failedByLevel',
-        JSON.stringify(this.failedByLevel)
-      );
-      localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
-      localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
-      localStorage.setItem('v3:currentRow', '' + this.currentRow);
-      localStorage.setItem('v3:board', JSON.stringify(this.board));
-      localStorage.setItem('v3:hasWon', '' + this.hasWon);
-    }
+    if (this.practiceMode) return;
+    this.writeDailySave(this.board, this.currentRow, this.hasWon);
+  }
+
+  //single writer for the daily save so every path stamps the schema version and
+  //stays in sync; callers pass the board/row/won state to persist
+  private writeDailySave(
+    board: ILetter[][],
+    currentRow: number,
+    hasWon: boolean
+  ) {
+    localStorage.setItem('v3:schema', this.SCHEMA_VERSION);
+    localStorage.setItem('v3:incorrectGuesses', '' + this.incorrectGuesses);
+    localStorage.setItem(
+      'v3:incorrectGuessesByLevel',
+      JSON.stringify(this.incorrectGuessesByLevel)
+    );
+    localStorage.setItem(
+      'v3:guessHistory',
+      JSON.stringify(this.guessHistoryByLevel)
+    );
+    localStorage.setItem('v3:failedByLevel', JSON.stringify(this.failedByLevel));
+    localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
+    localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
+    localStorage.setItem('v3:currentRow', '' + currentRow);
+    localStorage.setItem('v3:board', JSON.stringify(board));
+    localStorage.setItem('v3:hasWon', '' + hasWon);
   }
 
   getStats() {
@@ -838,6 +894,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   resetLocalStorage() {
+    localStorage.setItem('v3:schema', this.SCHEMA_VERSION);
     localStorage.removeItem('v3:incorrectGuesses');
     localStorage.removeItem('v3:incorrectGuessesByLevel');
     localStorage.removeItem('v3:guessHistory');
@@ -852,6 +909,16 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   //returns true if a saved in-progress board was restored
   loadFromLocalStorage(): boolean {
+    //a save whose schema stamp is missing or stale predates the current save
+    //shape and generated chains (e.g. this deploy reached someone who already
+    //played today). Restoring it could strand the board on a different answer
+    //or a wrong row count and crash on the next keystroke, so discard it and
+    //start today fresh instead.
+    if (localStorage.getItem('v3:schema') !== this.SCHEMA_VERSION) {
+      this.resetLocalStorage();
+      return false;
+    }
+
     const cL = localStorage.getItem('v3:currentLevel');
     if (cL) {
       this.currentLevel = +cL;

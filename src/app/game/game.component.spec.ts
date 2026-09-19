@@ -418,6 +418,63 @@ describe('GameComponent', () => {
       expect(fresh.board).toEqual(savedBoard);
     });
 
+    it('discards a legacy same-day save that predates the current schema', () => {
+      const day = component.PUZZLE_FIRST_DAY + 91;
+      component.daysSinceEpoch = () => day;
+      component.practiceMode = false;
+      component.buildClueMaps();
+      component.setChain();
+
+      // an in-progress save from an older build: valid-looking keys, but no
+      // schema stamp (older builds never wrote one). Its board may encode a
+      // different chain/row count, so it must not be restored.
+      localStorage.setItem('v3:currentDay', '' + day);
+      localStorage.setItem('v3:currentLevel', '4');
+      localStorage.setItem('v3:currentRow', '2');
+      localStorage.setItem(
+        'v3:board',
+        JSON.stringify([[{ letter: 'X', state: 'absent' }]])
+      );
+
+      const resumed = component.loadFromLocalStorage();
+
+      expect(resumed).toBe(false);
+      expect(component.currentLevel).toBe(0); // stale level not adopted
+      expect(localStorage.getItem('v3:board')).toBeNull(); // reset cleared it
+      expect(localStorage.getItem('v3:schema')).toBe(component.SCHEMA_VERSION);
+    });
+
+    it('persists the failed level result immediately, before the reveal delay', () => {
+      const day = component.PUZZLE_FIRST_DAY + 91;
+      component.daysSinceEpoch = () => day;
+      component.practiceMode = false;
+      component.buildClueMaps();
+      component.setChain();
+      component.currentLevel = 2;
+      component.loadLevel(2);
+      component.currentRow = component.GUESSES_PER_LEVEL - 1; // final guess row
+
+      // the guess pool is exhausted on the current level
+      (component as unknown as { handleLevelFailed(): void }).handleLevelFailed();
+
+      // storage reflects the advance right away, not only after the 2.5s reveal
+      expect(localStorage.getItem('v3:currentLevel')).toBe('3');
+      expect(localStorage.getItem('v3:currentRow')).toBe('0');
+      expect(
+        JSON.parse(localStorage.getItem('v3:failedByLevel')!)[2]
+      ).toBe(true);
+      // the saved board is a fresh next-level board (at most the carried given
+      // is pre-filled), never the just-failed board
+      const savedBoard: ILetter[][] = JSON.parse(
+        localStorage.getItem('v3:board')!
+      );
+      expect(savedBoard.length).toBe(component.GUESSES_PER_LEVEL);
+      const filledCells = savedBoard
+        .flat()
+        .filter((cell) => cell.letter).length;
+      expect(filledCells).toBeLessThanOrEqual(1);
+    });
+
     it('does not write daily progress while in practice mode', () => {
       component.practiceMode = true;
       component.currentLevel = 5;
