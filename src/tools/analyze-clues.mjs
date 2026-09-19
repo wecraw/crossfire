@@ -53,25 +53,50 @@ function loadChains() {
   return loadArrayLiteral(txt, eqIndex);
 }
 
+// The clue-overrides map (Lever 1): curated clue text the app shows in place of
+// the weekday-array clue. buildClueMaps() checks it first, so it's part of what
+// is actually SHOWN and must be applied here too -- otherwise this tool re-flags
+// an already-overridden answer's stale original clue and re-proposes a fix that
+// is already installed.
+function loadOverrides() {
+  const txt = fs.readFileSync(path.join(CLUES_DIR, 'clue-overrides.ts'), 'utf8');
+  const declIndex = txt.indexOf('export const clueOverrides');
+  const eqIndex = txt.indexOf('=', declIndex);
+  const start = txt.indexOf('{', eqIndex);
+  const end = txt.lastIndexOf('}');
+  // eslint-disable-next-line no-new-func
+  return new Function(`return (${txt.slice(start, end + 1)});`)();
+}
+
 const clueArrays = DAYS.map(loadClueArray);
 const chains = loadChains();
 DAYS.forEach((d, i) => console.log(`${d}: parsed ${clueArrays[i].length} entries`));
 console.log(`chains: parsed ${chains.length} chains`);
 
-// Per-weekday: answer -> first-occurrence {clueNumber, clue} (matches
-// buildClueMaps' runtime resolution exactly), plus ALL occurrences per answer
-// (for finding a better alternate clue for the same answer/same day).
-function buildMaps(clueArray) {
+// Per-weekday: answer -> the clue actually SHOWN (an active override wins,
+// else the first weekday-array occurrence -- matching buildClueMaps' runtime
+// resolution exactly), plus ALL weekday-array occurrences per answer (raw
+// alternate-clue candidates for the same answer/same day).
+function buildMaps(clueArray, overrides) {
   const first = new Map();
   const all = new Map();
   for (const [num, clue, answer] of clueArray) {
-    if (!first.has(answer)) first.set(answer, { clueNumber: +num, clue });
+    if (!first.has(answer)) {
+      const override = overrides[answer];
+      first.set(
+        answer,
+        override
+          ? { clueNumber: override.clueNumber, clue: override.clue }
+          : { clueNumber: +num, clue }
+      );
+    }
     if (!all.has(answer)) all.set(answer, []);
     all.get(answer).push({ clueNumber: +num, clue });
   }
   return { first, all };
 }
-const perDay = clueArrays.map(buildMaps);
+const overrides = loadOverrides();
+const perDay = clueArrays.map((clueArray) => buildMaps(clueArray, overrides));
 
 // The set of answers actually shown at each weekday level, across all 2024
 // chains (chain-building is word-disjoint per weekday, so each answer appears
