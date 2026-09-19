@@ -15,6 +15,7 @@ import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
 import { dailyChains, ChainLevel } from '../clues/chains';
+import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
 
@@ -243,13 +244,20 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   /*------------------------------Chain / clue setup-------------------------------------*/
 
-  //builds the per-weekday answer -> clue lookup (first occurrence wins)
+  //builds the per-weekday answer -> clue lookup (first occurrence wins, but
+  //clue-overrides.ts is checked first so curated replacements always win)
   buildClueMaps() {
     this.clueByAnswer = this.cluesArray.map((clueSet) => {
       const map = new Map<string, IClue>();
       for (const [num, clue, answer] of clueSet as string[][]) {
         if (!map.has(answer)) {
-          map.set(answer, { clueNumber: +num, clue, answer });
+          const override = clueOverrides[answer];
+          map.set(
+            answer,
+            override
+              ? { clueNumber: override.clueNumber, clue: override.clue, answer }
+              : { clueNumber: +num, clue, answer }
+          );
         }
       }
       return map;

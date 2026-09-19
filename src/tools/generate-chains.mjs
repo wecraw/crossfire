@@ -33,6 +33,38 @@ const DAYS = [
   'sunday',
 ];
 
+// Answers excluded from the puzzle pool entirely: obscure proper nouns (mostly
+// surnames of specific people with no independent recognition) identified by
+// src/tools/analyze-clues.mjs and hand-reviewed. See src/tools/clue-curation-spec.md
+// Lever 3. Unlike clue-overrides.ts (which only swaps clue text), removing an
+// answer here changes the generated chain set and reshuffles every daily puzzle.
+const DENYLIST = new Set([
+  'ABRAM', 'ADLER', 'ADUBA', 'AGNEW', 'AHMAD', 'AIDAN', 'AIKEN', 'AILEY', 'AIMEE', 'AISHA',
+  'AKINS', 'AKIRA', 'ALBEE', 'ALGER', 'ALICE', 'ALLAN', 'ALVIN', 'ANAIS', 'ANDIE', 'ANNAS',
+  'ANOUK', 'ANSON', 'ANTON', 'ARLEN', 'ARLOS', 'ARMIE', 'ARRAU', 'ARTIE', 'ASTIN', 'ATHOL',
+  'AUDRA', 'AVRIL', 'BEENE', 'BILES', 'BLIGE', 'BOLET', 'BONET', 'BOWEN', 'BREES', 'BRIAN',
+  'CARLA', 'CENAC', 'CHAKA', 'CHITA', 'CHRIS', 'CLEEF', 'CLINT', 'COKIE', 'COMEY', 'CRAPO',
+  'CROWE', 'DARIN', 'DEBRA', 'DIDDY', 'DIGGS', 'DINAH', 'DOBBS', 'DONNA', 'DUNST', 'EAMES',
+  'EARLE', 'EBSEN', 'EDDIE', 'EDGAR', 'EDITH', 'EFREM', 'ELENA', 'ELISA', 'ELLIS', 'ELWES',
+  'EMILE', 'EMILY', 'ENGEL', 'ENNIO', 'ENSOR', 'ERICA', 'ERIKA', 'ERIKS', 'ERNST', 'ETHAN',
+  'EYDIE', 'FAGEN', 'FERMI', 'GAYLE', 'GEENA', 'GEIST', 'GEORG', 'GILDA', 'GORKI', 'GRAMM',
+  'GREGG', 'GRETA', 'HAGEN', 'HASAN', 'HAUER', 'HECHE', 'HEGEL', 'HEIGL', 'HENRI', 'HILDA',
+  'HOAGY', 'HOSEA', 'IBSEN', 'IDRIS', 'IFILL', 'ILENE', 'INNES', 'IRINA', 'ISAAK', 'ITALO',
+  'JAMAL', 'JAMIE', 'JANET', 'JOYCE', 'JULES', 'KARAN', 'KAZAN', 'KEATS', 'KEIRA', 'KEITH',
+  'KELLI', 'KERRI', 'KLIMT', 'LAHTI', 'LAINE', 'LANGE', 'LAURA', 'LEMAT', 'LENNY', 'LEONE',
+  'LEWIS', 'LISZT', 'LLOSA', 'LOREN', 'LOTTE', 'LYDIA', 'MALEK', 'MAMET', 'MARCI', 'MARCO',
+  'MARON', 'MEARA', 'MEGAN', 'MEGYN', 'MINAJ', 'MINEO', 'MITZI', 'MONAE', 'NANCE', 'NANTZ',
+  'NAOMI', 'NEALE', 'NEGGA', 'NEILL', 'NIALL', 'NICOL', 'NIETO', 'NORAH', 'NOURI', 'OATES',
+  'ODETS', 'OGDEN', 'OHARA', 'OLSEN', 'ORRIN', 'ORTIZ', 'OSHEA', 'OSLIN', 'PABLO', 'PATTI',
+  'PAULA', 'PEABO', 'PEALE', 'PEDRO', 'PEPIN', 'PEREC', 'PEREZ', 'PESCI', 'PRATT', 'QUAID',
+  'RALPH', 'READE', 'REECE', 'REGIS', 'RENES', 'RICCI', 'ROGEN', 'RONAN', 'ROSEN', 'ROSIE',
+  'ROWAN', 'RUSSO', 'SALLY', 'SALMA', 'SATIE', 'SEGAL', 'SEGER', 'SELMA', 'SHARI', 'SMITH',
+  'SNEAD', 'SNOWE', 'SOFIA', 'SOLTI', 'SOREN', 'SPIRO', 'SPYRI', 'STACY', 'STEEN', 'STIEG',
+  'STROM', 'STYNE', 'SUSAN', 'SYKES', 'SZELL', 'TAKEI', 'TANIA', 'TARTT', 'TERRI', 'TESSA',
+  'THARP', 'THEDA', 'TILDA', 'TIPPI', 'TOMEI', 'TRINI', 'UPTON', 'URIAH', 'URICH', 'UTHER',
+  'VERNE', 'VIJAY', 'VOLTA', 'WANDA', 'WELCH', 'WILLA', 'WOPAT', 'XTINA', 'YAKOV', 'ZELDA',
+]);
+
 // Deterministic PRNG so regeneration is reproducible.
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -66,7 +98,7 @@ function loadPool(day) {
   let m;
   while ((m = re.exec(txt))) {
     const ans = m[2];
-    if (/^[A-Z]{5}$/.test(ans) && !seen.has(ans)) {
+    if (/^[A-Z]{5}$/.test(ans) && !seen.has(ans) && !DENYLIST.has(ans)) {
       seen.add(ans);
       pool.push(ans);
     }
