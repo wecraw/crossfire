@@ -15,6 +15,7 @@ import { fridayClues } from '../clues/friday';
 import { saturdayClues } from '../clues/saturday';
 import { sundayClues } from '../clues/sunday';
 import { dailyChains, ChainLevel } from '../clues/chains';
+import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
 
@@ -88,14 +89,15 @@ export class GameComponent implements OnInit, AfterViewInit {
   incorrectGuessesByLevel: number[] = [0, 0, 0, 0, 0, 0, 0];
   //every submitted guess per level (incl. the solving guess), for the postgame replay
   guessHistoryByLevel: ILetter[][][] = [[], [], [], [], [], [], []];
-  hasWon: boolean = false;
-  hasLost: boolean = false;
+  //true for any level whose guess pool ran out and whose answer was revealed
+  failedByLevel: boolean[] = [false, false, false, false, false, false, false];
+  hasWon: boolean = false; //true once all 7 levels are completed (game is over)
   guessNotAllowed: boolean = false; //disables input during transitions / end states
   practiceMode: boolean = false; //set true for debugging / free play
   currentDay: number = 0; //days since epoch
 
   //Board / entry variables
-  board: ILetter[][] = []; //(MAX_INCORRECT_GUESSES - incorrectGuesses) rows x WORD_LENGTH cols
+  board: ILetter[][] = []; //GUESSES_PER_LEVEL rows x WORD_LENGTH cols, fresh each level
   currentRow: number = 0; //active guess row
   currentCol: number = 0; //active cell within the row
   presentLetters: string[] = []; //keyboard highlighting
@@ -137,14 +139,23 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   //Constants
   WORD_LENGTH: number = 5;
-  MAX_INCORRECT_GUESSES: number = 6; //shared wrong-guess budget for the whole game
+  GUESSES_PER_LEVEL: number = 5; //fresh wrong-guess pool per level; no game-over
   NUM_LEVELS: number = 7;
+  //stamped into each daily save; bump whenever the save shape OR the generated
+  //chains change so stale same-day saves from an older build are discarded
+  //rather than restored into an incompatible board (see loadFromLocalStorage)
+  SCHEMA_VERSION: string = '4';
   MAX_TILE_PX: number = 56;
   MIN_TILE_PX: number = 28;
   DEFAULT_TOAST_DURATION: number = 1500;
   PUZZLE_FIRST_DAY: number = 20609;
   FLIP_DURATION_MS: number = 500; //one tile's flip, mirrored in square.component.scss
   FLIP_STAGGER_MS: number = 250; //delay between consecutive tile flips
+
+  //a "win" is now a flawless run: every level solved, none revealed by the game
+  get flawless(): boolean {
+    return !this.failedByLevel.some(Boolean);
+  }
 
   ngOnInit(): void {
     this.setTheme();
@@ -164,10 +175,10 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.loadLevel(this.currentLevel);
     }
 
+    //resuming an already-completed game: go straight to the postgame modal
     if (this.hasWon) {
-      this.handleWin();
-    } else if (this.hasLost) {
-      this.handleLoss();
+      this.guessNotAllowed = true;
+      this.showGameOverModal = true;
     }
 
     //first-ever visit: auto-show the quick beginner tutorial (skipped in practice mode)
@@ -187,8 +198,8 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.setBoardSize();
   }
 
-  //sizes the tiles so the fullest board (MAX_INCORRECT_GUESSES rows) fits
-  //between the clue and the keyboard; the board only ever shrinks from there
+  //sizes the tiles so a full level board (GUESSES_PER_LEVEL rows) fits
+  //between the clue and the keyboard
   setBoardSize() {
     const clue = document.querySelector('.clue');
     const keyboard = document.querySelector('.keyboard-container');
@@ -205,7 +216,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     }
 
     const byHeight =
-      Math.floor(availHeight / this.MAX_INCORRECT_GUESSES) - this.ROW_MARGIN_PX;
+      Math.floor(availHeight / this.GUESSES_PER_LEVEL) - this.ROW_MARGIN_PX;
     const availWidth = Math.min(window.innerWidth, 480) - 16;
     const byWidth = Math.floor(availWidth / this.WORD_LENGTH) - 2;
 
@@ -221,6 +232,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.absentLetters = [];
     this.correctLetters = [];
     this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0];
+    this.failedByLevel = [false, false, false, false, false, false, false];
     this.guessHistoryByLevel = [[], [], [], [], [], [], []];
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = 0;
     this.slideOffset = 0;
@@ -230,20 +242,26 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.showResetModal = this.showGameOverModal = false;
     this.guessNotAllowed = false;
     this.hasWon = false;
-    this.hasLost = false;
     this.setChain();
     this.loadLevel(0);
   }
 
   /*------------------------------Chain / clue setup-------------------------------------*/
 
-  //builds the per-weekday answer -> clue lookup (first occurrence wins)
+  //builds the per-weekday answer -> clue lookup (first occurrence wins, but
+  //clue-overrides.ts is checked first so curated replacements always win)
   buildClueMaps() {
     this.clueByAnswer = this.cluesArray.map((clueSet) => {
       const map = new Map<string, IClue>();
       for (const [num, clue, answer] of clueSet as string[][]) {
         if (!map.has(answer)) {
-          map.set(answer, { clueNumber: +num, clue, answer });
+          const override = clueOverrides[answer];
+          map.set(
+            answer,
+            override
+              ? { clueNumber: override.clueNumber, clue: override.clue, answer }
+              : { clueNumber: +num, clue, answer }
+          );
         }
       }
       return map;
@@ -289,18 +307,24 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.currentDisplayLevel = level;
   }
 
-  //the board only holds the wrong-guess budget still left for the whole game,
-  //so it shrinks as mistakes accumulate and is never refilled between levels
+  //each level gets a fresh board with its own pool of GUESSES_PER_LEVEL rows
   private buildBoard() {
-    this.board = [];
-    const rows = this.MAX_INCORRECT_GUESSES - this.incorrectGuesses;
-    for (let r = 0; r < rows; r++) {
+    this.board = this.makeEmptyBoard(this.answer.length);
+  }
+
+  //builds a fresh GUESSES_PER_LEVEL x width board of empty cells, without
+  //touching this.board (used both for the live board and for snapshotting the
+  //next level into storage mid-reveal)
+  private makeEmptyBoard(width: number): ILetter[][] {
+    const board: ILetter[][] = [];
+    for (let r = 0; r < this.GUESSES_PER_LEVEL; r++) {
       const row: ILetter[] = [];
-      for (let c = 0; c < this.answer.length; c++) {
+      for (let c = 0; c < width; c++) {
         row.push({ letter: '', state: 'default' });
       }
-      this.board.push(row);
+      board.push(row);
     }
+    return board;
   }
 
   //drops the carried green letter into a row as a locked given
@@ -344,7 +368,6 @@ export class GameComponent implements OnInit, AfterViewInit {
     return (
       !this.guessNotAllowed &&
       !this.hasWon &&
-      !this.hasLost &&
       this.solvedRow === -1 &&
       row === this.currentRow &&
       col === this.currentCol
@@ -375,7 +398,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   setCell(row: number, col: number) {
-    if (this.guessNotAllowed || this.hasWon || this.hasLost) return;
+    if (this.guessNotAllowed || this.hasWon) return;
     if (row !== this.currentRow) return;
     if (this.board[row][col].locked) return;
     this.currentCol = col;
@@ -454,10 +477,23 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.givenPos >= 0 ? this.answer.length - 1 : this.answer.length;
     const revealTime =
       (flipCount - 1) * this.FLIP_STAGGER_MS + this.FLIP_DURATION_MS;
+
+    //the final guess of a level missed: commit the failed/advanced result to
+    //storage NOW, before the flip animation, so a reload during the flip can't
+    //hand back the final guess or preserve a stale flawless result. The board
+    //keeps animating; only the visual reveal (answer toast, next-level swap) is
+    //deferred behind the flip. Capture the answer first, since the commit
+    //advances currentLevel (this.answer isn't reloaded until the reveal).
+    const outOfGuesses = !solved && this.currentRow >= this.GUESSES_PER_LEVEL - 1;
+    const failedAnswer = this.answer;
+    if (outOfGuesses) this.commitLevelFailed();
+
     setTimeout(() => {
       this.revealRow = -1;
       if (solved) {
         this.handleCorrect();
+      } else if (outOfGuesses) {
+        this.revealLevelFailed(failedAnswer);
       } else {
         this.handleIncorrect();
       }
@@ -472,7 +508,7 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     if (this.currentLevel === this.NUM_LEVELS) {
       this.currentDisplayLevel = this.NUM_LEVELS;
-      this.handleWin();
+      this.handleComplete();
       return;
     }
 
@@ -504,6 +540,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   private handleIncorrect() {
+    //a non-terminal miss (the level still has guesses left); the terminal miss
+    //is committed synchronously in checkAnswer and revealed by revealLevelFailed
     this.incorrectGuesses++;
     this.incorrectGuessesByLevel[this.currentLevel]++;
     this.shakeChecks = true;
@@ -512,41 +550,129 @@ export class GameComponent implements OnInit, AfterViewInit {
     }, 300);
 
     this.currentRow++;
-    if (this.incorrectGuesses === this.MAX_INCORRECT_GUESSES) {
-      this.guessNotAllowed = true;
-      this.handleLoss();
-    } else {
-      this.prefillRow(this.currentRow);
-      this.currentCol = this.firstEditableCol();
-      this.guessNotAllowed = false; //re-enable input after the flip reveal
+    this.prefillRow(this.currentRow);
+    this.currentCol = this.firstEditableCol();
+    this.guessNotAllowed = false; //re-enable input after the flip reveal
+    this.updateLocalStorage();
+  }
+
+  //the level's guess pool ran out: flag it, show the answer, then advance. Split
+  //into a synchronous commit + a deferred visual reveal so the terminal result
+  //is persisted the instant the final guess is submitted (before the flip), not
+  //only after the flip/reveal animations -- otherwise a reload during the flip
+  //could hand back the final guess or keep a stale flawless result. Retained as
+  //a single entry point (commit + reveal) for direct callers/tests.
+  private handleLevelFailed() {
+    const failedAnswer = this.answer;
+    this.commitLevelFailed();
+    this.revealLevelFailed(failedAnswer);
+  }
+
+  //synchronous state + storage commit for a level's terminal failure. Counts the
+  //final wrong guess, flags the level, advances, and persists the next level's
+  //fresh board (or records the finished game when it was the last level). Does
+  //NOT touch the on-screen board/answer, which keep animating the failed row
+  //until revealLevelFailed swaps them out.
+  private commitLevelFailed() {
+    this.incorrectGuesses++;
+    this.incorrectGuessesByLevel[this.currentLevel]++;
+    this.failedByLevel[this.currentLevel] = true;
+    this.currentRow++;
+    this.currentLevel++;
+
+    if (this.currentLevel === this.NUM_LEVELS) {
+      //record the finished game (hasWon + save + stats) now; only the modal is
+      //delayed by revealLevelFailed
+      this.finalizeComplete();
+      return;
     }
-    this.updateLocalStorage();
+
+    //snapshot the advanced level's fresh starting board into storage right away
+    this.persistAdvancedLevel();
   }
 
-  handleLoss() {
-    this.hasLost = true;
+  //deferred visual reveal for a failed level: show the just-failed answer, then
+  //(after the reveal delay) swap in the already-committed next level, or reveal
+  //the postgame modal when the failed level was the last. State/storage were
+  //committed up front by commitLevelFailed; this only drives the animation.
+  private revealLevelFailed(failedAnswer: string) {
     this.guessNotAllowed = true;
-    this.updateLocalStorage();
-    this.updateStats();
-    const toastDuration = 2250;
-    this.toast(this.answer, toastDuration);
-
+    this.shakeChecks = true;
     setTimeout(() => {
-      this.showGameOverModal = true;
+      this.shakeChecks = false;
+    }, 300);
+
+    const revealDuration = 2250;
+    this.toast(failedAnswer, revealDuration);
+
+    if (this.currentLevel === this.NUM_LEVELS) {
+      this.currentDisplayLevel = this.NUM_LEVELS;
+      setTimeout(() => this.revealComplete(), revealDuration + 250);
+      return;
+    }
+
+    //after the answer has been shown, snap the next level's board into place
+    setTimeout(() => {
+      this.boardTransition = false;
+      this.loadLevel(this.currentLevel);
+      this.updateLocalStorage();
       this.guessNotAllowed = false;
-    }, toastDuration + 500);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => (this.boardTransition = true))
+      );
+    }, revealDuration + 250);
   }
 
-  handleWin() {
+  //writes the just-advanced level's starting state (fresh board + carried
+  //given) to storage without touching the live board, which is still mid-reveal
+  //-- mirrors what loadLevel/loadFromLocalStorage would produce for that level
+  private persistAdvancedLevel() {
+    if (this.practiceMode) return;
+    const [answer, carryPos] = this.chain[this.currentLevel];
+    const board = this.makeEmptyBoard(answer.length);
+    if (carryPos >= 0) {
+      board[0][carryPos] = {
+        letter: answer[carryPos],
+        state: 'correct',
+        locked: true,
+      };
+    }
+    this.writeDailySave(board, 0, false);
+  }
+
+  //all 7 levels done (solved or revealed); a flawless run is the "win".
+  //the solved-last-level path records the game and reveals the modal together;
+  //the revealed-last-level path (handleLevelFailed) records it up front and
+  //delays only revealComplete so the answer reveal plays first.
+  handleComplete() {
+    this.finalizeComplete();
+    this.revealComplete();
+  }
+
+  //record the finished game synchronously (hasWon + save + stats) so it survives
+  //a reload even while the celebratory modal is still pending. Idempotent:
+  //updateStats is guarded on the puzzle number, so it counts a game only once.
+  private finalizeComplete() {
     this.guessNotAllowed = true;
     this.hasWon = true;
     this.updateLocalStorage();
     this.updateStats();
-    this.renderWinConfetti();
-    setTimeout(() => {
-      this.showGameOverModal = true;
-      this.guessNotAllowed = false;
-    }, 3500);
+  }
+
+  //show the postgame modal, after the win confetti when the run was flawless
+  private revealComplete() {
+    if (this.flawless) {
+      this.renderWinConfetti();
+      setTimeout(() => {
+        this.showGameOverModal = true;
+        this.guessNotAllowed = false;
+      }, 3500);
+    } else {
+      setTimeout(() => {
+        this.showGameOverModal = true;
+        this.guessNotAllowed = false;
+      }, 800);
+    }
   }
 
   togglePracticeMode() {
@@ -567,7 +693,7 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
-    if (!this.guessNotAllowed && !this.hasWon && !this.hasLost) {
+    if (!this.guessNotAllowed && !this.hasWon) {
       if (this.isLetterKey(event)) {
         this.handleLetterEntry(event.key.toUpperCase());
       }
@@ -628,20 +754,19 @@ export class GameComponent implements OnInit, AfterViewInit {
       shareString += '(practice)';
     }
 
-    const reached = this.hasWon ? this.NUM_LEVELS : this.currentLevel;
-    shareString += ' ' + reached + '/' + this.NUM_LEVELS;
-    if (this.hasWon) shareString += '🎉';
+    //completion is guaranteed, so the score is how many levels were solved
+    //unaided; a flawless run (none revealed) earns the trophy
+    const solved = this.NUM_LEVELS - this.failedByLevel.filter(Boolean).length;
+    shareString += '  ' + solved + '/' + this.NUM_LEVELS;
+    if (this.flawless) shareString += ' 🏆';
     shareString += '\n\n';
 
     for (let i = 0; i < this.NUM_LEVELS; i++) {
-      if (i < reached) {
+      if (this.failedByLevel[i]) {
+        shareString += '🟥';
+      } else {
         shareString += '🟩';
         shareString += '❌'.repeat(this.incorrectGuessesByLevel[i]);
-      } else if (i === reached) {
-        shareString += '🟨';
-        shareString += '❌'.repeat(this.incorrectGuessesByLevel[i]);
-      } else {
-        shareString += '⬛';
       }
       if (i !== this.NUM_LEVELS - 1) shareString += '\n';
     }
@@ -680,23 +805,33 @@ export class GameComponent implements OnInit, AfterViewInit {
   /*------------------------------Local Storage Helpers-------------------------------------*/
 
   updateLocalStorage() {
-    if (!this.practiceMode) {
-      localStorage.setItem('v3:incorrectGuesses', '' + this.incorrectGuesses);
-      localStorage.setItem(
-        'v3:incorrectGuessesByLevel',
-        JSON.stringify(this.incorrectGuessesByLevel)
-      );
-      localStorage.setItem(
-        'v3:guessHistory',
-        JSON.stringify(this.guessHistoryByLevel)
-      );
-      localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
-      localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
-      localStorage.setItem('v3:currentRow', '' + this.currentRow);
-      localStorage.setItem('v3:board', JSON.stringify(this.board));
-      localStorage.setItem('v3:hasWon', '' + this.hasWon);
-      localStorage.setItem('v3:hasLost', '' + this.hasLost);
-    }
+    if (this.practiceMode) return;
+    this.writeDailySave(this.board, this.currentRow, this.hasWon);
+  }
+
+  //single writer for the daily save so every path stamps the schema version and
+  //stays in sync; callers pass the board/row/won state to persist
+  private writeDailySave(
+    board: ILetter[][],
+    currentRow: number,
+    hasWon: boolean
+  ) {
+    localStorage.setItem('v3:schema', this.SCHEMA_VERSION);
+    localStorage.setItem('v3:incorrectGuesses', '' + this.incorrectGuesses);
+    localStorage.setItem(
+      'v3:incorrectGuessesByLevel',
+      JSON.stringify(this.incorrectGuessesByLevel)
+    );
+    localStorage.setItem(
+      'v3:guessHistory',
+      JSON.stringify(this.guessHistoryByLevel)
+    );
+    localStorage.setItem('v3:failedByLevel', JSON.stringify(this.failedByLevel));
+    localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
+    localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
+    localStorage.setItem('v3:currentRow', '' + currentRow);
+    localStorage.setItem('v3:board', JSON.stringify(board));
+    localStorage.setItem('v3:hasWon', '' + hasWon);
   }
 
   getStats() {
@@ -736,18 +871,22 @@ export class GameComponent implements OnInit, AfterViewInit {
           localStorage.setItem('totalGamesPlayed', '1');
         }
 
+        //a "win" is a flawless run (no revealed levels)
         const totalWins = +(localStorage.getItem('totalWins') || '0');
         localStorage.setItem(
           'totalWins',
-          '' + (totalWins + (this.hasWon ? 1 : 0))
+          '' + (totalWins + (this.flawless ? 1 : 0))
         );
 
+        //levels solved unaided this game (completion is always all 7)
+        const solvedLevels =
+          this.NUM_LEVELS - this.failedByLevel.filter(Boolean).length;
         const tL = localStorage.getItem('totalLevels');
         if (tL) {
           const tL_num = +tL;
-          localStorage.setItem('totalLevels', tL_num + this.currentLevel + '');
+          localStorage.setItem('totalLevels', tL_num + solvedLevels + '');
         } else {
-          localStorage.setItem('totalLevels', this.currentLevel + '');
+          localStorage.setItem('totalLevels', solvedLevels + '');
         }
 
         const totalGuesses = +(localStorage.getItem('totalGuesses') || '0');
@@ -763,10 +902,11 @@ export class GameComponent implements OnInit, AfterViewInit {
           if (this.getPuzzleNumber() - +streakLastPuzzle > 1)
             isStreakValid = false;
         }
+        //the streak counts consecutive flawless days; any revealed level ends it
         if (streak && isStreakValid) {
           let streak_num = +streak;
-          if (this.hasLost) streak_num = 0;
-          if (this.hasWon) streak_num++;
+          if (this.flawless) streak_num++;
+          else streak_num = 0;
           const mS = localStorage.getItem('maxStreak');
           let mS_num = 0;
           if (mS) mS_num = +mS;
@@ -775,7 +915,7 @@ export class GameComponent implements OnInit, AfterViewInit {
           localStorage.setItem('streak', streak_num + '');
         } else {
           let streak_num = 0;
-          if (this.hasWon) streak_num = 1;
+          if (this.flawless) streak_num = 1;
           const mS = localStorage.getItem('maxStreak');
           let mS_num = 0;
           if (mS) mS_num = +mS;
@@ -795,9 +935,11 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   resetLocalStorage() {
+    localStorage.setItem('v3:schema', this.SCHEMA_VERSION);
     localStorage.removeItem('v3:incorrectGuesses');
     localStorage.removeItem('v3:incorrectGuessesByLevel');
     localStorage.removeItem('v3:guessHistory');
+    localStorage.removeItem('v3:failedByLevel');
     localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
     localStorage.removeItem('v3:currentLevel');
     localStorage.removeItem('v3:currentRow');
@@ -808,6 +950,16 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   //returns true if a saved in-progress board was restored
   loadFromLocalStorage(): boolean {
+    //a save whose schema stamp is missing or stale predates the current save
+    //shape and generated chains (e.g. this deploy reached someone who already
+    //played today). Restoring it could strand the board on a different answer
+    //or a wrong row count and crash on the next keystroke, so discard it and
+    //start today fresh instead.
+    if (localStorage.getItem('v3:schema') !== this.SCHEMA_VERSION) {
+      this.resetLocalStorage();
+      return false;
+    }
+
     const cL = localStorage.getItem('v3:currentLevel');
     if (cL) {
       this.currentLevel = +cL;
@@ -823,11 +975,11 @@ export class GameComponent implements OnInit, AfterViewInit {
     const gH = localStorage.getItem('v3:guessHistory');
     if (gH) this.guessHistoryByLevel = JSON.parse(gH);
 
+    const fBL = localStorage.getItem('v3:failedByLevel');
+    if (fBL) this.failedByLevel = JSON.parse(fBL);
+
     const hW = localStorage.getItem('v3:hasWon');
     if (hW) this.hasWon = hW === 'true';
-
-    const hL = localStorage.getItem('v3:hasLost');
-    if (hL) this.hasLost = hL === 'true';
 
     //prime the level (clue, given letter, fresh board), then overlay saved board.
     //after a win currentLevel === NUM_LEVELS (past the last chain entry), so prime
@@ -843,7 +995,7 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.board = JSON.parse(savedBoard);
       const cR = localStorage.getItem('v3:currentRow');
       this.currentRow = cR ? +cR : 0;
-      if (!this.hasWon && !this.hasLost) {
+      if (!this.hasWon) {
         this.currentCol = this.firstEditableCol();
       }
       this.setKeyboardFromBoard();

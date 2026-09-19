@@ -60,7 +60,7 @@
   </div>
 </div>
 <div
-  [ngClass]="{ 'no-click': guessNotAllowed || hasLost || hasWon }"
+  [ngClass]="{ 'no-click': guessNotAllowed || hasWon }"
   class="keyboard-container"
   >
   <app-keyboard
@@ -120,6 +120,8 @@
       <app-modal
         [currentLevel]="currentDisplayLevel"
         [incorrectGuessesByLevel]="incorrectGuessesByLevel"
+        [failedByLevel]="failedByLevel"
+        [flawless]="flawless"
         [replays]="getReplays()"
         [decisionModal]="true"
         primaryLabel="New game"
@@ -133,6 +135,8 @@
         [stats]="getStats()"
         [currentLevel]="currentDisplayLevel"
         [incorrectGuessesByLevel]="incorrectGuessesByLevel"
+        [failedByLevel]="failedByLevel"
+        [flawless]="flawless"
         [replays]="getReplays()"
         [puzzleNumber]="getPuzzleNumber()"
         [decisionModal]="true"
