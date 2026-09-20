@@ -517,8 +517,13 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     this.renderConfetti();
 
-    //slide the board up so the solved row rises to the top, then fade away
-    //everything but the carried letter, then load the next level in its place
+    //Extend the strip below the viewport before sliding. These empty rows move
+    //in with the solved row, keeping a full board visible throughout the slide.
+    this.board.push(
+      ...this.makeEmptyBoard(this.answer.length).slice(0, this.solvedRow)
+    );
+
+    //Slide the solved row to the top and fade everything but the carried letter.
     setTimeout(() => {
       this.slideOffset = this.solvedRow;
       this.fadeNonCarry = true;

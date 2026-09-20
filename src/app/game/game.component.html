@@ -11,7 +11,7 @@
   <div class="row">
     <div class="clue">{{ clue.clueNumber }}. {{ clue.clue }}</div>
   </div>
-  <div class="board-viewport">
+  <div class="board-viewport" [style.height.px]="GUESSES_PER_LEVEL * rowHeight">
     <div
       class="board"
       [class.no-transition]="!boardTransition"
