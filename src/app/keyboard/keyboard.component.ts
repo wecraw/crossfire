@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, Input, HostListener } from '@angular/core';
 
 @Component({
   standalone: false,
@@ -18,6 +18,12 @@ export class KeyboardComponent {
   lettersRow3 = ['CHECK', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
   constructor() {}
+
+  @HostListener('keydown.enter', ['$event'])
+  preventEnterActivation(event: Event) {
+    // Enter submits on the game's window keyup; don't click the focused key first.
+    event.preventDefault();
+  }
 
   getState(letter: string) {
     if (this.correctLetters.includes(letter)) {

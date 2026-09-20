@@ -37,6 +37,35 @@ describe('GameComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it.each(['Q', 'CHECK', 'BKSP'])(
+    'submits without activating a focused virtual %s key',
+    (label) => {
+      fixture.detectChanges();
+      component.guessNotAllowed = false;
+      component.hasWon = false;
+      const keyboard = fixture.nativeElement.querySelector('app-keyboard');
+      const buttons = Array.from(keyboard.querySelectorAll('button')) as HTMLButtonElement[];
+      const button = label === 'BKSP'
+        ? buttons[buttons.length - 1]
+        : buttons.find((key) => key.textContent?.trim() === label)!;
+      const virtualKeypress = vi.spyOn(component, 'handleVirtualKeypress');
+      const submit = vi.spyOn(component, 'checkAnswer').mockImplementation(() => undefined);
+      button.focus();
+      expect(document.activeElement).toBe(button);
+
+      const keydown = new KeyboardEvent('keydown', {
+        key: 'Enter', bubbles: true, cancelable: true,
+      });
+      // jsdom doesn't perform native keyboard activation, so model its default action.
+      if (button.dispatchEvent(keydown)) button.click();
+      button.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+
+      expect(keydown.defaultPrevented).toBe(true);
+      expect(virtualKeypress).not.toHaveBeenCalled();
+      expect(submit).toHaveBeenCalledTimes(1);
+    },
+  );
+
   describe('daily chain selection', () => {
     it('picks the same chain for a given puzzle number for every player', () => {
       const a = makeComponent();
