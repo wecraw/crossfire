@@ -42,12 +42,6 @@ $page-background-color: #fefefe;
 // (:host(.fade-out-letter)) so only the colored fill + letter fade while the
 // empty-cell skeleton/borders stay in place.
 
-.levels-row {
-  margin-top: 15px;
-  display: flex;
-  width: 100%;
-  justify-content: center;
-}
 canvas {
   height: 100%; /* we need these for full-screen effect */
   width: 100%;
@@ -57,74 +51,11 @@ canvas {
   pointer-events: none;
 }
 
-.status-row {
+.levels-row {
+  margin-top: 15px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   width: 100%;
-  max-width: 320px;
-  margin: 10px auto 0;
-}
-
-.score {
-  position: relative;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-
-  .score-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    opacity: 0.7;
-  }
-
-  .score-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .score-gain {
-    position: absolute;
-    left: 100%;
-    margin-left: 6px;
-    font-weight: 700;
-    color: var(--square-correct-bg-color);
-    pointer-events: none;
-    white-space: nowrap;
-    animation: score-gain 1.4s ease-out forwards;
-  }
-}
-
-@keyframes score-gain {
-  0% { opacity: 0; transform: translateY(6px); }
-  15% { opacity: 1; transform: translateY(0); }
-  70% { opacity: 1; transform: translateY(-6px); }
-  100% { opacity: 0; transform: translateY(-14px); }
-}
-
-.hint-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-
-  .hint-count {
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
+  justify-content: center;
 }
 
 .clue {
@@ -154,6 +85,144 @@ canvas {
   // left: 50%;
   // margin-left: -187.5px; //half the width of the container
   // justify-content: center;
+}
+
+// hint + keyboard share one column so the hint spans exactly the keyboard's width
+.input-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+// a bar in the keyboard's own material: same fill, radius and type as the keys,
+// but shorter and set apart so it doesn't read as a fourth row of letters
+.hint-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  margin: 0 4px 12px;
+  border: none;
+  border-radius: 3px;
+  background-color: var(--keyboard-button-default-color);
+  color: var(--keyboard-button-label-color);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+
+  i {
+    font-size: 1rem;
+  }
+
+  .hint-left {
+    font-weight: 400;
+    opacity: 0.75;
+  }
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      filter: brightness(1.08);
+    }
+  }
+
+  &:active:not(:disabled) {
+    filter: brightness(0.92);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--square-highlighted-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+// short phones (e.g. 320x568): the board is already at its minimum tile size,
+// so win back the hint bar's height from the chrome around it
+@media (max-height: 640px) {
+  .levels-row { margin-top: 10px; }
+  .hint-button {
+    height: 32px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+  }
+}
+
+.confirm-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: #000;
+  opacity: 0.6;
+}
+
+.confirm-dialog {
+  position: fixed;
+  z-index: 1101;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100vw - 32px));
+  padding: 22px 20px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--modal-border-color);
+  background: var(--modal-bg-color);
+  color: var(--modal-text-color);
+  text-align: center;
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    opacity: 0.85;
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+
+  button {
+    flex: 1;
+    border-radius: 999px;
+    padding: 9px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+
+    &:active {
+      transform: scale(0.96);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--square-highlighted-color);
+      outline-offset: 2px;
+    }
+  }
+
+  .confirm-cancel {
+    background: transparent;
+    color: var(--btn-secondary-text);
+    border-color: var(--btn-secondary-border);
+  }
+
+  .confirm-primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+  }
 }
 
 .check-button {

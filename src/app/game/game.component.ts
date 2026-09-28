@@ -5,6 +5,7 @@ import {
   HostListener,
   OnInit,
   Renderer2,
+  ViewChild,
   inject,
 } from '@angular/core';
 import { mondayClues } from '../clues/monday';
@@ -18,7 +19,8 @@ import { dailyChains, ChainLevel } from '../clues/chains';
 import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
-import { GameStats } from '../modal/modal.component';
+import { DailyRank, GameStats } from '../modal/modal.component';
+import { environment } from '../../environments/environment';
 
 export interface IClue {
   clueNumber: number;
@@ -40,6 +42,7 @@ export interface LevelReplay {
   answer: string;
   solved: boolean;
   points: number;
+  hints: number;
   guesses: ILetter[][];
 }
 
@@ -102,6 +105,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   guessNotAllowed: boolean = false; //disables input during transitions / end states
   practiceMode: boolean = false; //set true for debugging / free play
   currentDay: number = 0; //days since epoch
+  dailyRank: DailyRank | null = null; //today's "top X%" from the stats backend
 
   //Board / entry variables
   board: ILetter[][] = []; //GUESSES_PER_LEVEL rows x WORD_LENGTH cols, fresh each level
@@ -120,8 +124,6 @@ export class GameComponent implements OnInit, AfterViewInit {
   boardTransition: boolean = true; //false = snap (no animation) when swapping levels
   revealRow: number = -1; //row currently playing the staggered flip reveal
   hintPopPos: number = -1; //column of a just-revealed hint, popped in like the given
-  lastGain: number = 0; //points from the latest solve, floated next to the score
-  gainKey: number = 0; //bumped per solve so the +N float re-renders and replays
 
   //Toast variables
   showToast: boolean = false;
@@ -137,6 +139,10 @@ export class GameComponent implements OnInit, AfterViewInit {
   showSettingsModal: boolean = false;
   showAboutModal: boolean = false;
   showWelcomeModal: boolean = false;
+  showHintConfirm: boolean = false;
+  private keyStartedInDialog: boolean = false; //swallows the keyup of a key pressed inside the hint dialog
+
+  @ViewChild('hintConfirmButton') hintConfirmButton?: ElementRef<HTMLButtonElement>;
 
   //Animation variables
   shakeChecks: boolean = false;
@@ -151,9 +157,9 @@ export class GameComponent implements OnInit, AfterViewInit {
   WORD_LENGTH: number = 5;
   GUESSES_PER_LEVEL: number = 5; //fresh wrong-guess pool per level; no game-over
   NUM_LEVELS: number = 7;
-  //points for solving each level (Mon..Sun) on the first guess; every extra
-  //guess costs another 1/GUESSES_PER_LEVEL of it, and a revealed level scores 0
-  LEVEL_MAX_POINTS: number[] = [100, 125, 150, 175, 200, 225, 250];
+  //points for solving any level on the first guess; every extra guess costs
+  //another 1/GUESSES_PER_LEVEL of it, and a revealed level scores 0
+  POINTS_PER_LEVEL: number = 100;
   HINTS_PER_GAME: number = 2; //free letter reveals per game, usable on any level
   //stamped into each daily save; bump whenever the save shape OR the generated
   //chains change so stale same-day saves from an older build are discarded
@@ -172,7 +178,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   get MAX_SCORE(): number {
-    return this.LEVEL_MAX_POINTS.reduce((a, b) => a + b, 0);
+    return this.POINTS_PER_LEVEL * this.NUM_LEVELS;
   }
 
   //derived from the level results, so it's never stored in the daily save
@@ -180,13 +186,13 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (level >= this.currentLevel || this.failedByLevel[level]) return 0;
     const guessesUsed = this.incorrectGuessesByLevel[level] + 1;
     return (
-      (this.LEVEL_MAX_POINTS[level] * (this.GUESSES_PER_LEVEL + 1 - guessesUsed)) /
+      (this.POINTS_PER_LEVEL * (this.GUESSES_PER_LEVEL + 1 - guessesUsed)) /
       this.GUESSES_PER_LEVEL
     );
   }
 
   get levelScores(): number[] {
-    return this.LEVEL_MAX_POINTS.map((_, i) => this.levelScore(i));
+    return Array.from({ length: this.NUM_LEVELS }, (_, i) => this.levelScore(i));
   }
 
   get score(): number {
@@ -204,6 +210,7 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.setTheme();
+    this.resetStaleScoreStats();
 
     this.buildClueMaps();
     this.setChain();
@@ -224,6 +231,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (this.hasWon) {
       this.guessNotAllowed = true;
       this.showGameOverModal = true;
+      this.fetchDailyRank();
     }
 
     //first-ever visit: auto-show the quick beginner tutorial (skipped in practice mode)
@@ -569,8 +577,6 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.guessNotAllowed = true;
     this.solvedRow = this.currentRow;
     this.currentLevel++;
-    this.lastGain = this.levelScore(this.currentLevel - 1);
-    this.gainKey++;
     this.updateLocalStorage();
 
     if (this.currentLevel === this.NUM_LEVELS) {
@@ -754,6 +760,33 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.hasWon = true;
     this.updateLocalStorage();
     this.updateStats();
+    this.fetchDailyRank();
+  }
+
+  //submits today's score once (POST), or just reads today's standing (GET) on a
+  //reload; best-effort, so any failure leaves dailyRank null and hides the line
+  async fetchDailyRank() {
+    const url = environment.statsApiUrl;
+    if (this.practiceMode || !url) return;
+
+    const puzzle = this.getPuzzleNumber();
+    const score = this.score;
+    const submitted = localStorage.getItem('rankSubmittedPuzzle') === '' + puzzle;
+    try {
+      const res = submitted
+        ? await fetch(`${url}?puzzle=${puzzle}&score=${score}`)
+        : await fetch(url, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ puzzle, score }),
+          });
+      if (!res.ok) return;
+      if (!submitted) localStorage.setItem('rankSubmittedPuzzle', '' + puzzle);
+      const rank: DailyRank = await res.json();
+      if (rank.total > 0) this.dailyRank = rank;
+    } catch {
+      //offline or backend down: the postgame just omits the rank line
+    }
   }
 
   //show the postgame modal, after the win confetti when the run was flawless
@@ -829,10 +862,38 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.updateLocalStorage();
   }
 
+  //hints sit next to the keyboard, so spending one takes a confirm step
+  openHintConfirm() {
+    if (!this.canHint) return;
+    this.showHintConfirm = true;
+    setTimeout(() => this.hintConfirmButton?.nativeElement.focus());
+  }
+
+  closeHintConfirm() {
+    this.showHintConfirm = false;
+  }
+
+  confirmHint() {
+    this.showHintConfirm = false;
+    this.useHint();
+  }
+
   /*------------------------------Keyboard/letter entry-------------------------------------*/
+
+  @HostListener('window:keydown')
+  keyDown() {
+    this.keyStartedInDialog = this.showHintConfirm;
+  }
 
   @HostListener('window:keyup', ['$event'])
   keyEvent(event: KeyboardEvent) {
+    //the dialog's own buttons handle Enter/Space on keydown; don't let that
+    //same keypress's keyup fall through to the board once the dialog closes
+    if (this.showHintConfirm || this.keyStartedInDialog) {
+      this.keyStartedInDialog = false;
+      if (event.key === 'Escape') this.closeHintConfirm();
+      return;
+    }
     if (!this.guessNotAllowed && !this.hasWon) {
       if (this.isLetterKey(event)) {
         this.handleLetterEntry(event.key.toUpperCase());
@@ -936,6 +997,7 @@ export class GameComponent implements OnInit, AfterViewInit {
         answer,
         solved,
         points: this.levelScore(level),
+        hints: this.hintsByLevel[level]?.length ?? 0,
         guesses,
       });
     }
@@ -986,6 +1048,21 @@ export class GameComponent implements OnInit, AfterViewInit {
       currentStreak: this.getStreak(),
       maxStreak: localStorage.getItem('maxStreak') || '0',
     };
+  }
+
+  //score stats saved under an older, larger point scale can leave an average or
+  //best above what's now possible; wipe the score stats so they restart cleanly
+  resetStaleScoreStats() {
+    const scoredGames = +(localStorage.getItem('scoredGames') || '0');
+    const average = scoredGames
+      ? +(localStorage.getItem('totalScore') || '0') / scoredGames
+      : 0;
+    const best = +(localStorage.getItem('bestScore') || '0');
+    if (average <= this.MAX_SCORE && best <= this.MAX_SCORE) return;
+
+    localStorage.removeItem('totalScore');
+    localStorage.removeItem('scoredGames');
+    localStorage.removeItem('bestScore');
   }
 
   //records a finished daily game once per puzzle (guarded on streakLastPuzzle)

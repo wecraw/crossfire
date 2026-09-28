@@ -3,103 +3,80 @@
 </div>
 <div class="modal-frame">
   <div class="modal-body">
-    <div
-      #pages
-      class="pages"
-      [style.minHeight.px]="minPagesHeight"
-    >
     @if (currentPage === 0) {
-    <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
-    <div class="final-score">
-      <span class="final-score-value">{{ score }}</span>
-      <span class="final-score-max">/ {{ maxScore }}</span>
-    </div>
-    @if (flawless) {
-      <div class="flawless-badge">🏆 Flawless</div>
-    }
-    @if (stats) {
-      <div>
-        <div class="header">
-          Statistics
-        </div>
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-number">
-              {{stats.totalGames}}
-            </div>
-            <div class="stat-label">
-              Games played
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">
-              {{stats.averageScore}}
-            </div>
-            <div class="stat-label">
-              Avg score
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">
-              {{stats.bestScore}}
-            </div>
-            <div class="stat-label">
-              Best score
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">
-              {{stats.currentStreak}}
-            </div>
-            <div class="stat-label">
-              Current streak
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">
-              {{stats.maxStreak}}
-            </div>
-            <div class="stat-label">
-              Max streak
-            </div>
-          </div>
-        </div>
+    <div class="summary">
+      <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
+      <div class="final-score">
+        <span class="final-score-value">{{ score }}</span>
+        <span class="final-score-max">/ {{ maxScore }}</span>
       </div>
-    }
-    <div>
-      <div class="header">
-        Game breakdown
-      </div>
+      <!-- line is reserved on the daily summary so a late-arriving rank doesn't
+           shift the layout -->
+      @if (flawless || stats) {
+        <div class="subtitle">
+          @if (flawless) {
+            <span class="flawless">🏆 Flawless</span>
+          }
+          @if (flawless && dailyRank) {
+            <span class="sep">·</span>
+          }
+          @if (dailyRank) {
+            <span>Top {{ dailyRank.topPercent }}% of {{ dailyRank.total | number }} today</span>
+          }
+        </div>
+      }
 
       <div class="breakdown">
         @for (level of levels; track level; let i = $index) {
-          <div class="day">
-            <div class="level" [ngClass]="{'completed': !failedByLevel[i], 'failed': failedByLevel[i]}">
-              <div class="level-name">
-                {{level}}
-              </div>
-            </div>
-            <div class="level-points" [ngClass]="{'failed': failedByLevel[i]}">
-              {{ levelScores[i] }}
-            </div>
-            <div class="guesses">
-              @for (j of numSequence(incorrectGuessesByLevel[i]); track $index) {
-                <i class="wrong-guess fa-solid fa-xmark"></i>
-              }
-              @for (j of numSequence(hintsByLevel[i]?.length ?? 0); track $index) {
-                <i class="hint-used fa-regular fa-lightbulb"></i>
-              }
-            </div>
-          </div>
+          <button
+            type="button"
+            class="day"
+            [ngClass]="{ solved: !failedByLevel[i], failed: failedByLevel[i] }"
+            (click)="goToPage(i + 1)"
+            [attr.aria-label]="'Replay ' + level + ': ' + levelScores[i] + ' points'"
+          >
+            <span class="day-name">{{ level }}</span>
+            <span class="day-points">{{ levelScores[i] }}</span>
+          </button>
         }
       </div>
+      <div class="breakdown-hint">Tap a day to see your guesses</div>
+
+      @if (stats) {
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-number">{{ stats.currentStreak }}</div>
+            <div class="stat-label">Streak</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">{{ stats.averageScore }}</div>
+            <div class="stat-label">Avg</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">{{ stats.bestScore }}</div>
+            <div class="stat-label">Best</div>
+          </div>
+        </div>
+      }
     </div>
     } @else {
-      @let replay = replays[currentPage - 1];
-      <div class="replay">
+    <!-- every replay is rendered into the same grid cell (inactive ones hidden),
+         so the frame is sized to the tallest replay and doesn't jump between them -->
+    <div class="pages">
+    @for (replay of replays; track $index; let i = $index) {
+      <div class="page replay" [class.active]="currentPage === i + 1">
         <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
         <div class="header">{{ replay.dayName }}</div>
-        <div class="replay-points">{{ replay.points }} pts</div>
+        <div class="replay-points">
+          {{ replay.points }} pts
+          @if (replay.hints) {
+            <span class="replay-hints">
+              @for (h of numSequence(replay.hints); track $index) {
+                <i class="fa-regular fa-lightbulb"></i>
+              }
+            </span>
+          }
+        </div>
         <div class="replay-clue">{{ replay.clueNumber }}. {{ replay.clue }}</div>
         <div
           class="replay-board"
@@ -124,11 +101,35 @@
             Answer: <span class="answer-text">{{ replay.answer }}</span>
           </div>
         }
+        <ng-container [ngTemplateOutlet]="pager"></ng-container>
       </div>
     }
     </div>
+    }
 
-    @if (totalPages > 1) {
+    <div class="modal-footer">
+      @if (!newDay) {
+        <div class="timer">
+          <div class="timer-label"> Next Crawsword </div>
+          <div class="time"> {{ secondsUntilTomorrow }} </div>
+        </div>
+      }
+      @if (newDay) {
+        <div class="timer">
+          <button (click)="refresh()" type="button" class="new-label btn btn-link">New Crawsword available!</button>
+        </div>
+      }
+      @if (decisionModal) {
+        <div class="buttons">
+          <button type="button" class="btn btn-secondary" (click)="onSecondaryClick()">{{secondaryLabel}}</button>
+          <button type="button" class="btn btn-primary" (click)="onPrimaryClick()">{{primaryLabel}}</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- rendered inside each replay page so it counts toward the replay height -->
+  <ng-template #pager>
       <div class="pager">
         <button
           type="button"
@@ -158,24 +159,5 @@
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
-    }
-    <div class="modal-footer">
-      @if (!newDay) {
-        <div class="timer">
-          <div class="timer-label"> Next Crawsword </div>
-          <div class="time"> {{ secondsUntilTomorrow }} </div>
-        </div>
-      }
-      @if (newDay) {
-        <div class="timer">
-          <button (click)="refresh()" type="button" class="new-label btn btn-link">New Crawsword available!</button>
-        </div>
-      }
-      @if (decisionModal) {
-        <div class="buttons">
-          <button type="button" class="btn btn-secondary" (click)="onSecondaryClick()">{{secondaryLabel}}</button>
-          <button type="button" class="btn btn-primary" (click)="onPrimaryClick()">{{primaryLabel}}</button>
-        </div>
-      }
-    </div>
-  </div>
+  </ng-template>
+</div>

@@ -151,98 +151,12 @@
     }
 }
 
-.stats{
-    display: flex;
+/*------------------------------Summary page-------------------------------------*/
+
+.summary{
     text-align: center;
-    margin-bottom: 20px;
-
-    .stat-label{
-        max-width: 50px;
-        line-height: 1.1;
-        font-size: 13px;
-    }
-    .stat-number{
-        font-size: 26px;
-        font-variant-numeric: tabular-nums;
-    }
-    .stat{
-        margin-left: auto;
-        margin-right: auto;
-    }
+    padding-top: 6px;
 }
-
-.breakdown{
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
-    .day{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-}
-
-
-.level{
-    border: 1px solid ;
-    height: 26px;
-    width: 26px;
-    font-size: 0.8rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.2s ease-in;
-    &.upcoming{
-        color: var(--level-upcoming-text-color);
-        border: 1px solid var(--level-upcoming-border-color);
-        background-color: var(--level-upcoming-bg-color);
-    }
-    &.completed{
-        color: var(--level-completed-text-color);
-        border: 1px solid var(--level-completed-border-color);
-        background-color: var(--level-completed-bg-color);
-    }
-    &.current{
-        color: var(--level-current-text-color);
-        border: 1px solid var(--level-current-border-color);
-        background-color: var(--level-current-bg-color);
-    }
-    &.failed{
-        color: var(--level-failed-text-color);
-        border: 1px solid var(--level-failed-border-color);
-        background-color: var(--level-failed-bg-color);
-    }
-}
-
-.wrong-guess {
-    font-size: 1.25rem;
-    color: #B50000;
-    margin-top: 5px;
-  }
-
-  .hint-used {
-    font-size: 1.1rem;
-    color: #d4a017;
-    margin-top: 5px;
-  }
-
-  .level-points{
-    font-size: 12px;
-    font-weight: 700;
-    margin-top: 4px;
-    font-variant-numeric: tabular-nums;
-    &.failed{
-        opacity: 0.5;
-    }
-  }
-
-  .guesses{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-  }
 
 .puzzle-tag{
     text-align: center;
@@ -255,42 +169,141 @@
 }
 
 .final-score{
-    text-align: center;
-    margin-bottom: 6px;
     .final-score-value{
-        font-size: 44px;
+        font-size: 56px;
         font-weight: 800;
         line-height: 1;
         font-variant-numeric: tabular-nums;
     }
     .final-score-max{
         font-size: 16px;
-        opacity: 0.6;
+        opacity: 0.55;
         margin-left: 4px;
     }
 }
 
-.flawless-badge{
-    text-align: center;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
+//fixed height: the line is reserved even while the rank is still loading
+.subtitle{
+    font-size: 14px;
+    line-height: 20px;
+    height: 20px;
+    margin-top: 8px;
+    opacity: 0.8;
+
+    .flawless{
+        font-weight: 700;
+    }
+    .sep{
+        margin: 0 6px;
+        opacity: 0.6;
+    }
+}
+
+//one tappable tile per level; color is the result, number is the points
+.breakdown{
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 22px;
+
+    //shrink evenly on the narrow (300px) frame
+    .day{
+        flex: 1 1 0;
+        max-width: 42px;
+        padding: 5px 0 6px;
+        border-radius: 6px;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+        transition: transform 0.05s ease, filter 0.15s ease;
+
+        &:hover{
+            filter: brightness(1.1);
+        }
+        &:active{
+            transform: scale(0.94);
+        }
+
+        &.solved{
+            color: var(--level-completed-text-color);
+            background-color: var(--level-completed-bg-color);
+        }
+        &.failed{
+            color: var(--level-failed-text-color);
+            background-color: var(--level-failed-bg-color);
+        }
+    }
+
+    .day-name{
+        font-size: 11px;
+        font-weight: 600;
+        opacity: 0.85;
+        line-height: 1.2;
+    }
+    .day-points{
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+}
+
+.breakdown-hint{
+    font-size: 12px;
+    opacity: 0.5;
+    margin-top: 6px;
+}
+
+.stats{
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+    margin-top: 20px;
+
+    .stat-number{
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+    .stat-label{
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+    }
 }
 
 /*------------------------------Replay pages-------------------------------------*/
 
-//pinned to the summary page's height (see minPagesHeight); center shorter
-//replay pages within it so the modal frame stays a constant size
+//replay pages share one grid cell so the frame takes the tallest replay's
+//height; each is vertically centered in it and only the active one is visible
 .pages{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: grid;
+
+    .page{
+        grid-area: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        visibility: hidden;
+
+        &.active{
+            visibility: visible;
+        }
+    }
 }
 
 .replay{
     .replay-points{
         text-align: center;
+
+        .replay-hints{
+            color: #d4a017;
+            margin-left: 6px;
+        }
         font-weight: 700;
         margin-top: -6px;
         margin-bottom: 8px;

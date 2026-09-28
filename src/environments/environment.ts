@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  //Lambda Function URL for daily "top X%" stats (backend/stats-lambda); '' disables it
+  statsApiUrl: '',
 };
 
 /*

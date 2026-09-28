@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppModule } from '../app.module';
 import { GameComponent, ILetter } from './game.component';
 import { dailyChains } from '../clues/chains';
+import { environment } from '../../environments/environment';
 
 describe('GameComponent', () => {
   let component: GameComponent;
@@ -407,11 +408,11 @@ describe('GameComponent', () => {
       component.incorrectGuessesByLevel = [1, 5, 0, 2, 0, 0, 0];
       component.failedByLevel = [false, true, false, false, false, false, false];
       component.hintsByLevel = [[], [], [3], [], [], [], []];
-      // 80 + 0 + 150 + 105 + 200 + 225 + 250
-      expect(component.score).toBe(1010);
+      // 80 + 0 + 100 + 60 + 100 + 100 + 100
+      expect(component.score).toBe(540);
 
       const shared = shareText();
-      expect(shared).toContain('Crawsword #1  1010/1225');
+      expect(shared).toContain('Crawsword #1  540/700');
       expect(shared).not.toContain('🏆'); // not flawless
       expect(shared).toContain('🟩❌'); // level 0 solved with one wrong guess
       expect(shared).toContain('🟥'); // level 1 revealed
@@ -426,20 +427,20 @@ describe('GameComponent', () => {
       component.failedByLevel = [false, false, false, false, false, false, false];
 
       const shared = shareText();
-      expect(shared).toContain('Crawsword #1  1195/1225 🏆');
+      expect(shared).toContain('Crawsword #1  680/700 🏆');
       expect(shared).not.toContain('🟥');
     });
   });
 
   describe('scoring', () => {
-    it('scores a level by guesses used, scaled by its day', () => {
+    it('scores a level by guesses used', () => {
       component.currentLevel = component.NUM_LEVELS;
       component.failedByLevel = [false, false, false, false, false, false, false];
       component.incorrectGuessesByLevel = [0, 1, 2, 3, 0, 0, 4];
 
-      expect(component.levelScores).toEqual([100, 100, 90, 70, 200, 225, 50]);
-      expect(component.score).toBe(835);
-      expect(component.MAX_SCORE).toBe(1225);
+      expect(component.levelScores).toEqual([100, 80, 60, 40, 100, 100, 20]);
+      expect(component.score).toBe(500);
+      expect(component.MAX_SCORE).toBe(700);
     });
 
     it('scores revealed and unfinished levels as zero', () => {
@@ -447,8 +448,8 @@ describe('GameComponent', () => {
       component.failedByLevel = [false, true, false, false, false, false, false];
       component.incorrectGuessesByLevel = [0, 5, 1, 0, 0, 0, 0];
 
-      expect(component.levelScores).toEqual([100, 0, 120, 0, 0, 0, 0]);
-      expect(component.score).toBe(220);
+      expect(component.levelScores).toEqual([100, 0, 80, 0, 0, 0, 0]);
+      expect(component.score).toBe(180);
     });
   });
 
@@ -800,21 +801,102 @@ describe('GameComponent', () => {
       component.failedByLevel = [false, false, false, false, false, false, true];
       localStorage.setItem('totalScore', '1000');
       localStorage.setItem('scoredGames', '2');
-      localStorage.setItem('bestScore', '900');
+      localStorage.setItem('bestScore', '500');
 
       component.updateStats();
       component.updateStats(); // idempotent for the same puzzle
 
       const stats = component.getStats();
-      expect(localStorage.getItem('totalScore')).toBe('1975'); // + 975
-      expect(stats.averageScore).toBe(658); // 1975 / 3
-      expect(stats.bestScore).toBe(975);
+      expect(localStorage.getItem('totalScore')).toBe('1600'); // + 600
+      expect(stats.averageScore).toBe(533); // 1600 / 3
+      expect(stats.bestScore).toBe(600);
       expect(stats.totalGames).toBe('1');
+    });
+
+    it('resets score stats left over from an older, larger point scale', () => {
+      localStorage.setItem('totalScore', '2360');
+      localStorage.setItem('scoredGames', '2');
+      localStorage.setItem('bestScore', '1180');
+      localStorage.setItem('streak', '3');
+
+      component.resetStaleScoreStats();
+
+      const stats = component.getStats();
+      expect(stats.averageScore).toBe(0);
+      expect(stats.bestScore).toBe(0);
+      expect(localStorage.getItem('scoredGames')).toBeNull();
+      expect(localStorage.getItem('streak')).toBe('3'); // other stats untouched
+    });
+
+    it('keeps score stats that fit the current scale', () => {
+      localStorage.setItem('totalScore', '1200');
+      localStorage.setItem('scoredGames', '2');
+      localStorage.setItem('bestScore', '700');
+
+      component.resetStaleScoreStats();
+
+      expect(component.getStats().averageScore).toBe(600);
+      expect(component.getStats().bestScore).toBe(700);
     });
 
     it('reports zero average before any scored game', () => {
       expect(component.getStats().averageScore).toBe(0);
       expect(component.getStats().bestScore).toBe(0);
+    });
+  });
+
+  describe('daily rank', () => {
+    const URL = 'https://stats.example/';
+    let fetchMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      environment.statsApiUrl = URL;
+      fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ total: 3482, topPercent: 12 }),
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+      component.daysSinceEpoch = () => 20700;
+    });
+
+    afterEach(() => {
+      environment.statsApiUrl = '';
+      vi.unstubAllGlobals();
+    });
+
+    it('submits the score once, then only reads on later calls', async () => {
+      await component.fetchDailyRank();
+      await component.fetchDailyRank();
+
+      const puzzle = component.getPuzzleNumber();
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({
+        method: 'POST',
+        body: JSON.stringify({ puzzle, score: component.score }),
+      });
+      expect(fetchMock.mock.calls[1][0]).toBe(
+        `${URL}?puzzle=${puzzle}&score=${component.score}`
+      );
+      expect(component.dailyRank).toEqual({ total: 3482, topPercent: 12 });
+    });
+
+    it('retries the submit after a failed request', async () => {
+      fetchMock.mockRejectedValueOnce(new Error('offline'));
+      await component.fetchDailyRank();
+      expect(component.dailyRank).toBeNull();
+
+      await component.fetchDailyRank();
+      expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST' });
+    });
+
+    it('never calls the backend in practice mode or without a URL', async () => {
+      component.practiceMode = true;
+      await component.fetchDailyRank();
+      component.practiceMode = false;
+      environment.statsApiUrl = '';
+      await component.fetchDailyRank();
+
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 });
