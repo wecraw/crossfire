@@ -353,6 +353,28 @@ describe('GameComponent', () => {
       expect(component.board[0][1].letter).toBe('Y');
     });
 
+    it('only locks the given on the first row; later rows start empty', () => {
+      vi.useFakeTimers();
+      loadWithGiven('CRANE', 2);
+      component.clue = { clueNumber: 1, clue: 'test', answer: 'CRANE' };
+      ['D', 'U', 'M', 'P'].forEach((ch) => component.handleLetterEntry(ch));
+      component.checkAnswer();
+      vi.advanceTimersByTime(
+        3 * component.FLIP_STAGGER_MS + component.FLIP_DURATION_MS + 1
+      );
+      vi.useRealTimers();
+
+      expect(component.currentRow).toBe(1);
+      expect(component.board[1].every((c) => c.letter === '' && !c.locked)).toBe(
+        true
+      );
+      expect(component.currentCol).toBe(0);
+      // the cursor no longer skips column 2 on this row
+      component.handleLetterEntry('X');
+      component.handleLetterEntry('Y');
+      expect(component.currentCol).toBe(2);
+    });
+
     it('backspace cannot clear the locked given', () => {
       loadWithGiven('CRANE', 2);
       component.currentCol = 2; // pretend cursor is on the locked cell

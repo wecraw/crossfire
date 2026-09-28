@@ -385,16 +385,18 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   //true for tiles in the row playing the Wordle-style staggered flip reveal;
-  //the pre-filled given is already known-correct, so it sits the reveal out
+  //a locked given (first row only) is already known-correct, so it sits it out
   isRevealing(row: number, col: number): boolean {
-    return this.revealRow === row && col !== this.givenPos;
+    return this.revealRow === row && !this.board[row][col].locked;
   }
 
   //per-column flip delay so tiles reveal one after another, left to right;
-  //columns past the skipped given shift back a step so there's no gap
-  revealDelay(col: number): string {
-    const index = this.givenPos >= 0 && col > this.givenPos ? col - 1 : col;
-    return index * this.FLIP_STAGGER_MS + 'ms';
+  //columns past a skipped locked given shift back a step so there's no gap
+  revealDelay(row: number, col: number): string {
+    const skipped = this.board[row]
+      .slice(0, col)
+      .filter((cell) => cell.locked).length;
+    return (col - skipped) * this.FLIP_STAGGER_MS + 'ms';
   }
 
   setCell(row: number, col: number) {
@@ -472,9 +474,8 @@ export class GameComponent implements OnInit, AfterViewInit {
     //play the staggered flip reveal, then act on the result once it finishes
     this.guessNotAllowed = true;
     this.revealRow = this.currentRow;
-    //one fewer tile flips when a given is skipped, so the row finishes sooner
-    const flipCount =
-      this.givenPos >= 0 ? this.answer.length - 1 : this.answer.length;
+    //a locked given doesn't flip, so a row with one finishes sooner
+    const flipCount = row.filter((cell) => !cell.locked).length;
     const revealTime =
       (flipCount - 1) * this.FLIP_STAGGER_MS + this.FLIP_DURATION_MS;
 
@@ -554,8 +555,9 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.shakeChecks = false;
     }, 300);
 
+    //only a level's first row gets the locked given; later rows start empty so
+    //the player types all five letters (the given stays green on the keyboard)
     this.currentRow++;
-    this.prefillRow(this.currentRow);
     this.currentCol = this.firstEditableCol();
     this.guessNotAllowed = false; //re-enable input after the flip reveal
     this.updateLocalStorage();
