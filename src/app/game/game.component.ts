@@ -18,6 +18,7 @@ import { dailyChains, ChainLevel } from '../clues/chains';
 import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
+import { GameStats } from '../modal/modal.component';
 
 export interface IClue {
   clueNumber: number;
@@ -28,7 +29,7 @@ export interface IClue {
 export interface ILetter {
   letter: string;
   state: 'default' | 'correct' | 'absent' | 'present';
-  locked?: boolean; //true for the carried green "given" letter
+  locked?: boolean; //true for the carried green "given" letter and hint reveals
 }
 
 //one page of the postgame replay: a level's clue and the guesses made on it
@@ -38,6 +39,7 @@ export interface LevelReplay {
   clue: string;
   answer: string;
   solved: boolean;
+  points: number;
   guesses: ILetter[][];
 }
 
@@ -80,6 +82,9 @@ export class GameComponent implements OnInit, AfterViewInit {
   answer: string = ''; //current level's answer
   givenPos: number = -1; //column of the carried green letter (-1 on Monday)
   givenLetter: string = ''; //the carried green letter itself
+  //level whose board is on screen; lags currentLevel while a terminal miss is
+  //committed ahead of its flip/reveal animation
+  boardLevel: number = 0;
   private clueByAnswer: Map<string, IClue>[] = []; //per-weekday answer -> clue
 
   //Game state variables
@@ -91,6 +96,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   guessHistoryByLevel: ILetter[][][] = [[], [], [], [], [], [], []];
   //true for any level whose guess pool ran out and whose answer was revealed
   failedByLevel: boolean[] = [false, false, false, false, false, false, false];
+  //columns revealed by hints per level (on top of the carried given)
+  hintsByLevel: number[][] = [[], [], [], [], [], [], []];
   hasWon: boolean = false; //true once all 7 levels are completed (game is over)
   guessNotAllowed: boolean = false; //disables input during transitions / end states
   practiceMode: boolean = false; //set true for debugging / free play
@@ -112,6 +119,9 @@ export class GameComponent implements OnInit, AfterViewInit {
   animateGiven: boolean = false; //pops the level-1 freebie in shortly after load
   boardTransition: boolean = true; //false = snap (no animation) when swapping levels
   revealRow: number = -1; //row currently playing the staggered flip reveal
+  hintPopPos: number = -1; //column of a just-revealed hint, popped in like the given
+  lastGain: number = 0; //points from the latest solve, floated next to the score
+  gainKey: number = 0; //bumped per solve so the +N float re-renders and replays
 
   //Toast variables
   showToast: boolean = false;
@@ -141,6 +151,10 @@ export class GameComponent implements OnInit, AfterViewInit {
   WORD_LENGTH: number = 5;
   GUESSES_PER_LEVEL: number = 5; //fresh wrong-guess pool per level; no game-over
   NUM_LEVELS: number = 7;
+  //points for solving each level (Mon..Sun) on the first guess; every extra
+  //guess costs another 1/GUESSES_PER_LEVEL of it, and a revealed level scores 0
+  LEVEL_MAX_POINTS: number[] = [100, 125, 150, 175, 200, 225, 250];
+  HINTS_PER_GAME: number = 2; //free letter reveals per game, usable on any level
   //stamped into each daily save; bump whenever the save shape OR the generated
   //chains change so stale same-day saves from an older build are discarded
   //rather than restored into an incompatible board (see loadFromLocalStorage)
@@ -155,6 +169,37 @@ export class GameComponent implements OnInit, AfterViewInit {
   //a "win" is now a flawless run: every level solved, none revealed by the game
   get flawless(): boolean {
     return !this.failedByLevel.some(Boolean);
+  }
+
+  get MAX_SCORE(): number {
+    return this.LEVEL_MAX_POINTS.reduce((a, b) => a + b, 0);
+  }
+
+  //derived from the level results, so it's never stored in the daily save
+  levelScore(level: number): number {
+    if (level >= this.currentLevel || this.failedByLevel[level]) return 0;
+    const guessesUsed = this.incorrectGuessesByLevel[level] + 1;
+    return (
+      (this.LEVEL_MAX_POINTS[level] * (this.GUESSES_PER_LEVEL + 1 - guessesUsed)) /
+      this.GUESSES_PER_LEVEL
+    );
+  }
+
+  get levelScores(): number[] {
+    return this.LEVEL_MAX_POINTS.map((_, i) => this.levelScore(i));
+  }
+
+  get score(): number {
+    return this.levelScores.reduce((a, b) => a + b, 0);
+  }
+
+  get hintsRemaining(): number {
+    const used = this.hintsByLevel.reduce((n, hints) => n + hints.length, 0);
+    return Math.max(0, this.HINTS_PER_GAME - used);
+  }
+
+  get canHint(): boolean {
+    return !this.guessNotAllowed && !this.hasWon && this.hintsRemaining > 0;
   }
 
   ngOnInit(): void {
@@ -234,6 +279,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0];
     this.failedByLevel = [false, false, false, false, false, false, false];
     this.guessHistoryByLevel = [[], [], [], [], [], [], []];
+    this.hintsByLevel = [[], [], [], [], [], [], []];
     this.currentLevel = this.currentDisplayLevel = this.incorrectGuesses = 0;
     this.slideOffset = 0;
     this.solvedRow = -1;
@@ -280,6 +326,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   //resolves the clue for a level and prepares a fresh board for it
   loadLevel(level: number) {
     const [answer, carryPos] = this.chain[level];
+    this.boardLevel = level;
     this.answer = answer;
     this.givenPos = carryPos;
     this.givenLetter = carryPos >= 0 ? answer[carryPos] : '';
@@ -288,11 +335,14 @@ export class GameComponent implements OnInit, AfterViewInit {
       ({ clueNumber: 0, clue: '', answer } as IClue);
 
     //each level is a new word, so reset keyboard highlights; the carried letter
-    //is a known-correct given, so seed it as such
+    //and any hints are known-correct givens, so seed them as such
     this.correctLetters = [];
     this.presentLetters = [];
     this.absentLetters = [];
-    if (this.givenLetter) this.correctLetters.push(this.givenLetter);
+    for (const pos of this.lockedPositions) {
+      if (!this.correctLetters.includes(answer[pos]))
+        this.correctLetters.push(answer[pos]);
+    }
 
     this.slideOffset = 0;
     this.solvedRow = -1;
@@ -327,11 +377,19 @@ export class GameComponent implements OnInit, AfterViewInit {
     return board;
   }
 
-  //drops the carried green letter into a row as a locked given
+  //columns pre-filled as locked green letters on the on-screen board: the
+  //given (carried in, or Monday's freebie) plus any hint reveals
+  get lockedPositions(): number[] {
+    const hints = this.hintsByLevel[this.boardLevel] ?? [];
+    return this.givenPos >= 0 ? [this.givenPos, ...hints] : [...hints];
+  }
+
+  //drops the carried green letter and any hinted letters into a row as locked givens
   private prefillRow(row: number) {
-    if (this.givenPos >= 0 && this.board[row]) {
-      this.board[row][this.givenPos] = {
-        letter: this.givenLetter,
+    if (!this.board[row]) return;
+    for (const pos of this.lockedPositions) {
+      this.board[row][pos] = {
+        letter: this.answer[pos],
         state: 'correct',
         locked: true,
       };
@@ -379,22 +437,28 @@ export class GameComponent implements OnInit, AfterViewInit {
     return this.fadeNonCarry && row === this.solvedRow && col !== this.fadeKeepPos;
   }
 
-  //the level-1 freebie square that pops in shortly after the board loads
+  //the level-1 freebie square that pops in shortly after the board loads, or a
+  //freshly revealed hint letter
   isGivenReveal(row: number, col: number): boolean {
-    return this.animateGiven && row === 0 && col === this.givenPos;
+    return (
+      (this.animateGiven && row === 0 && col === this.givenPos) ||
+      (row === this.currentRow && col === this.hintPopPos)
+    );
   }
 
   //true for tiles in the row playing the Wordle-style staggered flip reveal;
-  //the pre-filled given is already known-correct, so it sits the reveal out
+  //pre-filled givens/hints are already known-correct, so they sit the reveal out
   isRevealing(row: number, col: number): boolean {
-    return this.revealRow === row && col !== this.givenPos;
+    return this.revealRow === row && !this.board[row]?.[col]?.locked;
   }
 
   //per-column flip delay so tiles reveal one after another, left to right;
-  //columns past the skipped given shift back a step so there's no gap
+  //columns past skipped givens/hints shift back so there's no gap
   revealDelay(col: number): string {
-    const index = this.givenPos >= 0 && col > this.givenPos ? col - 1 : col;
-    return index * this.FLIP_STAGGER_MS + 'ms';
+    const skipped = this.lockedPositions.filter(
+      (pos) => pos < col
+    ).length;
+    return (col - skipped) * this.FLIP_STAGGER_MS + 'ms';
   }
 
   setCell(row: number, col: number) {
@@ -472,9 +536,11 @@ export class GameComponent implements OnInit, AfterViewInit {
     //play the staggered flip reveal, then act on the result once it finishes
     this.guessNotAllowed = true;
     this.revealRow = this.currentRow;
-    //one fewer tile flips when a given is skipped, so the row finishes sooner
-    const flipCount =
-      this.givenPos >= 0 ? this.answer.length - 1 : this.answer.length;
+    //locked givens/hints don't flip, so the row finishes sooner
+    const flipCount = Math.max(
+      1,
+      this.answer.length - this.lockedPositions.length
+    );
     const revealTime =
       (flipCount - 1) * this.FLIP_STAGGER_MS + this.FLIP_DURATION_MS;
 
@@ -504,6 +570,8 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.guessNotAllowed = true;
     this.solvedRow = this.currentRow;
     this.currentLevel++;
+    this.lastGain = this.levelScore(this.currentLevel - 1);
+    this.gainKey++;
     this.updateLocalStorage();
 
     if (this.currentLevel === this.NUM_LEVELS) {
@@ -607,16 +675,39 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.shakeChecks = false;
     }, 300);
 
-    const revealDuration = 2250;
-    this.toast(failedAnswer, revealDuration);
+    const toastMs = 2250;
+    this.toast(failedAnswer, toastMs);
 
+    //Mirror the solved-level slide: append the answer as a solved row (plus
+    //empty rows to keep a full board in view) and slide it up to the top,
+    //pushing the used-up guess rows out of the viewport.
+    const answerRow = this.board.length;
+    this.board.push(
+      [...failedAnswer].map(
+        (letter): ILetter => ({ letter, state: 'correct', locked: true })
+      ),
+      ...this.makeEmptyBoard(failedAnswer.length).slice(0, answerRow - 1)
+    );
+    this.solvedRow = answerRow;
+    //show the answer toast over the failed board, then slide as it fades out
+    const slideStart = toastMs;
+    setTimeout(() => (this.slideOffset = answerRow), slideStart);
+
+    const slideDone = slideStart + 600;
     if (this.currentLevel === this.NUM_LEVELS) {
       this.currentDisplayLevel = this.NUM_LEVELS;
-      setTimeout(() => this.revealComplete(), revealDuration + 250);
+      setTimeout(() => this.revealComplete(), slideDone + 500);
       return;
     }
 
-    //after the answer has been shown, snap the next level's board into place
+    //hold the answer a beat, then fade all but the carried letter like a solve
+    const holdMs = 900;
+    setTimeout(() => {
+      this.fadeKeepPos = this.chain[this.currentLevel]?.[1] ?? -1;
+      this.fadeNonCarry = true;
+    }, slideDone + holdMs);
+
+    //snap the board back to offset 0 with the already-committed next level
     setTimeout(() => {
       this.boardTransition = false;
       this.loadLevel(this.currentLevel);
@@ -625,7 +716,7 @@ export class GameComponent implements OnInit, AfterViewInit {
       requestAnimationFrame(() =>
         requestAnimationFrame(() => (this.boardTransition = true))
       );
-    }, revealDuration + 250);
+    }, slideDone + holdMs + 700);
   }
 
   //writes the just-advanced level's starting state (fresh board + carried
@@ -633,6 +724,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   //-- mirrors what loadLevel/loadFromLocalStorage would produce for that level
   private persistAdvancedLevel() {
     if (this.practiceMode) return;
+    //a level just advanced into has no hints yet, so only its carried given
     const [answer, carryPos] = this.chain[this.currentLevel];
     const board = this.makeEmptyBoard(answer.length);
     if (carryPos >= 0) {
@@ -692,6 +784,48 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (selection === 'welcome') this.toggleWelcomeModal();
     if (selection === 'practice') this.togglePracticeMode();
     if (selection === 'restart') this.reset();
+  }
+
+  /*------------------------------Hints-------------------------------------*/
+
+  //reveals a random still-unknown letter of the current answer as a locked
+  //green given in the active row (and, via prefillRow, every later row)
+  useHint() {
+    if (!this.canHint) return;
+
+    //skip locked columns and any the player has already turned green
+    const known = new Set<number>(this.lockedPositions);
+    for (const guess of this.guessHistoryByLevel[this.currentLevel] ?? []) {
+      guess.forEach((cell, c) => {
+        if (cell.state === 'correct') known.add(c);
+      });
+    }
+    const candidates: number[] = [];
+    for (let c = 0; c < this.answer.length; c++) {
+      if (!known.has(c)) candidates.push(c);
+    }
+    if (candidates.length === 0) {
+      this.toast('Nothing left to reveal');
+      return;
+    }
+
+    const pos = candidates[this.getRandomInt(candidates.length)];
+    this.hintsByLevel[this.currentLevel].push(pos);
+    const letter = this.answer[pos];
+    this.board[this.currentRow][pos] = { letter, state: 'correct', locked: true };
+    if (!this.correctLetters.includes(letter)) this.correctLetters.push(letter);
+
+    if (this.board[this.currentRow][this.currentCol].locked) {
+      const next = this.nextEditableCol(this.currentCol);
+      this.currentCol = next !== -1 ? next : this.firstEditableCol();
+    }
+
+    //hold the pop class past the given-reveal flip (0.22s delay + 0.5s)
+    this.hintPopPos = pos;
+    setTimeout(() => {
+      if (this.hintPopPos === pos) this.hintPopPos = -1;
+    }, 800);
+    this.updateLocalStorage();
   }
 
   /*------------------------------Keyboard/letter entry-------------------------------------*/
@@ -759,10 +893,8 @@ export class GameComponent implements OnInit, AfterViewInit {
       shareString += '(practice)';
     }
 
-    //completion is guaranteed, so the score is how many levels were solved
-    //unaided; a flawless run (none revealed) earns the trophy
-    const solved = this.NUM_LEVELS - this.failedByLevel.filter(Boolean).length;
-    shareString += '  ' + solved + '/' + this.NUM_LEVELS;
+    //headline is the day's score; a flawless run (none revealed) earns the trophy
+    shareString += '  ' + this.score + '/' + this.MAX_SCORE;
     if (this.flawless) shareString += ' 🏆';
     shareString += '\n\n';
 
@@ -773,6 +905,7 @@ export class GameComponent implements OnInit, AfterViewInit {
         shareString += '🟩';
         shareString += '❌'.repeat(this.incorrectGuessesByLevel[i]);
       }
+      shareString += '💡'.repeat(this.hintsByLevel[i]?.length ?? 0);
       if (i !== this.NUM_LEVELS - 1) shareString += '\n';
     }
 
@@ -801,6 +934,7 @@ export class GameComponent implements OnInit, AfterViewInit {
         clue: clue?.clue ?? '',
         answer,
         solved,
+        points: this.levelScore(level),
         guesses,
       });
     }
@@ -832,6 +966,7 @@ export class GameComponent implements OnInit, AfterViewInit {
       JSON.stringify(this.guessHistoryByLevel)
     );
     localStorage.setItem('v3:failedByLevel', JSON.stringify(this.failedByLevel));
+    localStorage.setItem('v3:hintsByLevel', JSON.stringify(this.hintsByLevel));
     localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
     localStorage.setItem('v3:currentLevel', '' + this.currentLevel);
     localStorage.setItem('v3:currentRow', '' + currentRow);
@@ -839,98 +974,50 @@ export class GameComponent implements OnInit, AfterViewInit {
     localStorage.setItem('v3:hasWon', '' + hasWon);
   }
 
-  getStats() {
-    const streak = this.getStreak();
-
-    let tG = localStorage.getItem('totalGamesPlayed');
-    if (!tG) tG = '0';
-
-    let tW = localStorage.getItem('totalWins');
-    if (!tW) tW = '0';
-
-    let winPercent = 0;
-    if (tG !== '0') winPercent = Math.round((+tW / +tG) * 100);
-
-    let mS = localStorage.getItem('maxStreak');
-    if (!mS) mS = '0';
+  getStats(): GameStats {
+    const scoredGames = +(localStorage.getItem('scoredGames') || '0');
+    const totalScore = +(localStorage.getItem('totalScore') || '0');
 
     return {
-      maxStreak: mS,
-      totalGames: tG,
-      winPercent: winPercent,
-      currentStreak: streak,
+      totalGames: localStorage.getItem('totalGamesPlayed') || '0',
+      averageScore: scoredGames ? Math.round(totalScore / scoredGames) : 0,
+      bestScore: +(localStorage.getItem('bestScore') || '0'),
+      currentStreak: this.getStreak(),
+      maxStreak: localStorage.getItem('maxStreak') || '0',
     };
   }
 
+  //records a finished daily game once per puzzle (guarded on streakLastPuzzle)
   updateStats() {
-    let streakLastPuzzle = localStorage.getItem('streakLastPuzzle');
-    if (!streakLastPuzzle) streakLastPuzzle = '-1';
+    if (this.practiceMode) return;
+    const puzzle = this.getPuzzleNumber();
+    const lastPuzzle = localStorage.getItem('streakLastPuzzle');
+    if (lastPuzzle !== null && +lastPuzzle === puzzle) return;
 
-    if (+streakLastPuzzle !== this.getPuzzleNumber()) {
-      if (!this.practiceMode) {
-        const tG = localStorage.getItem('totalGamesPlayed');
-        if (tG) {
-          const tG_num = +tG;
-          localStorage.setItem('totalGamesPlayed', tG_num + 1 + '');
-        } else {
-          localStorage.setItem('totalGamesPlayed', '1');
-        }
+    const bump = (key: string, by: number) =>
+      localStorage.setItem(key, '' + (+(localStorage.getItem(key) || '0') + by));
 
-        //a "win" is a flawless run (no revealed levels)
-        const totalWins = +(localStorage.getItem('totalWins') || '0');
-        localStorage.setItem(
-          'totalWins',
-          '' + (totalWins + (this.flawless ? 1 : 0))
-        );
+    bump('totalGamesPlayed', 1);
+    //a "win" is a flawless run (no revealed levels); kept for history, not shown
+    bump('totalWins', this.flawless ? 1 : 0);
+    //levels solved unaided this game (completion is always all 7)
+    bump('totalLevels', this.NUM_LEVELS - this.failedByLevel.filter(Boolean).length);
+    bump('totalGuesses', this.incorrectGuesses);
 
-        //levels solved unaided this game (completion is always all 7)
-        const solvedLevels =
-          this.NUM_LEVELS - this.failedByLevel.filter(Boolean).length;
-        const tL = localStorage.getItem('totalLevels');
-        if (tL) {
-          const tL_num = +tL;
-          localStorage.setItem('totalLevels', tL_num + solvedLevels + '');
-        } else {
-          localStorage.setItem('totalLevels', solvedLevels + '');
-        }
+    //score stats count only games played since scoring existed
+    const score = this.score;
+    bump('totalScore', score);
+    bump('scoredGames', 1);
+    if (score > +(localStorage.getItem('bestScore') || '0'))
+      localStorage.setItem('bestScore', '' + score);
 
-        const totalGuesses = +(localStorage.getItem('totalGuesses') || '0');
-        localStorage.setItem(
-          'totalGuesses',
-          '' + (totalGuesses + this.incorrectGuesses)
-        );
-
-        const streak = localStorage.getItem('streak');
-        const streakLastPuzzle = localStorage.getItem('streakLastPuzzle');
-        let isStreakValid = true;
-        if (streakLastPuzzle) {
-          if (this.getPuzzleNumber() - +streakLastPuzzle > 1)
-            isStreakValid = false;
-        }
-        //the streak counts consecutive flawless days; any revealed level ends it
-        if (streak && isStreakValid) {
-          let streak_num = +streak;
-          if (this.flawless) streak_num++;
-          else streak_num = 0;
-          const mS = localStorage.getItem('maxStreak');
-          let mS_num = 0;
-          if (mS) mS_num = +mS;
-          if (streak_num > mS_num)
-            localStorage.setItem('maxStreak', '' + streak_num);
-          localStorage.setItem('streak', streak_num + '');
-        } else {
-          let streak_num = 0;
-          if (this.flawless) streak_num = 1;
-          const mS = localStorage.getItem('maxStreak');
-          let mS_num = 0;
-          if (mS) mS_num = +mS;
-          if (streak_num > mS_num)
-            localStorage.setItem('maxStreak', '' + streak_num);
-          localStorage.setItem('streak', streak_num + '');
-        }
-        localStorage.setItem('streakLastPuzzle', '' + this.getPuzzleNumber());
-      }
-    }
+    //the streak counts consecutive days played, whatever the score
+    const continues = lastPuzzle !== null && puzzle - +lastPuzzle === 1;
+    const streak = continues ? +(localStorage.getItem('streak') || '0') + 1 : 1;
+    localStorage.setItem('streak', '' + streak);
+    if (streak > +(localStorage.getItem('maxStreak') || '0'))
+      localStorage.setItem('maxStreak', '' + streak);
+    localStorage.setItem('streakLastPuzzle', '' + puzzle);
   }
 
   getStreak() {
@@ -945,6 +1032,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     localStorage.removeItem('v3:incorrectGuessesByLevel');
     localStorage.removeItem('v3:guessHistory');
     localStorage.removeItem('v3:failedByLevel');
+    localStorage.removeItem('v3:hintsByLevel');
     localStorage.setItem('v3:currentDay', '' + this.daysSinceEpoch());
     localStorage.removeItem('v3:currentLevel');
     localStorage.removeItem('v3:currentRow');
@@ -982,6 +1070,10 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     const fBL = localStorage.getItem('v3:failedByLevel');
     if (fBL) this.failedByLevel = JSON.parse(fBL);
+
+    //saves from before hints existed have no key: no hints used yet
+    const hBL = localStorage.getItem('v3:hintsByLevel');
+    if (hBL) this.hintsByLevel = JSON.parse(hBL);
 
     const hW = localStorage.getItem('v3:hasWon');
     if (hW) this.hasWon = hW === 'true';

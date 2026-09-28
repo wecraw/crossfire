@@ -159,10 +159,11 @@
     .stat-label{
         max-width: 50px;
         line-height: 1.1;
-        font-size: 14px;
+        font-size: 13px;
     }
     .stat-number{
-        font-size: 30px;
+        font-size: 26px;
+        font-variant-numeric: tabular-nums;
     }
     .stat{
         margin-left: auto;
@@ -221,6 +222,22 @@
     margin-top: 5px;
   }
 
+  .hint-used {
+    font-size: 1.1rem;
+    color: #d4a017;
+    margin-top: 5px;
+  }
+
+  .level-points{
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+    &.failed{
+        opacity: 0.5;
+    }
+  }
+
   .guesses{
       display: flex;
       flex-direction: column;
@@ -235,6 +252,22 @@
     text-transform: uppercase;
     opacity: 0.55;
     margin-bottom: 8px;
+}
+
+.final-score{
+    text-align: center;
+    margin-bottom: 6px;
+    .final-score-value{
+        font-size: 44px;
+        font-weight: 800;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    .final-score-max{
+        font-size: 16px;
+        opacity: 0.6;
+        margin-left: 4px;
+    }
 }
 
 .flawless-badge{
@@ -256,6 +289,14 @@
 }
 
 .replay{
+    .replay-points{
+        text-align: center;
+        font-weight: 700;
+        margin-top: -6px;
+        margin-bottom: 8px;
+        font-variant-numeric: tabular-nums;
+    }
+
     .replay-clue{
         font-family: Georgia, "Times New Roman", Times, serif;
         text-align: center;

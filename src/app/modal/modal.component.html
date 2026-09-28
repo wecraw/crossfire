@@ -10,6 +10,10 @@
     >
     @if (currentPage === 0) {
     <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
+    <div class="final-score">
+      <span class="final-score-value">{{ score }}</span>
+      <span class="final-score-max">/ {{ maxScore }}</span>
+    </div>
     @if (flawless) {
       <div class="flawless-badge">🏆 Flawless</div>
     }
@@ -29,10 +33,18 @@
           </div>
           <div class="stat">
             <div class="stat-number">
-              {{stats.winPercent}}
+              {{stats.averageScore}}
             </div>
             <div class="stat-label">
-              Flawless %
+              Avg score
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">
+              {{stats.bestScore}}
+            </div>
+            <div class="stat-label">
+              Best score
             </div>
           </div>
           <div class="stat">
@@ -67,9 +79,15 @@
                 {{level}}
               </div>
             </div>
+            <div class="level-points" [ngClass]="{'failed': failedByLevel[i]}">
+              {{ levelScores[i] }}
+            </div>
             <div class="guesses">
               @for (j of numSequence(incorrectGuessesByLevel[i]); track $index) {
                 <i class="wrong-guess fa-solid fa-xmark"></i>
+              }
+              @for (j of numSequence(hintsByLevel[i]?.length ?? 0); track $index) {
+                <i class="hint-used fa-regular fa-lightbulb"></i>
               }
             </div>
           </div>
@@ -81,6 +99,7 @@
       <div class="replay">
         <div class="puzzle-tag">Crawsword {{ puzzleLabel }}</div>
         <div class="header">{{ replay.dayName }}</div>
+        <div class="replay-points">{{ replay.points }} pts</div>
         <div class="replay-clue">{{ replay.clueNumber }}. {{ replay.clue }}</div>
         <div
           class="replay-board"

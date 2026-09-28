@@ -14,10 +14,11 @@ import moment from 'moment-timezone';
 import { LevelReplay } from '../game/game.component';
 
 export interface GameStats {
-  maxStreak: string;
   totalGames: string;
-  winPercent: number;
+  averageScore: number;
+  bestScore: number;
   currentStreak: string;
+  maxStreak: string;
 }
 
 @Component({
@@ -39,6 +40,10 @@ export class ModalComponent implements OnDestroy, OnInit, AfterViewInit {
   @Input() currentLevel: number;
   @Input() replays: LevelReplay[] = [];
   @Input() puzzleNumber?: number;
+  @Input() score: number = 0;
+  @Input() maxScore: number = 0;
+  @Input() levelScores: number[] = [];
+  @Input() hintsByLevel: number[][] = [];
 
   @Output() secondaryEvent = new EventEmitter<void>();
   @Output() primaryEvent = new EventEmitter<void>();

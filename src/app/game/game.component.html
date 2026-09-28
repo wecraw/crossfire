@@ -8,6 +8,28 @@
   <div class="levels-row">
     <app-progress-bar [currentLevel]="currentDisplayLevel"></app-progress-bar>
   </div>
+  <div class="status-row">
+    <div class="score" aria-live="polite">
+      <span class="score-label">Score</span>
+      <span class="score-value">{{ score }}</span>
+      @for (key of [gainKey]; track key) {
+        @if (lastGain > 0) {
+          <span class="score-gain">+{{ lastGain }}</span>
+        }
+      }
+    </div>
+    <button
+      type="button"
+      class="hint-button"
+      [disabled]="!canHint"
+      (click)="useHint()"
+      [attr.aria-label]="'Reveal a letter, ' + hintsRemaining + ' hints left'"
+    >
+      <i class="fa-regular fa-lightbulb"></i>
+      Hint
+      <span class="hint-count">{{ hintsRemaining }}</span>
+    </button>
+  </div>
   <div class="row">
     <div class="clue">{{ clue.clueNumber }}. {{ clue.clue }}</div>
   </div>
@@ -123,6 +145,10 @@
         [failedByLevel]="failedByLevel"
         [flawless]="flawless"
         [replays]="getReplays()"
+        [score]="score"
+        [maxScore]="MAX_SCORE"
+        [levelScores]="levelScores"
+        [hintsByLevel]="hintsByLevel"
         [decisionModal]="true"
         primaryLabel="New game"
         secondaryLabel="Share"
@@ -138,6 +164,10 @@
         [failedByLevel]="failedByLevel"
         [flawless]="flawless"
         [replays]="getReplays()"
+        [score]="score"
+        [maxScore]="MAX_SCORE"
+        [levelScores]="levelScores"
+        [hintsByLevel]="hintsByLevel"
         [puzzleNumber]="getPuzzleNumber()"
         [decisionModal]="true"
         primaryLabel="Share"

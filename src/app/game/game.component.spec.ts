@@ -378,28 +378,149 @@ describe('GameComponent', () => {
       return writeText.mock.calls[0][0] as string;
     }
 
-    it('builds a share string reflecting solved count and revealed levels', () => {
+    it('builds a share string with the score, revealed levels and hints', () => {
       component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY; // puzzle #1
       component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
       component.incorrectGuessesByLevel = [1, 5, 0, 2, 0, 0, 0];
       component.failedByLevel = [false, true, false, false, false, false, false];
+      component.hintsByLevel = [[], [], [3], [], [], [], []];
+      // 80 + 0 + 150 + 105 + 200 + 225 + 250
+      expect(component.score).toBe(1010);
 
       const shared = shareText();
-      expect(shared).toContain('Crawsword #1  6/7'); // one level revealed
+      expect(shared).toContain('Crawsword #1  1010/1225');
       expect(shared).not.toContain('🏆'); // not flawless
       expect(shared).toContain('🟩❌'); // level 0 solved with one wrong guess
       expect(shared).toContain('🟥'); // level 1 revealed
+      expect(shared).toContain('🟩💡'); // level 2 solved with a hint
     });
 
     it('awards the trophy on a flawless run', () => {
       component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
       component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
       component.incorrectGuessesByLevel = [0, 0, 1, 0, 0, 0, 0];
       component.failedByLevel = [false, false, false, false, false, false, false];
 
       const shared = shareText();
-      expect(shared).toContain('Crawsword #1  7/7 🏆');
+      expect(shared).toContain('Crawsword #1  1195/1225 🏆');
       expect(shared).not.toContain('🟥');
+    });
+  });
+
+  describe('scoring', () => {
+    it('scores a level by guesses used, scaled by its day', () => {
+      component.currentLevel = component.NUM_LEVELS;
+      component.failedByLevel = [false, false, false, false, false, false, false];
+      component.incorrectGuessesByLevel = [0, 1, 2, 3, 0, 0, 4];
+
+      expect(component.levelScores).toEqual([100, 100, 90, 70, 200, 225, 50]);
+      expect(component.score).toBe(835);
+      expect(component.MAX_SCORE).toBe(1225);
+    });
+
+    it('scores revealed and unfinished levels as zero', () => {
+      component.currentLevel = 3; // levels 3..6 not reached yet
+      component.failedByLevel = [false, true, false, false, false, false, false];
+      component.incorrectGuessesByLevel = [0, 5, 1, 0, 0, 0, 0];
+
+      expect(component.levelScores).toEqual([100, 0, 120, 0, 0, 0, 0]);
+      expect(component.score).toBe(220);
+    });
+  });
+
+  describe('hints', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      component.buildClueMaps();
+      component.chain = [
+        ['CRANE', 2], ['SCARE', 1], ['SCARE', 1], ['SCARE', 1],
+        ['SCARE', 1], ['SCARE', 1], ['SCARE', 1],
+      ];
+      component.currentLevel = 0;
+      component.loadLevel(0); // given A at column 2
+      component.guessNotAllowed = false;
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it('locks a correct letter in the active row, never the given', () => {
+      for (let i = 0; i < 20; i++) {
+        component.hintsByLevel[0] = [];
+        component.loadLevel(0);
+        component.useHint();
+        const [pos] = component.hintsByLevel[0];
+        expect(pos).not.toBe(2);
+        expect(component.board[0][pos]).toEqual({
+          letter: 'CRANE'[pos],
+          state: 'correct',
+          locked: true,
+        });
+        expect(component.correctLetters).toContain('CRANE'[pos]);
+      }
+    });
+
+    it('decrements the pool and is ignored once it is empty', () => {
+      component.useHint();
+      component.useHint();
+      expect(component.hintsRemaining).toBe(0);
+      expect(component.canHint).toBe(false);
+
+      component.useHint();
+      expect(component.hintsByLevel[0].length).toBe(2);
+    });
+
+    it('skips columns the player has already solved', () => {
+      // a graded guess already found C, R, N (plus the given A); only E is left
+      component.guessHistoryByLevel[0] = [[
+        { letter: 'C', state: 'correct' },
+        { letter: 'R', state: 'correct' },
+        { letter: 'A', state: 'correct', locked: true },
+        { letter: 'N', state: 'correct' },
+        { letter: 'X', state: 'absent' },
+      ]];
+      component.useHint();
+      expect(component.hintsByLevel[0]).toEqual([4]);
+
+      // nothing left to reveal: the hint is not spent
+      component.guessHistoryByLevel[0][0][4] = { letter: 'E', state: 'correct' };
+      component.useHint();
+      expect(component.hintsByLevel[0]).toEqual([4]);
+      expect(component.hintsRemaining).toBe(1);
+    });
+
+    it('moves the cursor off a newly locked cell', () => {
+      vi.spyOn(component, 'getRandomInt').mockReturnValue(0); // first candidate: col 0
+      component.currentCol = 0;
+      component.useHint();
+      expect(component.hintsByLevel[0]).toEqual([0]);
+      expect(component.currentCol).toBe(1);
+    });
+
+    it('carries the hinted letter into the next row after a miss', () => {
+      vi.spyOn(component, 'getRandomInt').mockReturnValue(0); // reveal C
+      component.useHint();
+      ['X', 'Y', 'Z', 'Q'].forEach((ch) => component.handleLetterEntry(ch));
+      component.checkAnswer();
+      vi.advanceTimersByTime(5000);
+
+      expect(component.currentRow).toBe(1);
+      expect(component.board[1][0]).toEqual({ letter: 'C', state: 'correct', locked: true });
+      expect(component.board[1][2].locked).toBe(true); // the given still carries too
+    });
+
+    it('skips hinted columns in the flip-reveal stagger', () => {
+      component.hintsByLevel[0] = [0];
+      // locked columns 0 and 2: col 1 flips first, col 3 second, col 4 third
+      expect(component.revealDelay(1)).toBe('0ms');
+      expect(component.revealDelay(3)).toBe(component.FLIP_STAGGER_MS + 'ms');
+      expect(component.revealDelay(4)).toBe(2 * component.FLIP_STAGGER_MS + 'ms');
+    });
+
+    it('clears hints on restart', () => {
+      component.useHint();
+      component.reset();
+      expect(component.hintsRemaining).toBe(component.HINTS_PER_GAME);
     });
   });
 
@@ -470,6 +591,34 @@ describe('GameComponent', () => {
         false, true, false, false, false, false, false,
       ]);
       expect(fresh.board).toEqual(savedBoard);
+    });
+
+    it('round-trips used hints and defaults to none for older saves', () => {
+      const day = component.PUZZLE_FIRST_DAY + 91;
+      component.daysSinceEpoch = () => day;
+      component.practiceMode = false;
+      component.buildClueMaps();
+      component.setChain();
+      component.loadLevel(0);
+      component.hintsByLevel = [[1], [], [], [], [], [], []];
+      component.updateLocalStorage();
+
+      const fresh = makeComponent();
+      fresh.daysSinceEpoch = () => day;
+      fresh.buildClueMaps();
+      fresh.setChain();
+      fresh.loadFromLocalStorage();
+      expect(fresh.hintsByLevel).toEqual([[1], [], [], [], [], [], []]);
+      expect(fresh.hintsRemaining).toBe(1);
+
+      localStorage.removeItem('v3:hintsByLevel');
+      const legacy = makeComponent();
+      legacy.daysSinceEpoch = () => day;
+      legacy.buildClueMaps();
+      legacy.setChain();
+      legacy.loadFromLocalStorage();
+      expect(legacy.hintsByLevel).toEqual([[], [], [], [], [], [], []]);
+      expect(legacy.hintsRemaining).toBe(2);
     });
 
     it('discards a legacy same-day save that predates the current schema', () => {
@@ -575,6 +724,57 @@ describe('GameComponent', () => {
 
       expect(localStorage.getItem('totalWins')).toBe('5');
       expect(localStorage.getItem('streak')).toBe('4');
+    });
+
+    it('extends the play streak even when a level was revealed', () => {
+      component.daysSinceEpoch = () => 20000;
+      component.failedByLevel = [true, true, false, false, false, false, false];
+      component.currentLevel = component.NUM_LEVELS;
+      localStorage.setItem('streak', '3');
+      localStorage.setItem('maxStreak', '3');
+      localStorage.setItem('streakLastPuzzle', '' + (component.getPuzzleNumber() - 1));
+
+      component.updateStats();
+
+      expect(localStorage.getItem('streak')).toBe('4');
+      expect(localStorage.getItem('maxStreak')).toBe('4');
+    });
+
+    it('restarts the streak at 1 after a missed day', () => {
+      component.daysSinceEpoch = () => 20000;
+      component.currentLevel = component.NUM_LEVELS;
+      localStorage.setItem('streak', '9');
+      localStorage.setItem('maxStreak', '9');
+      localStorage.setItem('streakLastPuzzle', '' + (component.getPuzzleNumber() - 2));
+
+      component.updateStats();
+
+      expect(localStorage.getItem('streak')).toBe('1');
+      expect(localStorage.getItem('maxStreak')).toBe('9');
+    });
+
+    it('tracks average and best score, and records a game only once', () => {
+      component.daysSinceEpoch = () => 20000;
+      component.currentLevel = component.NUM_LEVELS;
+      component.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 0];
+      component.failedByLevel = [false, false, false, false, false, false, true];
+      localStorage.setItem('totalScore', '1000');
+      localStorage.setItem('scoredGames', '2');
+      localStorage.setItem('bestScore', '900');
+
+      component.updateStats();
+      component.updateStats(); // idempotent for the same puzzle
+
+      const stats = component.getStats();
+      expect(localStorage.getItem('totalScore')).toBe('1975'); // + 975
+      expect(stats.averageScore).toBe(658); // 1975 / 3
+      expect(stats.bestScore).toBe(975);
+      expect(stats.totalGames).toBe('1');
+    });
+
+    it('reports zero average before any scored game', () => {
+      expect(component.getStats().averageScore).toBe(0);
+      expect(component.getStats().bestScore).toBe(0);
     });
   });
 });
