@@ -223,6 +223,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (this.isNewDay()) this.resetLocalStorage();
     //after the daily load, so today's finished game can be re-counted
     this.resetStaleScoreStats();
+    this.migrateStreak();
 
     if (!resumed) {
       this.loadLevel(this.currentLevel);
@@ -1125,6 +1126,21 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (streak > +(localStorage.getItem('maxStreak') || '0'))
       localStorage.setItem('maxStreak', '' + streak);
     localStorage.setItem('streakLastPuzzle', '' + puzzle);
+  }
+
+  //streak/maxStreak used to count consecutive flawless days. Every flawless
+  //streak is also a run of played days, and streakLastPuzzle was set on every
+  //completed game, so the old values are lower bounds on the play streak and
+  //the last recorded day was played: floor the streak at 1 once, then leave it
+  migrateStreak() {
+    if (localStorage.getItem('streakKind') === 'play') return;
+    if (localStorage.getItem('streakLastPuzzle') !== null) {
+      const streak = Math.max(1, +(localStorage.getItem('streak') || '0'));
+      localStorage.setItem('streak', '' + streak);
+      if (streak > +(localStorage.getItem('maxStreak') || '0'))
+        localStorage.setItem('maxStreak', '' + streak);
+    }
+    localStorage.setItem('streakKind', 'play');
   }
 
   getStreak() {

@@ -801,6 +801,32 @@ describe('GameComponent', () => {
       expect(localStorage.getItem('streak')).toBe('4');
     });
 
+    it('migrates a legacy flawless streak into a play streak once', () => {
+      // played yesterday but not flawlessly: the old scheme stored streak 0
+      component.daysSinceEpoch = () => 20000;
+      component.failedByLevel = [false, false, false, true, false, false, false];
+      component.currentLevel = component.NUM_LEVELS;
+      localStorage.setItem('streak', '0');
+      localStorage.setItem('maxStreak', '0');
+      localStorage.setItem('streakLastPuzzle', '' + (component.getPuzzleNumber() - 1));
+
+      component.migrateStreak();
+      component.updateStats();
+      expect(localStorage.getItem('streak')).toBe('2');
+      expect(localStorage.getItem('maxStreak')).toBe('2');
+
+      // already migrated: a later load leaves the play streak alone
+      localStorage.setItem('streak', '0');
+      component.migrateStreak();
+      expect(localStorage.getItem('streak')).toBe('0');
+    });
+
+    it('marks brand-new players as migrated without inventing a streak', () => {
+      component.migrateStreak();
+      expect(localStorage.getItem('streak')).toBeNull();
+      expect(localStorage.getItem('streakKind')).toBe('play');
+    });
+
     it('extends the play streak even when a level was revealed', () => {
       component.daysSinceEpoch = () => 20000;
       component.failedByLevel = [true, true, false, false, false, false, false];
