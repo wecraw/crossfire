@@ -1067,22 +1067,19 @@ export class GameComponent implements OnInit, AfterViewInit {
     };
   }
 
-  //score stats saved under an older, larger point scale can leave an average or
-  //best above what's now possible; wipe the score stats so they restart cleanly.
-  //Then make sure today's finished game is counted: updateStats won't run for it
-  //again, yet it's missing from the score stats if the wipe just dropped it or it
-  //was finished on a build from before score stats existed
+  //score stats are stamped with the point scale they were measured on; any set
+  //without the current stamp (the earlier 1225/1000-point scales) can't be mixed
+  //with 700-point games, so wipe it and restart. Then make sure today's finished
+  //game is counted: updateStats won't run for it again, yet it's missing from the
+  //score stats if the wipe just dropped it or it was finished on a build from
+  //before score stats existed
   reconcileScoreStats() {
-    const scoredGames = +(localStorage.getItem('scoredGames') || '0');
-    const average = scoredGames
-      ? +(localStorage.getItem('totalScore') || '0') / scoredGames
-      : 0;
-    const best = +(localStorage.getItem('bestScore') || '0');
-    if (average > this.MAX_SCORE || best > this.MAX_SCORE) {
+    if (localStorage.getItem('scoreScale') !== '' + this.MAX_SCORE) {
       localStorage.removeItem('totalScore');
       localStorage.removeItem('scoredGames');
       localStorage.removeItem('bestScore');
       localStorage.removeItem('scoreStatsPuzzle');
+      localStorage.setItem('scoreScale', '' + this.MAX_SCORE);
     }
 
     if (this.practiceMode || !this.hasWon) return;

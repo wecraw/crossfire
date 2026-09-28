@@ -928,6 +928,7 @@ describe('GameComponent', () => {
     });
 
     it("doesn't re-count a game updateStats already scored", () => {
+      localStorage.setItem('scoreScale', '' + component.MAX_SCORE); // stamped on load
       component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
       component.practiceMode = false;
       component.currentLevel = component.NUM_LEVELS;
@@ -940,7 +941,8 @@ describe('GameComponent', () => {
       expect(localStorage.getItem('totalScore')).toBe('700');
     });
 
-    it('keeps score stats that fit the current scale', () => {
+    it('keeps score stats stamped with the current scale', () => {
+      localStorage.setItem('scoreScale', '' + component.MAX_SCORE);
       localStorage.setItem('totalScore', '1200');
       localStorage.setItem('scoredGames', '2');
       localStorage.setItem('bestScore', '700');
@@ -949,6 +951,18 @@ describe('GameComponent', () => {
 
       expect(component.getStats().averageScore).toBe(600);
       expect(component.getStats().bestScore).toBe(700);
+    });
+
+    it('resets unstamped score stats even when they fit the current scale', () => {
+      // one old-scale 600 would otherwise pass as a 700-point-scale 600
+      localStorage.setItem('totalScore', '600');
+      localStorage.setItem('scoredGames', '1');
+      localStorage.setItem('bestScore', '600');
+
+      component.reconcileScoreStats();
+
+      expect(localStorage.getItem('scoredGames')).toBeNull();
+      expect(localStorage.getItem('scoreScale')).toBe('' + component.MAX_SCORE);
     });
 
     it('reports zero average before any scored game', () => {
