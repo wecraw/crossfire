@@ -106,6 +106,10 @@ export class GameComponent implements OnInit, AfterViewInit {
   practiceMode: boolean = false; //set true for debugging / free play
   currentDay: number = 0; //days since epoch
   dailyRank: DailyRank | null = null; //today's "top X%" from the stats backend
+  rankLoading: boolean = false; //a rank request is in flight (postgame shows a skeleton)
+  //the finished game's rank has been requested; the early request at grading
+  //time and finalizeComplete's both go through startRankRequest, so it's sent once
+  private rankRequested: boolean = false;
 
   //Board / entry variables
   board: ILetter[][] = []; //GUESSES_PER_LEVEL rows x WORD_LENGTH cols, fresh each level
@@ -184,6 +188,11 @@ export class GameComponent implements OnInit, AfterViewInit {
   //derived from the level results, so it's never stored in the daily save
   levelScore(level: number): number {
     if (level >= this.currentLevel || this.failedByLevel[level]) return 0;
+    return this.solvedLevelPoints(level);
+  }
+
+  //what a solve of `level` is worth, given its wrong guesses so far
+  private solvedLevelPoints(level: number): number {
     const guessesUsed = this.incorrectGuessesByLevel[level] + 1;
     return (
       (this.POINTS_PER_LEVEL * (this.GUESSES_PER_LEVEL + 1 - guessesUsed)) /
@@ -233,7 +242,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (this.hasWon) {
       this.guessNotAllowed = true;
       this.showGameOverModal = true;
-      this.fetchDailyRank();
+      this.startRankRequest();
     }
 
     //first-ever visit: auto-show the quick beginner tutorial (skipped in practice mode)
@@ -298,6 +307,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.showResetModal = this.showGameOverModal = false;
     this.guessNotAllowed = false;
     this.hasWon = false;
+    this.rankRequested = false;
     this.setChain();
     this.loadLevel(0);
   }
@@ -560,6 +570,13 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     const solved = correctCount === this.answer.length;
 
+    //solving the last level fixes the final score, so submit it now and let the
+    //request run during the flip + confetti rather than after them (score
+    //doesn't count this level yet: handleCorrect advances currentLevel)
+    if (solved && this.currentLevel === this.NUM_LEVELS - 1) {
+      this.startRankRequest(this.score + this.solvedLevelPoints(this.currentLevel));
+    }
+
     //play the staggered flip reveal, then act on the result once it finishes
     this.guessNotAllowed = true;
     this.revealRow = this.currentRow;
@@ -777,18 +794,25 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.hasWon = true;
     this.updateLocalStorage();
     this.updateStats();
-    this.fetchDailyRank();
+    this.startRankRequest();
+  }
+
+  //requests the finished game's rank once (see rankRequested)
+  private startRankRequest(score: number = this.score) {
+    if (this.rankRequested) return;
+    this.rankRequested = true;
+    this.fetchDailyRank(score);
   }
 
   //submits today's score once (POST), or just reads today's standing (GET) on a
   //reload; best-effort, so any failure leaves dailyRank null and hides the line
-  async fetchDailyRank() {
+  async fetchDailyRank(score: number = this.score) {
     const url = environment.statsApiUrl;
     if (this.practiceMode || !url) return;
 
     const puzzle = this.getPuzzleNumber();
-    const score = this.score;
     const submitted = localStorage.getItem('rankSubmittedPuzzle') === '' + puzzle;
+    this.rankLoading = true;
     try {
       const res = submitted
         ? await fetch(`${url}?puzzle=${puzzle}&score=${score}`)
@@ -803,6 +827,8 @@ export class GameComponent implements OnInit, AfterViewInit {
       if (rank.total > 0) this.dailyRank = rank;
     } catch {
       //offline or backend down: the postgame just omits the rank line
+    } finally {
+      this.rankLoading = false;
     }
   }
 

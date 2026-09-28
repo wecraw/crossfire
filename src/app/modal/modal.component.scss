@@ -24,6 +24,55 @@
         padding: 0.9rem;
     }
 
+    //jumps from any replay back to the summary; sits in the empty corner beside
+    //the centered puzzle tag and fades in once you leave the summary
+    .home-button{
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 1;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--modal-text-color);
+        font-size: 13px;
+        cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.85);
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s,
+            background-color 0.15s ease;
+
+        &.shown{
+            opacity: 0.55;
+            visibility: visible;
+            transform: scale(1);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s,
+                background-color 0.15s ease;
+        }
+        &:hover{
+            opacity: 1;
+            background-color: var(--btn-secondary-hover-bg);
+        }
+        &:active{
+            transform: scale(0.9);
+        }
+        &:focus{
+            outline: none;
+        }
+        &:focus-visible{
+            opacity: 1;
+            outline: 2px solid var(--btn-primary-bg);
+            outline-offset: 1px;
+        }
+    }
+
     .modal-header{
         font-size: 1.5rem;
     }
@@ -155,7 +204,6 @@
 
 .summary{
     text-align: center;
-    padding-top: 6px;
 }
 
 .puzzle-tag{
@@ -189,6 +237,44 @@
     height: 20px;
     margin-top: 8px;
     opacity: 0.8;
+}
+
+//placeholder pill while the rank request is in flight; the text fades in over it
+.rank-skeleton{
+    display: inline-block;
+    width: 140px;
+    height: 12px;
+    vertical-align: middle;
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--modal-text-color) 10%, transparent) 30%,
+        color-mix(in srgb, var(--modal-text-color) 22%, transparent) 50%,
+        color-mix(in srgb, var(--modal-text-color) 10%, transparent) 70%
+    );
+    background-size: 300% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.rank{
+    animation: rank-in 0.3s ease-out both;
+}
+
+@keyframes skeleton-shimmer{
+    from{ background-position: 100% 0; }
+    to{ background-position: 0 0; }
+}
+
+@keyframes rank-in{
+    from{ opacity: 0; }
+    to{ opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .rank-skeleton,
+    .rank{
+        animation: none;
+    }
 }
 
 //one tappable tile per level; color is the result, number is the points
@@ -270,10 +356,14 @@
 
 /*------------------------------Replay pages-------------------------------------*/
 
-//replay pages share one grid cell so the frame takes the tallest replay's
-//height; each is vertically centered in it and only the active one is visible
+//all pages share one grid cell so the frame takes the tallest page's height
+//for the whole session; each is vertically centered in it and only the active
+//one (plus, briefly, the one turning away) is visible
 .pages{
     display: grid;
+    //clip the sideways slide; the vertical margin keeps focus rings visible
+    overflow: clip;
+    overflow-clip-margin: 4px;
 
     .page{
         grid-area: 1 / 1;
@@ -285,6 +375,54 @@
         &.active{
             visibility: visible;
         }
+        &.leaving{
+            visibility: visible;
+            pointer-events: none;
+        }
+    }
+
+    //incoming page slides in from the side you're heading toward while the
+    //outgoing one drifts off the other way; both crossfade in the shared cell
+    &.animated{
+        .page.active{
+            animation: page-in-forward 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+        .page.leaving{
+            animation: page-out-forward 0.2s ease-in both;
+        }
+        &.back{
+            .page.active{ animation-name: page-in-back; }
+            .page.leaving{ animation-name: page-out-back; }
+        }
+    }
+}
+
+$page-shift: 28px;
+
+@keyframes page-in-forward{
+    from{ opacity: 0; transform: translateX($page-shift); }
+    to{ opacity: 1; transform: none; }
+}
+@keyframes page-in-back{
+    from{ opacity: 0; transform: translateX(-$page-shift); }
+    to{ opacity: 1; transform: none; }
+}
+@keyframes page-out-forward{
+    from{ opacity: 1; transform: none; }
+    to{ opacity: 0; transform: translateX(-$page-shift); }
+}
+@keyframes page-out-back{
+    from{ opacity: 1; transform: none; }
+    to{ opacity: 0; transform: translateX($page-shift); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .pages.animated .page.active,
+    .pages.animated .page.leaving{
+        animation-duration: 0.01s;
+    }
+    .modal-frame .home-button{
+        transition: none;
     }
 }
 
@@ -312,22 +450,30 @@
         justify-content: center;
     }
 
-    .replay-board{
+    //sized for a full board plus the answer line (a revealed level uses every
+    //row), so the page height doesn't depend on how many guesses were made;
+    //shorter boards are centered in the space
+    $row-gap: 5px;
+    $answer-line: 28px;
+    .replay-result{
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
+        min-height: calc(var(--replay-rows, 5) * (var(--square-size) + #{$row-gap}) + #{$answer-line});
     }
 
     .replay-row{
         display: flex;
         justify-content: center;
-        margin-bottom: 5px;
+        margin-bottom: $row-gap;
     }
 
     .answer-reveal{
         text-align: center;
         margin-top: 8px;
         font-size: 14px;
+        line-height: 20px;
 
         .answer-text{
             font-weight: bold;

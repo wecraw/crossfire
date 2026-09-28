@@ -36,6 +36,34 @@ describe('ModalComponent', () => {
     expect(component.rankPercent).toBe(25);
   });
 
+  it('slides pages in the direction of travel and wraps the arrows', () => {
+    component.replays = new Array(7);
+    expect(component.animated).toBe(false);
+
+    component.goToPage(3);
+    expect(component.currentPage).toBe(3);
+    expect(component.leavingPage).toBe(0);
+    expect(component.direction).toBe('forward');
+    expect(component.animated).toBe(true);
+
+    component.goToPage(0);
+    expect(component.leavingPage).toBe(3);
+    expect(component.direction).toBe('back');
+
+    //the left arrow from the summary wraps to the last replay, still sliding back
+    component.prevPage();
+    expect(component.currentPage).toBe(7);
+    expect(component.direction).toBe('back');
+
+    component.nextPage();
+    expect(component.currentPage).toBe(0);
+    expect(component.direction).toBe('forward');
+
+    //re-selecting the current page is a no-op
+    component.goToPage(0);
+    expect(component.leavingPage).toBe(7);
+  });
+
   it('clears its countdown interval when destroyed', () => {
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
 
