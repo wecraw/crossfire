@@ -222,7 +222,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     }
     if (this.isNewDay()) this.resetLocalStorage();
     //after the daily load, so today's finished game can be re-counted
-    this.resetStaleScoreStats();
+    this.reconcileScoreStats();
     this.migrateStreak();
 
     if (!resumed) {
@@ -1068,31 +1068,43 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   //score stats saved under an older, larger point scale can leave an average or
-  //best above what's now possible; wipe the score stats so they restart cleanly,
-  //re-counting today's game if updateStats already recorded it (it won't again)
-  resetStaleScoreStats() {
+  //best above what's now possible; wipe the score stats so they restart cleanly.
+  //Then make sure today's finished game is counted: updateStats won't run for it
+  //again, yet it's missing from the score stats if the wipe just dropped it or it
+  //was finished on a build from before score stats existed
+  reconcileScoreStats() {
     const scoredGames = +(localStorage.getItem('scoredGames') || '0');
     const average = scoredGames
       ? +(localStorage.getItem('totalScore') || '0') / scoredGames
       : 0;
     const best = +(localStorage.getItem('bestScore') || '0');
-    if (average <= this.MAX_SCORE && best <= this.MAX_SCORE) return;
-
-    localStorage.removeItem('totalScore');
-    localStorage.removeItem('scoredGames');
-    localStorage.removeItem('bestScore');
-
-    const lastPuzzle = localStorage.getItem('streakLastPuzzle');
-    if (
-      this.hasWon &&
-      !this.practiceMode &&
-      lastPuzzle !== null &&
-      +lastPuzzle === this.getPuzzleNumber()
-    ) {
-      localStorage.setItem('totalScore', '' + this.score);
-      localStorage.setItem('scoredGames', '1');
-      localStorage.setItem('bestScore', '' + this.score);
+    if (average > this.MAX_SCORE || best > this.MAX_SCORE) {
+      localStorage.removeItem('totalScore');
+      localStorage.removeItem('scoredGames');
+      localStorage.removeItem('bestScore');
+      localStorage.removeItem('scoreStatsPuzzle');
     }
+
+    if (this.practiceMode || !this.hasWon) return;
+    const puzzle = '' + this.getPuzzleNumber();
+    if (
+      localStorage.getItem('streakLastPuzzle') === puzzle &&
+      localStorage.getItem('scoreStatsPuzzle') !== puzzle
+    ) {
+      this.recordScore();
+    }
+  }
+
+  //adds today's score to the running score stats and marks the puzzle counted
+  private recordScore() {
+    const score = this.score;
+    const bump = (key: string, by: number) =>
+      localStorage.setItem(key, '' + (+(localStorage.getItem(key) || '0') + by));
+    bump('totalScore', score);
+    bump('scoredGames', 1);
+    if (score > +(localStorage.getItem('bestScore') || '0'))
+      localStorage.setItem('bestScore', '' + score);
+    localStorage.setItem('scoreStatsPuzzle', '' + this.getPuzzleNumber());
   }
 
   //records a finished daily game once per puzzle (guarded on streakLastPuzzle)
@@ -1113,11 +1125,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     bump('totalGuesses', this.incorrectGuesses);
 
     //score stats count only games played since scoring existed
-    const score = this.score;
-    bump('totalScore', score);
-    bump('scoredGames', 1);
-    if (score > +(localStorage.getItem('bestScore') || '0'))
-      localStorage.setItem('bestScore', '' + score);
+    this.recordScore();
 
     //the streak counts consecutive days played, whatever the score
     const continues = lastPuzzle !== null && puzzle - +lastPuzzle === 1;

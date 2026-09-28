@@ -879,7 +879,7 @@ describe('GameComponent', () => {
       localStorage.setItem('bestScore', '1180');
       localStorage.setItem('streak', '3');
 
-      component.resetStaleScoreStats();
+      component.reconcileScoreStats();
 
       const stats = component.getStats();
       expect(stats.averageScore).toBe(0);
@@ -900,7 +900,7 @@ describe('GameComponent', () => {
       localStorage.setItem('scoredGames', '2');
       localStorage.setItem('bestScore', '1180');
 
-      component.resetStaleScoreStats();
+      component.reconcileScoreStats();
 
       const stats = component.getStats();
       expect(stats.averageScore).toBe(680);
@@ -908,12 +908,44 @@ describe('GameComponent', () => {
       expect(localStorage.getItem('scoredGames')).toBe('1');
     });
 
+    it("seeds score stats for today's game finished on a pre-scoring build", () => {
+      // an older build recorded today (streakLastPuzzle) but kept no score stats
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY; // puzzle #1
+      component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
+      component.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 1, 0];
+      component.failedByLevel = [false, false, false, false, false, false, false];
+      component.hasWon = true;
+      localStorage.setItem('streakLastPuzzle', '1');
+
+      component.reconcileScoreStats();
+      expect(component.getStats().averageScore).toBe(680);
+      expect(component.getStats().bestScore).toBe(680);
+
+      // a reload doesn't count it twice
+      component.reconcileScoreStats();
+      expect(localStorage.getItem('scoredGames')).toBe('1');
+    });
+
+    it("doesn't re-count a game updateStats already scored", () => {
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
+      component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
+      component.failedByLevel = [false, false, false, false, false, false, false];
+      component.hasWon = true;
+
+      component.updateStats();
+      component.reconcileScoreStats();
+      expect(localStorage.getItem('scoredGames')).toBe('1');
+      expect(localStorage.getItem('totalScore')).toBe('700');
+    });
+
     it('keeps score stats that fit the current scale', () => {
       localStorage.setItem('totalScore', '1200');
       localStorage.setItem('scoredGames', '2');
       localStorage.setItem('bestScore', '700');
 
-      component.resetStaleScoreStats();
+      component.reconcileScoreStats();
 
       expect(component.getStats().averageScore).toBe(600);
       expect(component.getStats().bestScore).toBe(700);
