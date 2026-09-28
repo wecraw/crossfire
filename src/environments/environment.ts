@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  //Cloud Run function URL for daily "top X%" stats (backend/stats-function); '' disables it
+  statsApiUrl: '',
 };
 
 /*

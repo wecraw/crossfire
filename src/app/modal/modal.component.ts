@@ -1,23 +1,26 @@
 import {
-  AfterViewInit,
   Component,
-  ElementRef,
   EventEmitter,
   Input,
   OnDestroy,
   OnInit,
   Output,
-  ViewChild,
-  inject,
 } from '@angular/core';
 import moment from 'moment-timezone';
 import { LevelReplay } from '../game/game.component';
 
 export interface GameStats {
-  maxStreak: string;
   totalGames: string;
-  winPercent: number;
+  averageScore: number;
+  bestScore: number;
   currentStreak: string;
+  maxStreak: string;
+}
+
+//today's standing among all players, from the stats backend
+export interface DailyRank {
+  total: number;
+  topPercent: number;
 }
 
 @Component({
@@ -26,19 +29,21 @@ export interface GameStats {
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss'],
 })
-export class ModalComponent implements OnDestroy, OnInit, AfterViewInit {
-  private elementRef = inject(ElementRef);
-
+export class ModalComponent implements OnDestroy, OnInit {
   @Input() decisionModal: boolean = false;
   @Input() primaryLabel: string = 'Confirm';
   @Input() secondaryLabel: string = 'Cancel';
   @Input() incorrectGuessesByLevel: number[];
   @Input() failedByLevel: boolean[] = [];
-  @Input() flawless: boolean = false;
   @Input() stats: GameStats;
   @Input() currentLevel: number;
   @Input() replays: LevelReplay[] = [];
   @Input() puzzleNumber?: number;
+  @Input() score: number = 0;
+  @Input() maxScore: number = 0;
+  @Input() levelScores: number[] = [];
+  @Input() hintsByLevel: number[][] = [];
+  @Input() dailyRank: DailyRank | null = null;
 
   @Output() secondaryEvent = new EventEmitter<void>();
   @Output() primaryEvent = new EventEmitter<void>();
@@ -49,15 +54,18 @@ export class ModalComponent implements OnDestroy, OnInit, AfterViewInit {
 
   levels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-  //page 0 is the summary (stats + breakdown); pages 1..N are per-level replays
+  //page 0 is the summary (score, day tiles, stats); pages 1..N are per-level replays
   currentPage: number = 0;
-
-  //locked to the summary page's height so the modal doesn't resize between pages
-  @ViewChild('pages') pagesRef?: ElementRef<HTMLElement>;
-  minPagesHeight: number | null = null;
 
   get totalPages(): number {
     return 1 + (this.replays?.length ?? 0);
+  }
+
+  //the day's first player has no one to compare against, so they get a
+  //friendly default instead of the backend's "top 100%"
+  get rankPercent(): number {
+    if (!this.dailyRank) return 0;
+    return this.dailyRank.total <= 1 ? 25 : this.dailyRank.topPercent;
   }
 
   //"Crawsword #123" tag (or "(practice)" when there's no daily puzzle number)
@@ -85,16 +93,6 @@ export class ModalComponent implements OnDestroy, OnInit, AfterViewInit {
     this.interval = setInterval(() => {
       this.secondsUntilTomorrow = this.getSecondsUntilTomorrow();
     }, 1000);
-  }
-
-  ngAfterViewInit(): void {
-    //measure the summary page (current on first render) and pin it as a floor
-    //so navigating to shorter replay pages doesn't shrink the modal
-    setTimeout(() => {
-      if (this.pagesRef) {
-        this.minPagesHeight = this.pagesRef.nativeElement.offsetHeight;
-      }
-    });
   }
 
   ngOnDestroy(): void {

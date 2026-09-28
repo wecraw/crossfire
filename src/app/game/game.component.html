@@ -63,14 +63,67 @@
   [ngClass]="{ 'no-click': guessNotAllowed || hasWon }"
   class="keyboard-container"
   >
-  <app-keyboard
-    tabindex="-1"
-    (keypressEvent)="handleVirtualKeypress($event)"
-    [correctLetters]="correctLetters"
-    [absentLetters]="absentLetters"
-    [presentLetters]="presentLetters"
-  ></app-keyboard>
+  <div class="input-deck">
+    @if (!hasWon) {
+      <button
+        type="button"
+        class="hint-button"
+        [disabled]="!canHint"
+        (mousedown)="$event.preventDefault()"
+        (click)="openHintConfirm()"
+      >
+        <i class="fa-regular fa-lightbulb" aria-hidden="true"></i>
+        @if (hintsRemaining > 0) {
+          <span>Reveal a letter</span>
+          <span class="hint-left">{{ hintsRemaining }} left</span>
+        } @else {
+          <span>No hints left</span>
+        }
+      </button>
+    }
+    <app-keyboard
+      tabindex="-1"
+      (keypressEvent)="handleVirtualKeypress($event)"
+      [correctLetters]="correctLetters"
+      [absentLetters]="absentLetters"
+      [presentLetters]="presentLetters"
+    ></app-keyboard>
+  </div>
 </div>
+@if (showHintConfirm) {
+  <div
+    class="confirm-mask"
+    tabindex="-1"
+    (click)="closeHintConfirm()"
+    (keyup.escape)="closeHintConfirm()"
+  ></div>
+  <div
+    class="confirm-dialog"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="hint-confirm-title"
+    aria-describedby="hint-confirm-body"
+  >
+    <h2 id="hint-confirm-title">Reveal a letter?</h2>
+    <p id="hint-confirm-body">
+      One random letter of this answer will be filled in. You have
+      {{ hintsRemaining }} left.
+    </p>
+    <div class="confirm-actions">
+      <button type="button" class="confirm-cancel" (click)="closeHintConfirm()">
+        Cancel
+      </button>
+      <button
+        #hintConfirmButton
+        type="button"
+        class="confirm-primary"
+        (click)="confirmHint()"
+      >
+        Reveal letter
+      </button>
+    </div>
+  </div>
+}
 @if (showWelcomeModal) {
   <app-welcome
     (howToPlay)="toggleWelcomeModal(); toggleHelpModal()"
@@ -121,8 +174,11 @@
         [currentLevel]="currentDisplayLevel"
         [incorrectGuessesByLevel]="incorrectGuessesByLevel"
         [failedByLevel]="failedByLevel"
-        [flawless]="flawless"
         [replays]="getReplays()"
+        [score]="score"
+        [maxScore]="MAX_SCORE"
+        [levelScores]="levelScores"
+        [hintsByLevel]="hintsByLevel"
         [decisionModal]="true"
         primaryLabel="New game"
         secondaryLabel="Share"
@@ -136,9 +192,13 @@
         [currentLevel]="currentDisplayLevel"
         [incorrectGuessesByLevel]="incorrectGuessesByLevel"
         [failedByLevel]="failedByLevel"
-        [flawless]="flawless"
         [replays]="getReplays()"
+        [score]="score"
+        [maxScore]="MAX_SCORE"
+        [levelScores]="levelScores"
+        [hintsByLevel]="hintsByLevel"
         [puzzleNumber]="getPuzzleNumber()"
+        [dailyRank]="dailyRank"
         [decisionModal]="true"
         primaryLabel="Share"
         secondaryLabel="Practice"

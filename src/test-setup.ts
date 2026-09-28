@@ -25,6 +25,10 @@ if (!Element.prototype.scrollTo) {
   Element.prototype.scrollTo = () => undefined;
 }
 
+// fetch — the daily-rank stats call must never reach the network; specs that
+// exercise it stub their own responses with vi.stubGlobal.
+globalThis.fetch = () => Promise.reject(new Error('fetch is disabled in tests'));
+
 // Ensure each test starts from a clean localStorage so persistence-related
 // state never leaks between specs.
 beforeEach(() => {

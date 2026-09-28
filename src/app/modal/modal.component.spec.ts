@@ -28,6 +28,14 @@ describe('ModalComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('shows the backend rank, or top 25% for the day\'s first player', () => {
+    component.dailyRank = { total: 1342, topPercent: 12 };
+    expect(component.rankPercent).toBe(12);
+
+    component.dailyRank = { total: 1, topPercent: 100 };
+    expect(component.rankPercent).toBe(25);
+  });
+
   it('clears its countdown interval when destroyed', () => {
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
 
