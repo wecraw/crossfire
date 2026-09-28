@@ -210,7 +210,6 @@ export class GameComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.setTheme();
-    this.resetStaleScoreStats();
 
     this.buildClueMaps();
     this.setChain();
@@ -222,6 +221,8 @@ export class GameComponent implements OnInit, AfterViewInit {
       resumed = this.loadFromLocalStorage();
     }
     if (this.isNewDay()) this.resetLocalStorage();
+    //after the daily load, so today's finished game can be re-counted
+    this.resetStaleScoreStats();
 
     if (!resumed) {
       this.loadLevel(this.currentLevel);
@@ -1066,7 +1067,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   //score stats saved under an older, larger point scale can leave an average or
-  //best above what's now possible; wipe the score stats so they restart cleanly
+  //best above what's now possible; wipe the score stats so they restart cleanly,
+  //re-counting today's game if updateStats already recorded it (it won't again)
   resetStaleScoreStats() {
     const scoredGames = +(localStorage.getItem('scoredGames') || '0');
     const average = scoredGames
@@ -1078,6 +1080,18 @@ export class GameComponent implements OnInit, AfterViewInit {
     localStorage.removeItem('totalScore');
     localStorage.removeItem('scoredGames');
     localStorage.removeItem('bestScore');
+
+    const lastPuzzle = localStorage.getItem('streakLastPuzzle');
+    if (
+      this.hasWon &&
+      !this.practiceMode &&
+      lastPuzzle !== null &&
+      +lastPuzzle === this.getPuzzleNumber()
+    ) {
+      localStorage.setItem('totalScore', '' + this.score);
+      localStorage.setItem('scoredGames', '1');
+      localStorage.setItem('bestScore', '' + this.score);
+    }
   }
 
   //records a finished daily game once per puzzle (guarded on streakLastPuzzle)

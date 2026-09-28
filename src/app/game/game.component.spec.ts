@@ -862,6 +862,26 @@ describe('GameComponent', () => {
       expect(localStorage.getItem('streak')).toBe('3'); // other stats untouched
     });
 
+    it("re-counts today's already-recorded game after a reset", () => {
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY; // puzzle #1
+      component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
+      component.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 1, 0];
+      component.failedByLevel = [false, false, false, false, false, false, false];
+      component.hasWon = true;
+      localStorage.setItem('streakLastPuzzle', '1');
+      localStorage.setItem('totalScore', '2360');
+      localStorage.setItem('scoredGames', '2');
+      localStorage.setItem('bestScore', '1180');
+
+      component.resetStaleScoreStats();
+
+      const stats = component.getStats();
+      expect(stats.averageScore).toBe(680);
+      expect(stats.bestScore).toBe(680);
+      expect(localStorage.getItem('scoredGames')).toBe('1');
+    });
+
     it('keeps score stats that fit the current scale', () => {
       localStorage.setItem('totalScore', '1200');
       localStorage.setItem('scoredGames', '2');

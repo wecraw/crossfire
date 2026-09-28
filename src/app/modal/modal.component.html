@@ -12,16 +12,10 @@
       </div>
       <!-- line is reserved on the daily summary so a late-arriving rank doesn't
            shift the layout -->
-      @if (flawless || stats) {
+      @if (stats) {
         <div class="subtitle">
-          @if (flawless) {
-            <span class="flawless">🏆 Flawless</span>
-          }
-          @if (flawless && dailyRank) {
-            <span class="sep">·</span>
-          }
           @if (dailyRank) {
-            <span>Top {{ dailyRank.topPercent }}% of {{ dailyRank.total | number }} today</span>
+            Top {{ rankPercent }}% of players
           }
         </div>
       }

@@ -35,7 +35,6 @@ export class ModalComponent implements OnDestroy, OnInit {
   @Input() secondaryLabel: string = 'Cancel';
   @Input() incorrectGuessesByLevel: number[];
   @Input() failedByLevel: boolean[] = [];
-  @Input() flawless: boolean = false;
   @Input() stats: GameStats;
   @Input() currentLevel: number;
   @Input() replays: LevelReplay[] = [];
@@ -60,6 +59,13 @@ export class ModalComponent implements OnDestroy, OnInit {
 
   get totalPages(): number {
     return 1 + (this.replays?.length ?? 0);
+  }
+
+  //the day's first player has no one to compare against, so they get a
+  //friendly default instead of the backend's "top 100%"
+  get rankPercent(): number {
+    if (!this.dailyRank) return 0;
+    return this.dailyRank.total <= 1 ? 25 : this.dailyRank.topPercent;
   }
 
   //"Crawsword #123" tag (or "(practice)" when there's no daily puzzle number)
