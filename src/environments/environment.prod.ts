@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  //Lambda Function URL for daily "top X%" stats (backend/stats-lambda); '' disables it
-  statsApiUrl: '',
+  //Cloud Run function URL for daily "top X%" stats (backend/stats-function); '' disables it
+  statsApiUrl: 'https://crawsword-stats-lway2fokla-uw.a.run.app',
 };

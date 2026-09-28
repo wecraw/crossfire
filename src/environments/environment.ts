@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  //Lambda Function URL for daily "top X%" stats (backend/stats-lambda); '' disables it
+  //Cloud Run function URL for daily "top X%" stats (backend/stats-function); '' disables it
   statsApiUrl: '',
 };
 
