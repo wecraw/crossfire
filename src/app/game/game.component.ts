@@ -609,16 +609,39 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.shakeChecks = false;
     }, 300);
 
-    const revealDuration = 2250;
-    this.toast(failedAnswer, revealDuration);
+    const toastMs = 2250;
+    this.toast(failedAnswer, toastMs);
 
+    //Mirror the solved-level slide: append the answer as a solved row (plus
+    //empty rows to keep a full board in view) and slide it up to the top,
+    //pushing the used-up guess rows out of the viewport.
+    const answerRow = this.board.length;
+    this.board.push(
+      [...failedAnswer].map(
+        (letter): ILetter => ({ letter, state: 'correct', locked: true })
+      ),
+      ...this.makeEmptyBoard(failedAnswer.length).slice(0, answerRow - 1)
+    );
+    this.solvedRow = answerRow;
+    //show the answer toast over the failed board, then slide as it fades out
+    const slideStart = toastMs;
+    setTimeout(() => (this.slideOffset = answerRow), slideStart);
+
+    const slideDone = slideStart + 600;
     if (this.currentLevel === this.NUM_LEVELS) {
       this.currentDisplayLevel = this.NUM_LEVELS;
-      setTimeout(() => this.revealComplete(), revealDuration + 250);
+      setTimeout(() => this.revealComplete(), slideDone + 500);
       return;
     }
 
-    //after the answer has been shown, snap the next level's board into place
+    //hold the answer a beat, then fade all but the carried letter like a solve
+    const holdMs = 900;
+    setTimeout(() => {
+      this.fadeKeepPos = this.chain[this.currentLevel]?.[1] ?? -1;
+      this.fadeNonCarry = true;
+    }, slideDone + holdMs);
+
+    //snap the board back to offset 0 with the already-committed next level
     setTimeout(() => {
       this.boardTransition = false;
       this.loadLevel(this.currentLevel);
@@ -627,7 +650,7 @@ export class GameComponent implements OnInit, AfterViewInit {
       requestAnimationFrame(() =>
         requestAnimationFrame(() => (this.boardTransition = true))
       );
-    }, revealDuration + 250);
+    }, slideDone + holdMs + 700);
   }
 
   //writes the just-advanced level's starting state (fresh board + carried
