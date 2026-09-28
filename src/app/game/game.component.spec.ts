@@ -444,7 +444,7 @@ describe('GameComponent', () => {
       expect(shareText()).toContain('Crawsword #1  680/700 🏆\nTop 12% of players\n🟩');
 
       component.dailyRank = { total: 1, topPercent: 100 };
-      expect(shareText()).toContain('\nTop 25% of players\n');
+      expect(shareText()).toContain('\nTop 50% of players\n');
     });
   });
 
@@ -1031,7 +1031,7 @@ describe('GameComponent', () => {
       expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST' });
     });
 
-    it('submits the final score as soon as the last level is graded, once', () => {
+    it('submits the final score only after the finished game is saved, once', () => {
       vi.useFakeTimers();
       // on the last level with one wrong guess; the second guess is right
       component.currentLevel = component.NUM_LEVELS - 1;
@@ -1043,20 +1043,35 @@ describe('GameComponent', () => {
       component.currentRow = 1;
 
       component.checkAnswer();
-      // before the flip reveal: six perfect levels + a second-guess solve
+      // during the flip the save is still unfinished, so nothing is posted yet
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(10000);
+      expect(component.hasWon).toBe(true);
+      expect(component.score).toBe(680);
+      expect(localStorage.getItem('v3:hasWon')).toBe('true');
       expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(fetchMock.mock.calls[0][1]).toMatchObject({
         method: 'POST',
         body: JSON.stringify({ puzzle: component.getPuzzleNumber(), score: 680 }),
       });
       expect(component.rankLoading).toBe(true);
-
-      // finishing the game afterwards doesn't send it again
-      vi.advanceTimersByTime(10000);
-      expect(component.hasWon).toBe(true);
-      expect(component.score).toBe(680);
-      expect(fetchMock).toHaveBeenCalledTimes(1);
       vi.useRealTimers();
+    });
+
+    it('drops a rank that lands after reset and clears the old one', async () => {
+      let resolveRes!: (v: unknown) => void;
+      fetchMock.mockImplementationOnce(() => new Promise((r) => (resolveRes = r)));
+      component.buildClueMaps();
+      const pending = component.fetchDailyRank();
+      component.reset();
+      resolveRes({ ok: true, json: async () => ({ total: 9, topPercent: 5 }) });
+      await pending;
+      expect(component.dailyRank).toBeNull();
+
+      component.dailyRank = { total: 9, topPercent: 5 };
+      component.reset();
+      expect(component.dailyRank).toBeNull();
     });
 
     it('never calls the backend in practice mode or without a URL', async () => {

@@ -107,9 +107,11 @@ export class GameComponent implements OnInit, AfterViewInit {
   currentDay: number = 0; //days since epoch
   dailyRank: DailyRank | null = null; //today's "top X%" from the stats backend
   rankLoading: boolean = false; //a rank request is in flight (postgame shows a skeleton)
-  //the finished game's rank has been requested; the early request at grading
-  //time and finalizeComplete's both go through startRankRequest, so it's sent once
+  //the finished game's rank has been requested; every trigger goes through
+  //startRankRequest, so it's sent once
   private rankRequested: boolean = false;
+  //bumped by reset() so a response that lands after a mode switch is dropped
+  private rankGeneration: number = 0;
 
   //Board / entry variables
   board: ILetter[][] = []; //GUESSES_PER_LEVEL rows x WORD_LENGTH cols, fresh each level
@@ -308,6 +310,9 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.guessNotAllowed = false;
     this.hasWon = false;
     this.rankRequested = false;
+    this.rankGeneration++;
+    this.dailyRank = null;
+    this.rankLoading = false;
     this.setChain();
     this.loadLevel(0);
   }
@@ -570,13 +575,6 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     const solved = correctCount === this.answer.length;
 
-    //solving the last level fixes the final score, so submit it now and let the
-    //request run during the flip + confetti rather than after them (score
-    //doesn't count this level yet: handleCorrect advances currentLevel)
-    if (solved && this.currentLevel === this.NUM_LEVELS - 1) {
-      this.startRankRequest(this.score + this.solvedLevelPoints(this.currentLevel));
-    }
-
     //play the staggered flip reveal, then act on the result once it finishes
     this.guessNotAllowed = true;
     this.revealRow = this.currentRow;
@@ -798,10 +796,12 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   //requests the finished game's rank once (see rankRequested)
-  private startRankRequest(score: number = this.score) {
+  //only after the finished state is saved, so a reload can't leave a submitted
+  //score behind an unfinished save
+  private startRankRequest() {
     if (this.rankRequested) return;
     this.rankRequested = true;
-    this.fetchDailyRank(score);
+    this.fetchDailyRank();
   }
 
   //submits today's score once (POST), or just reads today's standing (GET) on a
@@ -812,6 +812,7 @@ export class GameComponent implements OnInit, AfterViewInit {
 
     const puzzle = this.getPuzzleNumber();
     const submitted = localStorage.getItem('rankSubmittedPuzzle') === '' + puzzle;
+    const generation = this.rankGeneration;
     this.rankLoading = true;
     try {
       const res = submitted
@@ -824,11 +825,13 @@ export class GameComponent implements OnInit, AfterViewInit {
       if (!res.ok) return;
       if (!submitted) localStorage.setItem('rankSubmittedPuzzle', '' + puzzle);
       const rank: DailyRank = await res.json();
-      if (rank.total > 0) this.dailyRank = rank;
+      if (generation === this.rankGeneration && rank.total > 0) {
+        this.dailyRank = rank;
+      }
     } catch {
       //offline or backend down: the postgame just omits the rank line
     } finally {
-      this.rankLoading = false;
+      if (generation === this.rankGeneration) this.rankLoading = false;
     }
   }
 
