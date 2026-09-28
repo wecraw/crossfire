@@ -377,14 +377,16 @@ export class GameComponent implements OnInit, AfterViewInit {
     return board;
   }
 
-  //columns pre-filled as locked green letters on the on-screen board: the
-  //given (carried in, or Monday's freebie) plus any hint reveals
+  //columns known to be correct on the on-screen level: the given (carried in,
+  //or Monday's freebie) plus any hint reveals. Seeds the keyboard and keeps
+  //hints from re-revealing them; only the row a letter first appears in has
+  //it locked on the board
   get lockedPositions(): number[] {
     const hints = this.hintsByLevel[this.boardLevel] ?? [];
     return this.givenPos >= 0 ? [this.givenPos, ...hints] : [...hints];
   }
 
-  //drops the carried green letter and any hinted letters into a row as locked givens
+  //drops the carried green letter (and any hinted letters) into a row as locked givens
   private prefillRow(row: number) {
     if (!this.board[row]) return;
     for (const pos of this.lockedPositions) {
@@ -447,17 +449,17 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   //true for tiles in the row playing the Wordle-style staggered flip reveal;
-  //pre-filled givens/hints are already known-correct, so they sit the reveal out
+  //a locked given (first row only) is already known-correct, so it sits it out
   isRevealing(row: number, col: number): boolean {
-    return this.revealRow === row && !this.board[row]?.[col]?.locked;
+    return this.revealRow === row && !this.board[row][col].locked;
   }
 
   //per-column flip delay so tiles reveal one after another, left to right;
-  //columns past skipped givens/hints shift back so there's no gap
-  revealDelay(col: number): string {
-    const skipped = this.lockedPositions.filter(
-      (pos) => pos < col
-    ).length;
+  //columns past a skipped locked given shift back a step so there's no gap
+  revealDelay(row: number, col: number): string {
+    const skipped = this.board[row]
+      .slice(0, col)
+      .filter((cell) => cell.locked).length;
     return (col - skipped) * this.FLIP_STAGGER_MS + 'ms';
   }
 
@@ -536,11 +538,8 @@ export class GameComponent implements OnInit, AfterViewInit {
     //play the staggered flip reveal, then act on the result once it finishes
     this.guessNotAllowed = true;
     this.revealRow = this.currentRow;
-    //locked givens/hints don't flip, so the row finishes sooner
-    const flipCount = Math.max(
-      1,
-      this.answer.length - this.lockedPositions.length
-    );
+    //a locked given doesn't flip, so a row with one finishes sooner
+    const flipCount = row.filter((cell) => !cell.locked).length;
     const revealTime =
       (flipCount - 1) * this.FLIP_STAGGER_MS + this.FLIP_DURATION_MS;
 
@@ -622,8 +621,9 @@ export class GameComponent implements OnInit, AfterViewInit {
       this.shakeChecks = false;
     }, 300);
 
+    //only a level's first row gets the locked given; later rows start empty so
+    //the player types all five letters (the given stays green on the keyboard)
     this.currentRow++;
-    this.prefillRow(this.currentRow);
     this.currentCol = this.firstEditableCol();
     this.guessNotAllowed = false; //re-enable input after the flip reveal
     this.updateLocalStorage();
@@ -789,7 +789,8 @@ export class GameComponent implements OnInit, AfterViewInit {
   /*------------------------------Hints-------------------------------------*/
 
   //reveals a random still-unknown letter of the current answer as a locked
-  //green given in the active row (and, via prefillRow, every later row)
+  //green given in the active row only; like the carried given, later rows start
+  //empty and the letter just stays green on the keyboard
   useHint() {
     if (!this.canHint) return;
 

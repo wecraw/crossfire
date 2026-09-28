@@ -353,6 +353,28 @@ describe('GameComponent', () => {
       expect(component.board[0][1].letter).toBe('Y');
     });
 
+    it('only locks the given on the first row; later rows start empty', () => {
+      vi.useFakeTimers();
+      loadWithGiven('CRANE', 2);
+      component.clue = { clueNumber: 1, clue: 'test', answer: 'CRANE' };
+      ['D', 'U', 'M', 'P'].forEach((ch) => component.handleLetterEntry(ch));
+      component.checkAnswer();
+      vi.advanceTimersByTime(
+        3 * component.FLIP_STAGGER_MS + component.FLIP_DURATION_MS + 1
+      );
+      vi.useRealTimers();
+
+      expect(component.currentRow).toBe(1);
+      expect(component.board[1].every((c) => c.letter === '' && !c.locked)).toBe(
+        true
+      );
+      expect(component.currentCol).toBe(0);
+      // the cursor no longer skips column 2 on this row
+      component.handleLetterEntry('X');
+      component.handleLetterEntry('Y');
+      expect(component.currentCol).toBe(2);
+    });
+
     it('backspace cannot clear the locked given', () => {
       loadWithGiven('CRANE', 2);
       component.currentCol = 2; // pretend cursor is on the locked cell
@@ -497,7 +519,7 @@ describe('GameComponent', () => {
       expect(component.currentCol).toBe(1);
     });
 
-    it('carries the hinted letter into the next row after a miss', () => {
+    it('locks the hint only on its own row; later rows start empty', () => {
       vi.spyOn(component, 'getRandomInt').mockReturnValue(0); // reveal C
       component.useHint();
       ['X', 'Y', 'Z', 'Q'].forEach((ch) => component.handleLetterEntry(ch));
@@ -505,16 +527,34 @@ describe('GameComponent', () => {
       vi.advanceTimersByTime(5000);
 
       expect(component.currentRow).toBe(1);
+      expect(component.board[1].every((c) => c.letter === '' && !c.locked)).toBe(
+        true
+      );
+      expect(component.currentCol).toBe(0);
+      // the hinted letter stays green on the keyboard
+      expect(component.correctLetters).toContain('C');
+    });
+
+    it('a hint on a later row locks just that row, not the given', () => {
+      ['X', 'Y', 'Z', 'Q'].forEach((ch) => component.handleLetterEntry(ch));
+      component.checkAnswer();
+      vi.advanceTimersByTime(5000);
+
+      vi.spyOn(component, 'getRandomInt').mockReturnValue(0); // reveal C
+      component.useHint();
+      expect(component.hintsByLevel[0]).toEqual([0]);
       expect(component.board[1][0]).toEqual({ letter: 'C', state: 'correct', locked: true });
-      expect(component.board[1][2].locked).toBe(true); // the given still carries too
+      expect(component.board[1][2].locked).toBeFalsy(); // the given doesn't re-lock
+      expect(component.currentCol).toBe(1);
     });
 
     it('skips hinted columns in the flip-reveal stagger', () => {
-      component.hintsByLevel[0] = [0];
+      vi.spyOn(component, 'getRandomInt').mockReturnValue(0); // reveal C
+      component.useHint();
       // locked columns 0 and 2: col 1 flips first, col 3 second, col 4 third
-      expect(component.revealDelay(1)).toBe('0ms');
-      expect(component.revealDelay(3)).toBe(component.FLIP_STAGGER_MS + 'ms');
-      expect(component.revealDelay(4)).toBe(2 * component.FLIP_STAGGER_MS + 'ms');
+      expect(component.revealDelay(0, 1)).toBe('0ms');
+      expect(component.revealDelay(0, 3)).toBe(component.FLIP_STAGGER_MS + 'ms');
+      expect(component.revealDelay(0, 4)).toBe(2 * component.FLIP_STAGGER_MS + 'ms');
     });
 
     it('clears hints on restart', () => {
