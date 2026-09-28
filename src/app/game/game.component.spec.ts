@@ -662,6 +662,40 @@ describe('GameComponent', () => {
       expect(legacy.hintsRemaining).toBe(2);
     });
 
+    it('resumes a hint-saved partial draft at its first empty cell', () => {
+      const day = component.PUZZLE_FIRST_DAY + 91;
+      component.daysSinceEpoch = () => day;
+      component.practiceMode = false;
+      component.buildClueMaps();
+      component.setChain();
+      component.loadLevel(0);
+      component.guessNotAllowed = false;
+      const given = component.lockedPositions[0];
+
+      // type two letters, then hint (which saves the partial row); the hint
+      // takes the last candidate column so it never lands on the draft
+      vi.spyOn(component, 'getRandomInt').mockImplementation((n) => n - 1);
+      component.handleLetterEntry('X');
+      component.handleLetterEntry('Y');
+      component.useHint();
+      const expected = component.currentCol;
+      expect(component.board[0][expected].letter).toBe('');
+
+      const fresh = makeComponent();
+      fresh.daysSinceEpoch = () => day;
+      fresh.buildClueMaps();
+      fresh.setChain();
+      fresh.loadFromLocalStorage();
+      expect(fresh.currentCol).toBe(expected);
+
+      // the next keystroke extends the draft rather than overwriting it
+      fresh.handleLetterEntry('Z');
+      const typed = fresh.board[0]
+        .filter((c, i) => !c.locked && i !== given && c.letter !== '')
+        .map((c) => c.letter);
+      expect(typed).toEqual(['X', 'Y', 'Z']);
+    });
+
     it('discards a legacy same-day save that predates the current schema', () => {
       const day = component.PUZZLE_FIRST_DAY + 91;
       component.daysSinceEpoch = () => day;

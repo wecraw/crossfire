@@ -415,6 +415,21 @@ export class GameComponent implements OnInit, AfterViewInit {
     return 0;
   }
 
+  //where typing continues in a restored row: a hint mid-guess saves the partial
+  //draft, so resume at its first empty editable cell, or the last editable cell
+  //when it's full (where handleLetterEntry stops)
+  private resumeCol(): number {
+    const row = this.board[this.currentRow];
+    if (!row) return 0;
+    let last = this.firstEditableCol();
+    for (let c = 0; c < row.length; c++) {
+      if (row[c].locked) continue;
+      if (row[c].letter === '') return c;
+      last = c;
+    }
+    return last;
+  }
+
   private nextEditableCol(from: number): number {
     for (let c = from + 1; c < this.answer.length; c++) {
       if (!this.board[this.currentRow][c].locked) return c;
@@ -1171,7 +1186,7 @@ export class GameComponent implements OnInit, AfterViewInit {
       const cR = localStorage.getItem('v3:currentRow');
       this.currentRow = cR ? +cR : 0;
       if (!this.hasWon) {
-        this.currentCol = this.firstEditableCol();
+        this.currentCol = this.resumeCol();
       }
       this.setKeyboardFromBoard();
       return true;
