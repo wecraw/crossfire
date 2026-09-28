@@ -430,6 +430,22 @@ describe('GameComponent', () => {
       expect(shared).toContain('Crawsword #1  680/700 🏆');
       expect(shared).not.toContain('🟥');
     });
+
+    it('puts the daily rank in place of the blank line', () => {
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
+      component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
+      component.incorrectGuessesByLevel = [0, 0, 1, 0, 0, 0, 0];
+      component.failedByLevel = [false, false, false, false, false, false, false];
+
+      expect(shareText()).toContain('Crawsword #1  680/700 🏆\n\n🟩');
+
+      component.dailyRank = { total: 3482, topPercent: 12 };
+      expect(shareText()).toContain('Crawsword #1  680/700 🏆\nTop 12% of players\n🟩');
+
+      component.dailyRank = { total: 1, topPercent: 100 };
+      expect(shareText()).toContain('\nTop 25% of players\n');
+    });
   });
 
   describe('scoring', () => {

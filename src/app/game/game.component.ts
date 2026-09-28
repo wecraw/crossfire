@@ -19,7 +19,7 @@ import { dailyChains, ChainLevel } from '../clues/chains';
 import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
-import { DailyRank, GameStats } from '../modal/modal.component';
+import { DailyRank, GameStats, rankPercent } from '../modal/modal.component';
 import { environment } from '../../environments/environment';
 
 export interface IClue {
@@ -1001,7 +1001,12 @@ export class GameComponent implements OnInit, AfterViewInit {
     //headline is the day's score; a flawless run (none revealed) earns the trophy
     shareString += '  ' + this.score + '/' + this.MAX_SCORE;
     if (this.flawless) shareString += ' 🏆';
-    shareString += '\n\n';
+    shareString += '\n';
+    //the daily rank takes the blank line's place; without one the gap stays
+    if (this.dailyRank) {
+      shareString += 'Top ' + rankPercent(this.dailyRank) + '% of players';
+    }
+    shareString += '\n';
 
     for (let i = 0; i < this.NUM_LEVELS; i++) {
       if (this.failedByLevel[i]) {

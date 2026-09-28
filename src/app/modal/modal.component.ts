@@ -23,6 +23,12 @@ export interface DailyRank {
   topPercent: number;
 }
 
+//the day's first player has no one to compare against, so they get a
+//friendly default instead of the backend's "top 100%"
+export function rankPercent(rank: DailyRank): number {
+  return rank.total <= 1 ? 25 : rank.topPercent;
+}
+
 @Component({
   standalone: false,
   selector: 'app-modal',
@@ -69,11 +75,8 @@ export class ModalComponent implements OnDestroy, OnInit {
     return 1 + (this.replays?.length ?? 0);
   }
 
-  //the day's first player has no one to compare against, so they get a
-  //friendly default instead of the backend's "top 100%"
   get rankPercent(): number {
-    if (!this.dailyRank) return 0;
-    return this.dailyRank.total <= 1 ? 25 : this.dailyRank.topPercent;
+    return this.dailyRank ? rankPercent(this.dailyRank) : 0;
   }
 
   //"Crawsword #123" tag (or "(practice)" when there's no daily puzzle number)
