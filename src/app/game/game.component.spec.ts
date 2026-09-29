@@ -439,7 +439,7 @@ describe('GameComponent', () => {
       expect(shareText()).toContain('680/700 🏆 · top 12% of players today!');
 
       component.dailyRank = { total: 1, topPercent: 100 };
-      expect(shareText()).toContain('top 50% of players today!');
+      expect(shareText()).toContain('top 1% of players today!');
     });
   });
 
