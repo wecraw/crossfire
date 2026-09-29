@@ -30,17 +30,19 @@ export const RANK_PLACE_THRESHOLD = 20;
 
 type RankKind =
   | { kind: 'first' }
-  | { kind: 'place'; place: number; total: number }
+  | { kind: 'place'; place: number; total: number; percent: number }
   | { kind: 'percent'; percent: number };
 
 //the day's first finisher has no one to compare against; small days show a
-//place ("#2 of 5"); otherwise a percent, floored at 1 so it never reads "top 0%"
+//place ("#2 of 5", with its percent as a side note); otherwise a percent. The
+//percent is floored at 1 so it never reads "top 0%"
 function classifyRank(rank: DailyRank): RankKind {
   if (rank.total <= 1) return { kind: 'first' };
+  const percent = Math.max(1, rank.topPercent);
   if (rank.place && rank.total < RANK_PLACE_THRESHOLD) {
-    return { kind: 'place', place: rank.place, total: rank.total };
+    return { kind: 'place', place: rank.place, total: rank.total, percent };
   }
-  return { kind: 'percent', percent: Math.max(1, rank.topPercent) };
+  return { kind: 'percent', percent };
 }
 
 //the postgame summary's rank line
@@ -51,11 +53,17 @@ export function rankLabel(rank: DailyRank): string {
   return `Top ${r.percent}% of players`;
 }
 
-//the share string's rank suffix
+//the percent shown in smaller type after a place ("#2 of 5 players (top 40%)");
+//empty when the label is already a percent or there's no one to compare against
+export function rankPercentNote(rank: DailyRank): string {
+  const r = classifyRank(rank);
+  return r.kind === 'place' ? `(top ${r.percent}%)` : '';
+}
+
+//the share string's rank suffix: always the percent, never the place/count
 export function rankShareText(rank: DailyRank): string {
   const r = classifyRank(rank);
   if (r.kind === 'first') return 'first to finish today!';
-  if (r.kind === 'place') return `#${r.place} of ${r.total} players today`;
   return `top ${r.percent}% of players today!`;
 }
 
@@ -107,6 +115,10 @@ export class ModalComponent implements OnDestroy, OnInit {
 
   get rankLabel(): string {
     return this.dailyRank ? rankLabel(this.dailyRank) : '';
+  }
+
+  get rankPercentNote(): string {
+    return this.dailyRank ? rankPercentNote(this.dailyRank) : '';
   }
 
   //"Crawsword #123" tag (or "(practice)" when there's no daily puzzle number)

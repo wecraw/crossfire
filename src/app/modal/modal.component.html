@@ -44,7 +44,11 @@
         @if (stats) {
           <div class="subtitle">
             @if (dailyRank) {
-              <span class="rank">{{ rankLabel }}</span>
+              <span class="rank">{{ rankLabel }}
+                @if (rankPercentNote) {
+                  <span class="rank-percent">{{ rankPercentNote }}</span>
+                }
+              </span>
             } @else if (rankLoading) {
               <span class="rank-skeleton" role="status" aria-label="Loading your rank"></span>
             }
