@@ -994,32 +994,34 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   share() {
-    let shareString = 'Crawsword ';
+    let shareString = 'crawsword.xyz';
     if (!this.practiceMode) {
-      shareString += '#' + this.getPuzzleNumber();
+      //the puzzle's own (Pacific) day
+      const date = moment.utc(0).add(this.daysSinceEpoch(), 'days');
+      shareString += ' · ' + date.format('MMM D YYYY');
     } else {
-      shareString += '(practice)';
+      shareString += ' (practice)';
     }
 
-    //headline is the day's score; a flawless run (none revealed) earns the trophy
-    shareString += '  ' + this.score + '/' + this.MAX_SCORE;
-    if (this.flawless) shareString += ' 🏆';
-    shareString += '\n';
-    //the daily rank takes the blank line's place; without one the gap stays
-    if (this.dailyRank) {
-      shareString += 'Top ' + rankPercent(this.dailyRank) + '% of players';
-    }
     shareString += '\n';
 
+    //one square per level: green solved first try, yellow solved after wrong
+    //guesses, red X revealed
     for (let i = 0; i < this.NUM_LEVELS; i++) {
       if (this.failedByLevel[i]) {
-        shareString += '🟥';
+        shareString += '❌';
+      } else if (this.incorrectGuessesByLevel[i] > 0) {
+        shareString += '🟨';
       } else {
         shareString += '🟩';
-        shareString += '❌'.repeat(this.incorrectGuessesByLevel[i]);
       }
-      shareString += '💡'.repeat(this.hintsByLevel[i]?.length ?? 0);
-      if (i !== this.NUM_LEVELS - 1) shareString += '\n';
+    }
+    shareString += '\n';
+
+    shareString += this.score + '/' + this.MAX_SCORE;
+    if (this.flawless) shareString += ' 🏆';
+    if (this.dailyRank) {
+      shareString += ' · top ' + rankPercent(this.dailyRank) + '% of players today!';
     }
 
     if (navigator.share) {
