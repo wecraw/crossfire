@@ -7,7 +7,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "functions-framework --target=stats"
+    "start": "functions-framework --target=stats",
+    "test": "node --test"
   },
   "dependencies": {
     "@google-cloud/firestore": "^9.2.0",
