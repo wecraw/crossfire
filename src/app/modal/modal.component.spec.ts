@@ -31,9 +31,11 @@ describe('ModalComponent', () => {
   it('labels the rank: first finisher, a place on small days, else a percent', () => {
     component.dailyRank = { total: 1, place: 1, topPercent: 100 };
     expect(component.rankLabel).toBe('First to finish today!');
+    expect(component.rankPercentNote).toBe('');
 
     component.dailyRank = { total: 5, place: 2, topPercent: 40 };
     expect(component.rankLabel).toBe('#2 of 5 players');
+    expect(component.rankPercentNote).toBe('(top 40%)');
 
     //an older backend sends no place: fall back to the percent
     component.dailyRank = { total: 5, topPercent: 40 };
@@ -41,6 +43,7 @@ describe('ModalComponent', () => {
 
     component.dailyRank = { total: 1342, place: 150, topPercent: 12 };
     expect(component.rankLabel).toBe('Top 12% of players');
+    expect(component.rankPercentNote).toBe('');
 
     component.dailyRank = { total: 5000, topPercent: 0 };
     expect(component.rankLabel).toBe('Top 1% of players');
