@@ -15,7 +15,7 @@ export class KeyboardComponent {
 
   lettersRow1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
   lettersRow2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
-  lettersRow3 = ['CHECK', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
+  lettersRow3 = ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
   constructor() {}
 

@@ -51,8 +51,14 @@ canvas {
   pointer-events: none;
 }
 
+.score-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
 .levels-row {
-  margin-top: 15px;
+  margin-top: 6px;
   display: flex;
   width: 100%;
   justify-content: center;
@@ -60,6 +66,7 @@ canvas {
 
 .clue {
   font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 1.15rem;
   text-align: center;
   margin-top: 10px;
   margin-bottom: 10px;
@@ -146,7 +153,8 @@ canvas {
 // short phones (e.g. 320x568): the board is already at its minimum tile size,
 // so win back the hint bar's height from the chrome around it
 @media (max-height: 640px) {
-  .levels-row { margin-top: 10px; }
+  .score-row { margin-top: 8px; }
+  .levels-row { margin-top: 6px; }
   .hint-button {
     height: 32px;
     margin-bottom: 6px;

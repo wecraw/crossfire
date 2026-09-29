@@ -1,0 +1,10 @@
+<div class="score" role="status" [attr.aria-label]="'Score ' + score + ' of ' + maxScore">
+  <span class="score-label" aria-hidden="true">Score</span>
+  <span class="score-figure" aria-hidden="true">
+    <span class="score-value">{{ displayScore }}</span>
+    <span class="score-max">/ {{ maxScore }}</span>
+    @for (gain of gains; track gain.id) {
+      <span class="score-gain">+{{ gain.amount }}</span>
+    }
+  </span>
+</div>

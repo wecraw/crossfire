@@ -1,0 +1,67 @@
+// deliberately quiet: the clue and board are the focus, so the score reads as a
+// caption -- small, muted, and in the body text color. The "+N" is the only
+// accent, and it's plain green text rather than a filled chip.
+.score {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1;
+    opacity: 0.6;
+    user-select: none;
+}
+
+.score-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.score-figure {
+    position: relative; // anchors the floating "+N"
+    display: inline-flex;
+    align-items: baseline;
+}
+
+.score-value {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.score-max {
+    font-size: 10px;
+    margin-left: 3px;
+}
+
+// rises a few px off the score and fades; several can overlap if points land
+// back to back. It inherits the caption's muting, so it stays a soft accent.
+.score-gain {
+    position: absolute;
+    left: calc(100% + 6px);
+    bottom: 0;
+    color: var(--square-correct-bg-color);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: score-gain 1.1s ease-out both; // mirrors GAIN_MS
+}
+
+@keyframes score-gain {
+    0% { opacity: 0; transform: translateY(3px); }
+    20% { opacity: 1; transform: translateY(0); }
+    65% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .score-gain { animation: score-gain-fade 1.1s ease both; }
+}
+
+@keyframes score-gain-fade {
+    0%, 100% { opacity: 0; }
+    20%, 65% { opacity: 1; }
+}

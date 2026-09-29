@@ -38,7 +38,7 @@ describe('GameComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it.each(['Q', 'CHECK', 'BKSP'])(
+  it.each(['Q', 'ENTER', 'BKSP'])(
     'submits without activating a focused virtual %s key',
     (label) => {
       fixture.detectChanges();
