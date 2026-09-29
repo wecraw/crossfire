@@ -4,10 +4,6 @@ $divider-color: #ccc;
     margin-bottom: 10px;
 }
 
-app-square:last-of-type{
-    border-right: 1px solid var(--tutorial-square-border-color);
-}
-
 h5{
     text-align: center;
     margin-top: 15px;
@@ -31,7 +27,7 @@ app-square::ng-deep {
         .square {
             background-color: var(--tutorial-square-color);
             border: 1px solid var(--tutorial-square-border-color);
-            border-right: none;
+            border-right-style: none;
         }
         
 }

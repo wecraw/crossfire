@@ -965,7 +965,7 @@ export class GameComponent implements OnInit, AfterViewInit {
   }
 
   handleVirtualKeypress(event: string) {
-    if (event === 'CHECK') {
+    if (event === 'ENTER') {
       this.checkAnswer();
     } else if (event === 'BKSP') {
       this.handleDeleteLetter();

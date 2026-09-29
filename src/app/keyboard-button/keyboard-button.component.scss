@@ -11,7 +11,7 @@ $absent-bg-color: rgb(120, 124, 126);
     height: 58px;
     background-color: var(--keyboard-button-default-color);
     border-radius: 3px;
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     margin-right: 2.5px;
     margin-left: 2.5px;
     width: fit-content;
@@ -68,7 +68,7 @@ $absent-bg-color: rgb(120, 124, 126);
 
     }
     .check-button{
-        font-size: 0.7rem;
+        font-size: 0.8rem;
         min-width: fit-content;
     }
   }

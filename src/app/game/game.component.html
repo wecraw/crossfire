@@ -5,6 +5,9 @@
   (menuClickEvent)="onMenuClick($event)"
 ></app-header>
 <div class="container flex fit-content-lg">
+  <div class="score-row">
+    <app-score [score]="score" [maxScore]="MAX_SCORE"></app-score>
+  </div>
   <div class="levels-row">
     <app-progress-bar [currentLevel]="currentDisplayLevel"></app-progress-bar>
   </div>

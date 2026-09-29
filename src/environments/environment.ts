@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   //Cloud Run function URL for daily "top X%" stats (backend/stats-function); '' disables it
-  statsApiUrl: '',
+  statsApiUrl: 'https://crawsword-stats-lway2fokla-uw.a.run.app',
 };
 
 /*
