@@ -17,17 +17,46 @@ export interface GameStats {
   maxStreak: string;
 }
 
-//today's standing among all players, from the stats backend
+//today's standing among all players, from the stats backend. `place` is ties-share-
+//best ("#1" for everyone tied for the day's best); older backends omit it
 export interface DailyRank {
   total: number;
+  place?: number;
   topPercent: number;
 }
 
-//the day's first player has no one to compare against, so they get a
-//friendly default instead of the backend's "top 100%"; "top 0%" is never
-//shown, so the value is floored at 1
-export function rankPercent(rank: DailyRank): number {
-  return rank.total <= 1 ? 1 : Math.max(1, rank.topPercent);
+//below this many finishers a percent is noise, so the place is shown instead
+export const RANK_PLACE_THRESHOLD = 20;
+
+type RankKind =
+  | { kind: 'first' }
+  | { kind: 'place'; place: number; total: number }
+  | { kind: 'percent'; percent: number };
+
+//the day's first finisher has no one to compare against; small days show a
+//place ("#2 of 5"); otherwise a percent, floored at 1 so it never reads "top 0%"
+function classifyRank(rank: DailyRank): RankKind {
+  if (rank.total <= 1) return { kind: 'first' };
+  if (rank.place && rank.total < RANK_PLACE_THRESHOLD) {
+    return { kind: 'place', place: rank.place, total: rank.total };
+  }
+  return { kind: 'percent', percent: Math.max(1, rank.topPercent) };
+}
+
+//the postgame summary's rank line
+export function rankLabel(rank: DailyRank): string {
+  const r = classifyRank(rank);
+  if (r.kind === 'first') return 'First to finish today!';
+  if (r.kind === 'place') return `#${r.place} of ${r.total} players`;
+  return `Top ${r.percent}% of players`;
+}
+
+//the share string's rank suffix
+export function rankShareText(rank: DailyRank): string {
+  const r = classifyRank(rank);
+  if (r.kind === 'first') return 'first to finish today!';
+  if (r.kind === 'place') return `#${r.place} of ${r.total} players today`;
+  return `top ${r.percent}% of players today!`;
 }
 
 @Component({
@@ -76,8 +105,8 @@ export class ModalComponent implements OnDestroy, OnInit {
     return 1 + (this.replays?.length ?? 0);
   }
 
-  get rankPercent(): number {
-    return this.dailyRank ? rankPercent(this.dailyRank) : 0;
+  get rankLabel(): string {
+    return this.dailyRank ? rankLabel(this.dailyRank) : '';
   }
 
   //"Crawsword #123" tag (or "(practice)" when there's no daily puzzle number)

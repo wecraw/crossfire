@@ -438,8 +438,11 @@ describe('GameComponent', () => {
       component.dailyRank = { total: 3482, topPercent: 12 };
       expect(shareText()).toContain('680/700 🏆 · top 12% of players today!');
 
-      component.dailyRank = { total: 1, topPercent: 100 };
-      expect(shareText()).toContain('top 1% of players today!');
+      component.dailyRank = { total: 5, place: 2, topPercent: 40 };
+      expect(shareText()).toContain('680/700 🏆 · #2 of 5 players today');
+
+      component.dailyRank = { total: 1, place: 1, topPercent: 100 };
+      expect(shareText()).toContain('680/700 🏆 · first to finish today!');
     });
   });
 

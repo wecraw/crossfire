@@ -5,10 +5,11 @@
 // One Firestore doc per puzzle (daily/<puzzle>) holds a score histogram:
 //   { total: 3482, s700: 40, s680: 97, ... }
 // POST { puzzle, score } records a finished game; GET ?puzzle=&score= only reads.
-// Both reply { total, topPercent }.
+// Both reply { total, place, topPercent } (see rank.js).
 
 import { http } from '@google-cloud/functions-framework';
 import { FieldValue, Firestore } from '@google-cloud/firestore';
+import { rank } from './rank.js';
 
 const COLLECTION = process.env.COLLECTION || 'daily';
 //comma-separated list of origins allowed to call this from a browser, or '*'
@@ -29,19 +30,6 @@ function todaysPuzzle() {
   const get = (type) => Number(parts.find((p) => p.type === type).value);
   const days = Date.UTC(get('year'), get('month') - 1, get('day')) / 86400000;
   return days - PUZZLE_FIRST_DAY + 1;
-}
-
-//share of today's players (you included) who scored at least `score`,
-//rounded up and floored at 1 so the day's best reads "top 1%", not "top 0%"
-function rank(item, score) {
-  const total = Number(item?.total ?? 0);
-  let atOrAbove = 0;
-  for (const [key, value] of Object.entries(item ?? {})) {
-    const match = /^s(\d+)$/.exec(key);
-    if (match && Number(match[1]) >= score) atOrAbove += Number(value);
-  }
-  const topPercent = total ? Math.max(1, Math.ceil((100 * atOrAbove) / total)) : 100;
-  return { total, topPercent };
 }
 
 //Cloud Run has no CORS config of its own, so it's handled here

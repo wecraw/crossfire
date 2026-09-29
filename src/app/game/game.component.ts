@@ -19,7 +19,7 @@ import { dailyChains, ChainLevel } from '../clues/chains';
 import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
-import { DailyRank, GameStats, rankPercent } from '../modal/modal.component';
+import { DailyRank, GameStats, rankShareText } from '../modal/modal.component';
 import { environment } from '../../environments/environment';
 
 export interface IClue {
@@ -1021,7 +1021,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     shareString += this.score + '/' + this.MAX_SCORE;
     if (this.flawless) shareString += ' 🏆';
     if (this.dailyRank) {
-      shareString += ' · top ' + rankPercent(this.dailyRank) + '% of players today!';
+      shareString += ' · ' + rankShareText(this.dailyRank);
     }
 
     if (navigator.share) {

@@ -28,15 +28,22 @@ describe('ModalComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('shows the backend rank, or top 1% for the day\'s first player', () => {
-    component.dailyRank = { total: 1342, topPercent: 12 };
-    expect(component.rankPercent).toBe(12);
+  it('labels the rank: first finisher, a place on small days, else a percent', () => {
+    component.dailyRank = { total: 1, place: 1, topPercent: 100 };
+    expect(component.rankLabel).toBe('First to finish today!');
 
-    component.dailyRank = { total: 1, topPercent: 100 };
-    expect(component.rankPercent).toBe(1);
+    component.dailyRank = { total: 5, place: 2, topPercent: 40 };
+    expect(component.rankLabel).toBe('#2 of 5 players');
+
+    //an older backend sends no place: fall back to the percent
+    component.dailyRank = { total: 5, topPercent: 40 };
+    expect(component.rankLabel).toBe('Top 40% of players');
+
+    component.dailyRank = { total: 1342, place: 150, topPercent: 12 };
+    expect(component.rankLabel).toBe('Top 12% of players');
 
     component.dailyRank = { total: 5000, topPercent: 0 };
-    expect(component.rankPercent).toBe(1);
+    expect(component.rankLabel).toBe('Top 1% of players');
   });
 
   it('disables the primary (Share) button while the rank is loading', () => {

@@ -30,7 +30,7 @@ gcloud billing budgets create --billing-account=<billing-account-id> \
 
 ## Data
 
-Each puzzle is one document, `daily/<puzzle>`, holding a score histogram: `{ total, s700, s680, ... }`. A POST increments `total` and `s<score>` atomically with `FieldValue.increment`, then reads the document back.
+Each puzzle is one document, `daily/<puzzle>`, holding a score histogram: `{ total, s700, s680, ... }`. A POST increments `total` and `s<score>` atomically with `FieldValue.increment`, then reads the document back. Both methods reply `{ total, place, topPercent }` for the given score (`rank.js`): ties share the best place, so everyone tied for the day's best is #1 and top 1%.
 
 ## Smoke test
 
