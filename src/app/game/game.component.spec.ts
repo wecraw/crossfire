@@ -401,22 +401,17 @@ describe('GameComponent', () => {
       return writeText.mock.calls[0][0] as string;
     }
 
-    it('builds a share string with the score, revealed levels and hints', () => {
+    it('builds a share string with one square per level and the score', () => {
       component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY; // puzzle #1
       component.practiceMode = false;
       component.currentLevel = component.NUM_LEVELS;
       component.incorrectGuessesByLevel = [1, 5, 0, 2, 0, 0, 0];
       component.failedByLevel = [false, true, false, false, false, false, false];
-      component.hintsByLevel = [[], [], [3], [], [], [], []];
       // 80 + 0 + 100 + 60 + 100 + 100 + 100
       expect(component.score).toBe(540);
 
-      const shared = shareText();
-      expect(shared).toContain('Crawsword #1  540/700');
-      expect(shared).not.toContain('🏆'); // not flawless
-      expect(shared).toContain('🟩❌'); // level 0 solved with one wrong guess
-      expect(shared).toContain('🟥'); // level 1 revealed
-      expect(shared).toContain('🟩💡'); // level 2 solved with a hint
+      // yellow = solved after wrong guesses, X = revealed, green = first try
+      expect(shareText()).toBe('crawsword.xyz · Jun 5 2026\n🟨❌🟩🟨🟩🟩🟩\n540/700');
     });
 
     it('awards the trophy on a flawless run', () => {
@@ -427,24 +422,24 @@ describe('GameComponent', () => {
       component.failedByLevel = [false, false, false, false, false, false, false];
 
       const shared = shareText();
-      expect(shared).toContain('Crawsword #1  680/700 🏆');
-      expect(shared).not.toContain('🟥');
+      expect(shared).toContain('680/700 🏆');
+      expect(shared).not.toContain('❌');
     });
 
-    it('puts the daily rank in place of the blank line', () => {
+    it('appends the daily rank to the score line when known', () => {
       component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
       component.practiceMode = false;
       component.currentLevel = component.NUM_LEVELS;
       component.incorrectGuessesByLevel = [0, 0, 1, 0, 0, 0, 0];
       component.failedByLevel = [false, false, false, false, false, false, false];
 
-      expect(shareText()).toContain('Crawsword #1  680/700 🏆\n\n🟩');
+      expect(shareText()).toMatch(/\n680\/700 🏆$/);
 
       component.dailyRank = { total: 3482, topPercent: 12 };
-      expect(shareText()).toContain('Crawsword #1  680/700 🏆\nTop 12% of players\n🟩');
+      expect(shareText()).toContain('680/700 🏆 · top 12% of players today!');
 
       component.dailyRank = { total: 1, topPercent: 100 };
-      expect(shareText()).toContain('\nTop 50% of players\n');
+      expect(shareText()).toContain('top 50% of players today!');
     });
   });
 
