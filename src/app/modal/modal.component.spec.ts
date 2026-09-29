@@ -36,6 +36,20 @@ describe('ModalComponent', () => {
     expect(component.rankPercent).toBe(50);
   });
 
+  it('disables the primary (Share) button while the rank is loading', () => {
+    component.decisionModal = true;
+    const button = () =>
+      fixture.nativeElement.querySelector('.btn-primary') as HTMLButtonElement;
+
+    component.rankLoading = true;
+    fixture.detectChanges();
+    expect(button().disabled).toBe(true);
+
+    component.rankLoading = false;
+    fixture.detectChanges();
+    expect(button().disabled).toBe(false);
+  });
+
   it('slides pages in the direction of travel and wraps the arrows', () => {
     component.replays = new Array(7);
     expect(component.animated).toBe(false);
