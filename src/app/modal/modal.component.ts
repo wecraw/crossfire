@@ -24,9 +24,10 @@ export interface DailyRank {
 }
 
 //the day's first player has no one to compare against, so they get a
-//friendly default instead of the backend's "top 100%"
+//friendly default instead of the backend's "top 100%"; "top 0%" is never
+//shown, so the value is floored at 1
 export function rankPercent(rank: DailyRank): number {
-  return rank.total <= 1 ? 50 : rank.topPercent;
+  return rank.total <= 1 ? 1 : Math.max(1, rank.topPercent);
 }
 
 @Component({
