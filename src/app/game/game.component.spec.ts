@@ -430,6 +430,22 @@ describe('GameComponent', () => {
       expect(shared).toContain('Crawsword #1  680/700 🏆');
       expect(shared).not.toContain('🟥');
     });
+
+    it('puts the daily rank in place of the blank line', () => {
+      component.daysSinceEpoch = () => component.PUZZLE_FIRST_DAY;
+      component.practiceMode = false;
+      component.currentLevel = component.NUM_LEVELS;
+      component.incorrectGuessesByLevel = [0, 0, 1, 0, 0, 0, 0];
+      component.failedByLevel = [false, false, false, false, false, false, false];
+
+      expect(shareText()).toContain('Crawsword #1  680/700 🏆\n\n🟩');
+
+      component.dailyRank = { total: 3482, topPercent: 12 };
+      expect(shareText()).toContain('Crawsword #1  680/700 🏆\nTop 12% of players\n🟩');
+
+      component.dailyRank = { total: 1, topPercent: 100 };
+      expect(shareText()).toContain('\nTop 50% of players\n');
+    });
   });
 
   describe('scoring', () => {
@@ -1013,6 +1029,49 @@ describe('GameComponent', () => {
 
       await component.fetchDailyRank();
       expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST' });
+    });
+
+    it('submits the final score only after the finished game is saved, once', () => {
+      vi.useFakeTimers();
+      // on the last level with one wrong guess; the second guess is right
+      component.currentLevel = component.NUM_LEVELS - 1;
+      component.incorrectGuessesByLevel = [0, 0, 0, 0, 0, 0, 1];
+      component.answer = 'CRANE';
+      component.board = ['XXXXX', 'CRANE'].map((word) =>
+        [...word].map((letter): ILetter => ({ letter, state: 'default' }))
+      );
+      component.currentRow = 1;
+
+      component.checkAnswer();
+      // during the flip the save is still unfinished, so nothing is posted yet
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(10000);
+      expect(component.hasWon).toBe(true);
+      expect(component.score).toBe(680);
+      expect(localStorage.getItem('v3:hasWon')).toBe('true');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({
+        method: 'POST',
+        body: JSON.stringify({ puzzle: component.getPuzzleNumber(), score: 680 }),
+      });
+      expect(component.rankLoading).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it('drops a rank that lands after reset and clears the old one', async () => {
+      let resolveRes!: (v: unknown) => void;
+      fetchMock.mockImplementationOnce(() => new Promise((r) => (resolveRes = r)));
+      component.buildClueMaps();
+      const pending = component.fetchDailyRank();
+      component.reset();
+      resolveRes({ ok: true, json: async () => ({ total: 9, topPercent: 5 }) });
+      await pending;
+      expect(component.dailyRank).toBeNull();
+
+      component.dailyRank = { total: 9, topPercent: 5 };
+      component.reset();
+      expect(component.dailyRank).toBeNull();
     });
 
     it('never calls the backend in practice mode or without a URL', async () => {

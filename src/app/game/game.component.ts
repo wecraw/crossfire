@@ -19,7 +19,7 @@ import { dailyChains, ChainLevel } from '../clues/chains';
 import { clueOverrides } from '../clues/clue-overrides';
 import * as confetti from 'canvas-confetti';
 import moment from 'moment-timezone';
-import { DailyRank, GameStats } from '../modal/modal.component';
+import { DailyRank, GameStats, rankPercent } from '../modal/modal.component';
 import { environment } from '../../environments/environment';
 
 export interface IClue {
@@ -106,6 +106,12 @@ export class GameComponent implements OnInit, AfterViewInit {
   practiceMode: boolean = false; //set true for debugging / free play
   currentDay: number = 0; //days since epoch
   dailyRank: DailyRank | null = null; //today's "top X%" from the stats backend
+  rankLoading: boolean = false; //a rank request is in flight (postgame shows a skeleton)
+  //the finished game's rank has been requested; every trigger goes through
+  //startRankRequest, so it's sent once
+  private rankRequested: boolean = false;
+  //bumped by reset() so a response that lands after a mode switch is dropped
+  private rankGeneration: number = 0;
 
   //Board / entry variables
   board: ILetter[][] = []; //GUESSES_PER_LEVEL rows x WORD_LENGTH cols, fresh each level
@@ -184,6 +190,11 @@ export class GameComponent implements OnInit, AfterViewInit {
   //derived from the level results, so it's never stored in the daily save
   levelScore(level: number): number {
     if (level >= this.currentLevel || this.failedByLevel[level]) return 0;
+    return this.solvedLevelPoints(level);
+  }
+
+  //what a solve of `level` is worth, given its wrong guesses so far
+  private solvedLevelPoints(level: number): number {
     const guessesUsed = this.incorrectGuessesByLevel[level] + 1;
     return (
       (this.POINTS_PER_LEVEL * (this.GUESSES_PER_LEVEL + 1 - guessesUsed)) /
@@ -233,7 +244,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     if (this.hasWon) {
       this.guessNotAllowed = true;
       this.showGameOverModal = true;
-      this.fetchDailyRank();
+      this.startRankRequest();
     }
 
     //first-ever visit: auto-show the quick beginner tutorial (skipped in practice mode)
@@ -298,6 +309,10 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.showResetModal = this.showGameOverModal = false;
     this.guessNotAllowed = false;
     this.hasWon = false;
+    this.rankRequested = false;
+    this.rankGeneration++;
+    this.dailyRank = null;
+    this.rankLoading = false;
     this.setChain();
     this.loadLevel(0);
   }
@@ -777,18 +792,28 @@ export class GameComponent implements OnInit, AfterViewInit {
     this.hasWon = true;
     this.updateLocalStorage();
     this.updateStats();
+    this.startRankRequest();
+  }
+
+  //requests the finished game's rank once (see rankRequested)
+  //only after the finished state is saved, so a reload can't leave a submitted
+  //score behind an unfinished save
+  private startRankRequest() {
+    if (this.rankRequested) return;
+    this.rankRequested = true;
     this.fetchDailyRank();
   }
 
   //submits today's score once (POST), or just reads today's standing (GET) on a
   //reload; best-effort, so any failure leaves dailyRank null and hides the line
-  async fetchDailyRank() {
+  async fetchDailyRank(score: number = this.score) {
     const url = environment.statsApiUrl;
     if (this.practiceMode || !url) return;
 
     const puzzle = this.getPuzzleNumber();
-    const score = this.score;
     const submitted = localStorage.getItem('rankSubmittedPuzzle') === '' + puzzle;
+    const generation = this.rankGeneration;
+    this.rankLoading = true;
     try {
       const res = submitted
         ? await fetch(`${url}?puzzle=${puzzle}&score=${score}`)
@@ -800,9 +825,13 @@ export class GameComponent implements OnInit, AfterViewInit {
       if (!res.ok) return;
       if (!submitted) localStorage.setItem('rankSubmittedPuzzle', '' + puzzle);
       const rank: DailyRank = await res.json();
-      if (rank.total > 0) this.dailyRank = rank;
+      if (generation === this.rankGeneration && rank.total > 0) {
+        this.dailyRank = rank;
+      }
     } catch {
       //offline or backend down: the postgame just omits the rank line
+    } finally {
+      if (generation === this.rankGeneration) this.rankLoading = false;
     }
   }
 
@@ -975,7 +1004,12 @@ export class GameComponent implements OnInit, AfterViewInit {
     //headline is the day's score; a flawless run (none revealed) earns the trophy
     shareString += '  ' + this.score + '/' + this.MAX_SCORE;
     if (this.flawless) shareString += ' 🏆';
-    shareString += '\n\n';
+    shareString += '\n';
+    //the daily rank takes the blank line's place; without one the gap stays
+    if (this.dailyRank) {
+      shareString += 'Top ' + rankPercent(this.dailyRank) + '% of players';
+    }
+    shareString += '\n';
 
     for (let i = 0; i < this.NUM_LEVELS; i++) {
       if (this.failedByLevel[i]) {

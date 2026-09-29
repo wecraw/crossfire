@@ -23,6 +23,12 @@ export interface DailyRank {
   topPercent: number;
 }
 
+//the day's first player has no one to compare against, so they get a
+//friendly default instead of the backend's "top 100%"
+export function rankPercent(rank: DailyRank): number {
+  return rank.total <= 1 ? 50 : rank.topPercent;
+}
+
 @Component({
   standalone: false,
   selector: 'app-modal',
@@ -44,6 +50,9 @@ export class ModalComponent implements OnDestroy, OnInit {
   @Input() levelScores: number[] = [];
   @Input() hintsByLevel: number[][] = [];
   @Input() dailyRank: DailyRank | null = null;
+  @Input() rankLoading: boolean = false;
+  //replay boards reserve this many guess rows so every page is the same height
+  @Input() guessesPerLevel: number = 5;
 
   @Output() secondaryEvent = new EventEmitter<void>();
   @Output() primaryEvent = new EventEmitter<void>();
@@ -56,16 +65,18 @@ export class ModalComponent implements OnDestroy, OnInit {
 
   //page 0 is the summary (score, day tiles, stats); pages 1..N are per-level replays
   currentPage: number = 0;
+  //the page sliding out while currentPage slides in; cleared when its exit ends
+  leavingPage: number | null = null;
+  direction: 'forward' | 'back' = 'forward';
+  //off until the first page turn, so the modal doesn't animate its opening page
+  animated: boolean = false;
 
   get totalPages(): number {
     return 1 + (this.replays?.length ?? 0);
   }
 
-  //the day's first player has no one to compare against, so they get a
-  //friendly default instead of the backend's "top 100%"
   get rankPercent(): number {
-    if (!this.dailyRank) return 0;
-    return this.dailyRank.total <= 1 ? 25 : this.dailyRank.topPercent;
+    return this.dailyRank ? rankPercent(this.dailyRank) : 0;
   }
 
   //"Crawsword #123" tag (or "(practice)" when there's no daily puzzle number)
@@ -75,15 +86,30 @@ export class ModalComponent implements OnDestroy, OnInit {
 
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
-    this.currentPage = page;
+    this.turnTo(page, page > this.currentPage ? 'forward' : 'back');
   }
 
+  //arrows wrap around, still sliding in the direction of the arrow pressed
   nextPage(): void {
-    this.currentPage = (this.currentPage + 1) % this.totalPages;
+    this.turnTo((this.currentPage + 1) % this.totalPages, 'forward');
   }
 
   prevPage(): void {
-    this.currentPage = (this.currentPage - 1 + this.totalPages) % this.totalPages;
+    this.turnTo((this.currentPage - 1 + this.totalPages) % this.totalPages, 'back');
+  }
+
+  onPageAnimationEnd(event: AnimationEvent, page: number): void {
+    //ignore animations bubbling up from inside the page (e.g. squares)
+    if (event.target !== event.currentTarget) return;
+    if (this.leavingPage === page) this.leavingPage = null;
+  }
+
+  private turnTo(page: number, direction: 'forward' | 'back'): void {
+    if (page === this.currentPage) return;
+    this.leavingPage = this.currentPage;
+    this.direction = direction;
+    this.currentPage = page;
+    this.animated = true;
   }
 
   constructor() {}
