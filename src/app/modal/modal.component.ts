@@ -60,11 +60,10 @@ export function rankPercentNote(rank: DailyRank): string {
   return r.kind === 'place' ? `(top ${r.percent}%)` : '';
 }
 
-//the share string's rank suffix
+//the share string's rank suffix: always the percent, never the place/count
 export function rankShareText(rank: DailyRank): string {
   const r = classifyRank(rank);
   if (r.kind === 'first') return 'first to finish today!';
-  if (r.kind === 'place') return `#${r.place} of ${r.total} players today (top ${r.percent}%)`;
   return `top ${r.percent}% of players today!`;
 }
 
